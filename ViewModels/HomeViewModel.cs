@@ -15,9 +15,24 @@ public partial class HomeViewModel : ObservableObject
     private readonly MockDataService _data;
     private readonly CartService _cart;
 
+    /// <summary>
+    /// Gets the collection of available countries.
+    /// </summary>
     public ObservableCollection<CountryOption> Countries { get; } = new(CountryOption.All);
+
+    /// <summary>
+    /// Gets the collection of available categories.
+    /// </summary>
     public ObservableCollection<string> Categories { get; } = new() { "Popular", "Local Meals", "Snacks", "Drinks" };
+
+    /// <summary>
+    /// Gets the collection of featured dishes.
+    /// </summary>
     public ObservableCollection<Dish> FeaturedDishes { get; } = new();
+
+    /// <summary>
+    /// gets the collection of top sellers.
+    /// </summary>
     public ObservableCollection<Vendor> TopSellers { get; } = new();
 
     [ObservableProperty]
@@ -33,11 +48,11 @@ public partial class HomeViewModel : ObservableObject
     private int cartCount;
 
 
-/// <summary>
-/// Initializes a new instance of the HomeViewModel class.
-/// </summary>
-/// <param name="data">The service that provides mock data.</param>
-/// <param name="cart">The service that manages the shopping cart.</param>
+    /// <summary>
+    /// Initializes a new instance of the HomeViewModel class.
+    /// </summary>
+    /// <param name="data">The service that provides mock data.</param>
+    /// <param name="cart">The service that manages the shopping cart.</param>
     public HomeViewModel(MockDataService data, CartService cart)
     {
         _data = data;

@@ -7,6 +7,12 @@ using AfroPhloem.Views;
 
 namespace AfroPhloem.ViewModels;
 
+/// <summary>
+/// Manages the list of vendors, supports filtering by country and search text, and provides navigation to vendor
+/// details.
+/// </summary>
+/// <remarks>Interacts with data and cart services to retrieve and update vendor information based on user
+/// selections.</remarks>
 public partial class VendorsListViewModel : ObservableObject
 {
     private readonly MockDataService _data;
@@ -21,6 +27,12 @@ public partial class VendorsListViewModel : ObservableObject
     [ObservableProperty]
     private string searchText = string.Empty;
 
+    /// <summary>
+    /// creates a new instance of the VendorsListViewModel class, 
+    /// initializing it with the provided data and cart services.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="cart"></param>
     public VendorsListViewModel(MockDataService data, CartService cart)
     {
         _data = data;
@@ -29,14 +41,26 @@ public partial class VendorsListViewModel : ObservableObject
         RefreshVendors();
     }
 
+    /// <summary>
+    /// triggered when the selected country changes, updates the cart's 
+    /// selected country and refreshes the vendor list accordingly.
+    /// </summary>
+    /// <param name="value"></param>
     partial void OnSelectedCountryChanged(CountryOption value)
     {
         _cart.SelectedCountry = value;
         RefreshVendors();
     }
 
+    /// <summary>
+    /// triggered when the search text changes, refreshes the vendor list to reflect the current search criteria.
+    /// </summary>
+    /// <param name="value"></param>
     partial void OnSearchTextChanged(string value) => RefreshVendors();
 
+    /// <summary>
+    /// refreshes the list of vendors based on the selected country and search text,
+    /// </summary>
     private void RefreshVendors()
     {
         Vendors.Clear();
@@ -56,6 +80,12 @@ public partial class VendorsListViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// command to navigate to the vendor's shop page, 
+    /// passing the vendor's ID and name as query parameters in the URL.
+    /// </summary>
+    /// <param name="vendor"></param>
+    /// <returns></returns>
     [RelayCommand]
     private async Task ViewShop(Vendor vendor)
     {
