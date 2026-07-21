@@ -1,0 +1,44 @@
+name: Build AfroPhloem
+
+on:
+  push:
+    branches:
+      - main
+      - development
+
+  pull_request:
+    branches:
+      - main
+      - development
+
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Display .NET information
+        run: dotnet --info
+
+      - name: Install .NET MAUI workload
+        run: dotnet workload install maui-android
+
+      - name: Restore dependencies
+        run: dotnet restore AfroPhloem.csproj
+
+      - name: Build Android app
+        run: >
+          dotnet build AfroPhloem.csproj
+          -f net10.0-android
+          -c Release
+          --no-restore
