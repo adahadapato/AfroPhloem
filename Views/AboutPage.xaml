@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             x:Class="AfroPhloem.Views.AboutPage"
+             Shell.NavBarIsVisible="False"
+             Title="About Afro-Phloem">
+
+    <Grid RowDefinitions="Auto,*">
+        <controls:AppHeaderBar Grid.Row="0" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- ============ HERO ============ -->
+                <Grid>
+                    <Image Source="header_bg.jpg" Aspect="AspectFill" />
+                    <BoxView BackgroundColor="{StaticResource BrandDark}" Opacity="0.72" />
+
+                    <VerticalStackLayout Padding="24,44" Spacing="10" HorizontalOptions="Center" MaximumWidthRequest="640">
+                        <Image Source="logo_large.png" HeightRequest="110" WidthRequest="110" HorizontalOptions="Center" />
+                        <Label Text="PLATFORM OVERVIEW" Style="{StaticResource EyebrowLabel}" HorizontalOptions="Center" Margin="0,10,0,0" />
+                        <Label Text="Afro-Phloem" Style="{StaticResource HeroTitle}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                        <Label Text="Connecting Africa to its diaspora, one meal at a time." Style="{StaticResource HeroSubtitle}"
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- ============ STATS STRIP ============ -->
+                <FlexLayout Wrap="NoWrap" JustifyContent="Center" Padding="20,24" AlignItems="Center">
+                    <Border Style="{StaticResource StatTile}" Margin="8">
+                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label Text="3" Style="{StaticResource StatNumber}" />
+                            <Label Text="Markets: Ghana, Nigeria &amp; the UK" Style="{StaticResource StatCaption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource StatTile}" Margin="8">
+                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label Text="✈️" Style="{StaticResource StatNumber}" />
+                            <Label Text="Cross-border delivery to the diaspora" Style="{StaticResource StatCaption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource StatTile}" Margin="8">
+                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label Text="100%" Style="{StaticResource StatNumber}" />
+                            <Label Text="Open to home cooks &amp; small vendors" Style="{StaticResource StatCaption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </FlexLayout>
+                <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" Margin="24,0" />
+
+                <!-- ============ MISSION ============ -->
+                <VerticalStackLayout Padding="24,10,24,30" Spacing="12" MaximumWidthRequest="720" HorizontalOptions="Center">
+                    <Label Text="Our Mission" Style="{StaticResource SectionTitle}" />
+                    <Label LineBreakMode="WordWrap" FontSize="15" TextColor="{StaticResource BrandTextDark}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Afro-Phloem is a culturally focused food marketplace connecting buyers and sellers in " />
+                                <Span Text="Ghana, Nigeria, and the UK" FontAttributes="Bold" />
+                                <Span Text=", with built-in support for " />
+                                <Span Text="local and cross-border African food trade" FontAttributes="Bold" />
+                                <Span Text=". Inspired by on-demand delivery platforms but purpose-built for African food systems, it enables small vendors, home cooks, and food businesses to sell locally while reaching the diaspora through international delivery to the UK." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+
+                <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" Margin="24,0" />
+
+                <!-- ============ WHAT WE DO DIFFERENTLY ============ -->
+                <VerticalStackLayout Padding="24,30,24,10" Spacing="6" HorizontalOptions="Center">
+                    <Label Text="What Afro-Phloem Does Differently" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+                    <Label Text="Existing platforms are a delivery company. Afro-Phloem is a cultural food ecosystem plus a cross-border trade platform — and that difference is massive."
+                           Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" MaximumWidthRequest="600" />
+                </VerticalStackLayout>
+
+                <FlexLayout Wrap="Wrap" JustifyContent="Center" Padding="20" BindableLayout.ItemsSource="{Binding Features}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:FeatureComparison">
+                            <Frame Style="{StaticResource ComparisonCard}" Margin="8">
+                                <VerticalStackLayout Spacing="10">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding Icon}" FontSize="20" />
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="17"
+                                               TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" />
+
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="✗" TextColor="{StaticResource BrandDanger}" FontAttributes="Bold" />
+                                        <Label Text="{Binding ExistingPlatformText}" FontSize="13"
+                                               TextColor="{StaticResource BrandTextMuted}" LineBreakMode="WordWrap"
+                                               WidthRequest="270" />
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="✓" TextColor="{StaticResource BrandSuccess}" FontAttributes="Bold" />
+                                        <Label Text="{Binding AfroPhloemText}" FontSize="13.5"
+                                               TextColor="{StaticResource BrandTextDark}" LineBreakMode="WordWrap"
+                                               WidthRequest="270" />
+                                    </HorizontalStackLayout>
+
+                                    <Label Text="{Binding ValueAdded}" FontAttributes="Italic" FontSize="12.5"
+                                           TextColor="{StaticResource BrandGreen}" LineBreakMode="WordWrap" Margin="0,4,0,0" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+                <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" Margin="24,10" />
+
+                <!-- ============ LONG-TERM STRATEGIC MOAT ============ -->
+                <VerticalStackLayout Padding="24,10,24,40" Spacing="10" MaximumWidthRequest="640" HorizontalOptions="Center">
+                    <Label Text="Long-Term Strategic Moat" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Afro-Phloem can evolve into:" FontSize="14" TextColor="{StaticResource BrandTextMuted}" />
+
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="🇬🇧" FontSize="16" />
+                            <Label Text="African grocery imports" FontSize="14.5" TextColor="{StaticResource BrandTextDark}" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="📦" FontSize="16" />
+                            <Label Text="Export compliance platform" FontSize="14.5" TextColor="{StaticResource BrandTextDark}"/>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="🛡️" FontSize="16" />
+                            <Label Text="Vendor certification &amp; trust badges" FontSize="14.5" TextColor="{StaticResource BrandTextDark}" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="🏭" FontSize="16" />
+                            <Label Text="African food brand incubator" FontSize="14.5" TextColor="{StaticResource BrandTextDark}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="Existing platforms cannot pivot here easily — it's not their DNA." FontAttributes="Italic"
+                           FontSize="13" TextColor="{StaticResource BrandGreen}" Margin="0,6,0,0" />
+                </VerticalStackLayout>
+
+                <!-- ============ FOOTER ============ -->
+                <Grid BackgroundColor="{StaticResource BrandDark}" Padding="24,18">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Label Text="Afro-Phloem" TextColor="{StaticResource BrandGold}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Version 1.0" TextColor="White" Opacity="0.6" FontSize="12" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

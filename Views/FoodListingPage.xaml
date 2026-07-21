@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:FoodListingViewModel"
+             x:Class="AfroPhloem.Views.FoodListingPage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Browse &amp; Order">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+        <controls:AppHeaderBar Grid.Row="0"
+                                Countries="{Binding Countries}"
+                                SelectedCountry="{Binding SelectedCountry}" />
+
+       
+
+        <!-- Filters -->
+        <VerticalStackLayout Grid.Row="1" Spacing="8" Padding="16,12" BackgroundColor="{StaticResource BrandCard}">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0" Text="Browse &amp; Order" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
+
+                <Grid Grid.Column="1" WidthRequest="44" HeightRequest="44">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToCheckoutCommand}" />
+                    </Grid.GestureRecognizers>
+
+                    <Image Source="cart_icon.png" WidthRequest="30" HeightRequest="30"
+                   HorizontalOptions="Center" VerticalOptions="Center" />
+
+                    <Border StrokeShape="RoundRectangle 10" BackgroundColor="{StaticResource BrandDanger}" Stroke="Transparent"
+                    Padding="5,1" HorizontalOptions="End" VerticalOptions="Start"
+                    IsVisible="{Binding CartCount, Converter={StaticResource IntToBoolConverter}}">
+                        <Label Text="{Binding CartCount}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Picker Grid.Column="0" Title="Select Country" ItemsSource="{Binding Countries}"
+                SelectedItem="{Binding SelectedCountry}" ItemDisplayBinding="{Binding Display}" />
+                <Picker Grid.Column="1" Title="Delivery Time" ItemsSource="{Binding DeliveryTimes}"
+                SelectedItem="{Binding SelectedDeliveryTime}" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Vendor filter banner: only shown when arrived here via "View Shop" for a specific vendor -->
+        <Grid Grid.Row="2" Padding="16,10" ColumnDefinitions="*,Auto" BackgroundColor="{StaticResource BrandGoldLight}"
+                IsVisible="{Binding IsFilteredByVendor}">
+            <Label Grid.Column="0" Text="{Binding FilterVendorName, StringFormat='Showing dishes from {0}'}"
+                    FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+            <Button Grid.Column="1" Text="✕ Clear" Style="{StaticResource OutlineButton}" FontSize="12" HeightRequest="30"
+                    Command="{Binding ClearVendorFilterCommand}" />
+        </Grid>
+
+        <!-- Dish list -->
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Dishes}" Margin="16">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Dish">
+                    <Border Style="{StaticResource CardBorder}" Padding="0">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid HeightRequest="120">
+                                <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
+                                <Border Style="{StaticResource RatingBadge}" HorizontalOptions="End" VerticalOptions="Start" Margin="8">
+                                    <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                                </Border>
+                            </Grid>
+                            <VerticalStackLayout Spacing="4" Padding="12">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="{Binding Price, StringFormat='£{0:0.00}'}" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold" />
+                                <Button Text="Order" Style="{StaticResource PrimaryButton}" HeightRequest="36"
+                                Command="{Binding BindingContext.AddToCartCommand, Source={x:Reference RootPage}}"
+                                CommandParameter="{Binding .}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+
+        <!-- Cart summary bar -->
+        <Grid Grid.Row="4" Padding="16" BackgroundColor="{StaticResource BrandDark}"
+                IsVisible="{Binding CartCount, Converter={StaticResource IntToBoolConverter}}">
+            <Button Text="{Binding CartCount, StringFormat='Checkout · {0} item(s) →'}"
+            Style="{StaticResource CtaButton}" Command="{Binding GoToCheckoutCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>

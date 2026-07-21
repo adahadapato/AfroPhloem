@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:SellerDashboardViewModel"
+             x:Class="AfroPhloem.Views.SellerDashboardPage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Seller Dashboard">
+
+    <Grid RowDefinitions="Auto,*">
+        <controls:AppHeaderBar Grid.Row="0" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="16" MaximumWidthRequest="700" HorizontalOptions="Center">
+
+                <!-- Vendor summary -->
+                <Frame Style="{StaticResource CardFrame}" BindingContext="{Binding CurrentVendor}" x:DataType="models:Vendor">
+                    <Grid ColumnDefinitions="60,*,Auto" ColumnSpacing="12">
+                        <Image Grid.Column="0" Source="dotnet_bot.png" HeightRequest="55" WidthRequest="55" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource BrandTextDark}"/>
+                            <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" Style="{StaticResource SubtleLabel}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="{Binding Balance, StringFormat='£{0:0.00}'}"
+                           FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
+                    </Grid>
+                </Frame>
+
+                <!-- Stats -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" BindingContext="{Binding CurrentVendor}" x:DataType="models:Vendor">
+                    <Frame Grid.Column="0" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
+                        <VerticalStackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding TotalOrders}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center" 
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="Total Orders" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Column="1" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
+                        <VerticalStackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding PendingOrders}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center"
+                                   TextColor="{StaticResource BrandTextDark}"/>
+                            <Label Text="Pending" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Column="2" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
+                        <VerticalStackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding Balance, StringFormat='£{0:0}'}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center"
+                                   TextColor="{StaticResource BrandTextDark}"/>
+                            <Label Text="Balance" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+                <Button Text="Accept Next Pending Order" Style="{StaticResource SecondaryButton}" Command="{Binding AcceptNextOrderCommand}" />
+
+                <Label Text="Sales Overview" Style="{StaticResource SectionTitle}" />
+
+                <CollectionView ItemsSource="{Binding MyDishes}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Dish">
+                            <Frame Style="{StaticResource CardFrame}" Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="55,*,Auto" ColumnSpacing="10">
+                                    <Image Grid.Column="0" Source="{Binding ImageUrl}" HeightRequest="50" WidthRequest="50" Aspect="AspectFill" />
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                                        <Label Text="{Binding Price, StringFormat='£{0:0.00}'}" TextColor="{StaticResource BrandGreen}" />
+                                    </VerticalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center">
+                                        <Button Text="−" WidthRequest="36" HeightRequest="36" Padding="0"
+                                            Command="{Binding BindingContext.DecreasePriceCommand, Source={x:Reference RootPage}}"
+                                            CommandParameter="{Binding .}" Style="{StaticResource CircleIconButton}" />
+                                        <Button Text="+" WidthRequest="36" HeightRequest="36" Padding="0"
+                                            Command="{Binding BindingContext.IncreasePriceCommand, Source={x:Reference RootPage}}"
+                                            CommandParameter="{Binding .}"  Style="{StaticResource CircleIconButton}"/>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

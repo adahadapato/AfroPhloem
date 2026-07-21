@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Brand palette pulled from the Afro-Phloem blueprint -->
+    <Color x:Key="BrandDark">#2B3A25</Color>       <!-- deep bronze-green header -->
+    <Color x:Key="BrandGreen">#3F5A2E</Color>      <!-- primary buttons (Buy Food) -->
+    <Color x:Key="BrandGreenDark">#2E4321</Color>
+    <Color x:Key="BrandGold">#C9A24B</Color>       <!-- accent / logo ring -->
+    <Color x:Key="BrandGoldLight">#E8D9AE</Color>
+    <Color x:Key="BrandOrange">#E29A2D</Color>     <!-- Place Order CTA -->
+    <Color x:Key="BrandCream">#FBF3DD</Color>      <!-- page background -->
+    <Color x:Key="BrandCard">#FFFFFF</Color>
+    <Color x:Key="BrandTextDark">#2B2B2B</Color>
+    <Color x:Key="BrandTextMuted">#6B6B6B</Color>
+    <Color x:Key="BrandBorder">#E3DCC6</Color>
+    <Color x:Key="BrandDanger">#C0392B</Color>
+    <Color x:Key="BrandSuccess">#3F5A2E</Color>
+
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>
+    <Color x:Key="Gray100">#F5F5F5</Color>
+    <Color x:Key="Gray300">#D9D9D9</Color>
+    <Color x:Key="Gray600">#6B6B6B</Color>
+
+</ResourceDictionary>

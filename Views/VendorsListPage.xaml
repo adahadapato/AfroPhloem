@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:VendorsListViewModel"
+             x:Class="AfroPhloem.Views.VendorsListPage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Vendors">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <controls:AppHeaderBar Grid.Row="0"
+                                Countries="{Binding Countries}"
+                                SelectedCountry="{Binding SelectedCountry}"
+                                SearchText="{Binding SearchText}"
+                                ShowSearch="True" />
+
+        <Grid Grid.Row="1" Padding="16,12,16,4">
+            <Label Text="Sellers &amp; Vendors" Style="{StaticResource SectionTitle}" />
+        </Grid>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Vendors}" Margin="16">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Vendor">
+                    <Border Style="{StaticResource VendorCard}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+
+                        <VerticalStackLayout Spacing="0">
+                            <!-- Cover banner + overlapping avatar + floating badges -->
+                            <Grid HeightRequest="72">
+                                <Border StrokeShape="Rectangle" Stroke="Transparent">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#3F5A2E" Offset="0.0" />
+                                            <GradientStop Color="#2B3A25" Offset="1.0" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <!-- Verified badge, top-left -->
+                                <Border Style="{StaticResource RatingBadge}" HorizontalOptions="Start" VerticalOptions="Start"
+                                        Margin="8" IsVisible="{Binding IsVerified}">
+                                    <Label Text="✅ Verified" TextColor="White" FontSize="10" FontAttributes="Bold" />
+                                </Border>
+
+                                <!-- Rating badge, top-right -->
+                                <Border Style="{StaticResource RatingBadge}" HorizontalOptions="End" VerticalOptions="Start" Margin="8">
+                                    <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                                </Border>
+
+                                <Border StrokeShape="RoundRectangle 30" Stroke="{StaticResource BrandCard}" StrokeThickness="3"
+                                        WidthRequest="60" HeightRequest="60" VerticalOptions="End" Margin="0,0,0,-30"
+                                        BackgroundColor="{StaticResource BrandCream}">
+                                    <Image Source="header_logo.png" Aspect="AspectFit" Margin="6" />
+                                </Border>
+                            </Grid>
+
+                            <VerticalStackLayout Spacing="4" Padding="12,36,12,14" HorizontalOptions="Center">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="14"
+                                       TextColor="{StaticResource BrandTextDark}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding DishCount, StringFormat='{0} dishes'}" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
+                                <Button Text="View Shop" Style="{StaticResource OutlineButton}" FontSize="12" HeightRequest="34"
+                                        Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
+                                        CommandParameter="{Binding .}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

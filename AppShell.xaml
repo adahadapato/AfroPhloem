@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:AfroPhloem.Views"
+       x:Class="AfroPhloem.AppShell"
+       Title="Afro-Phloem"
+       FlyoutBehavior="Flyout"
+       BackgroundColor="{StaticResource BrandDark}">
+
+    <Shell.FlyoutHeader>
+        <Grid HeightRequest="140" BackgroundColor="{StaticResource BrandDark}" Padding="20">
+            <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                <Label Text="Afro-Phloem" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource BrandGold}" />
+                <Label Text="Connecting Africa to its diaspora" FontSize="12" TextColor="White" Opacity="0.7" />
+            </VerticalStackLayout>
+        </Grid>
+    </Shell.FlyoutHeader>
+   
+    <FlyoutItem Title="Home">
+        <ShellContent ContentTemplate="{DataTemplate views:HomePage}" Route="home" />
+    </FlyoutItem>
+    <FlyoutItem Title="About">
+        <ShellContent ContentTemplate="{DataTemplate views:AboutPage}" Route="about" />
+    </FlyoutItem>
+    <FlyoutItem Title="Browse &amp; Order">
+        <ShellContent ContentTemplate="{DataTemplate views:FoodListingPage}" Route="listing" />
+    </FlyoutItem>
+    <FlyoutItem Title="Sellers &amp; Vendors">
+        <ShellContent ContentTemplate="{DataTemplate views:VendorsListPage}" Route="vendors" />
+    </FlyoutItem>
+    <FlyoutItem Title="Become a Seller">
+        <ShellContent ContentTemplate="{DataTemplate views:SellerSetupPage}" Route="sellersetup" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Seller Dashboard">
+        <ShellContent ContentTemplate="{DataTemplate views:SellerDashboardPage}" Route="dashboard" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Send Food to UK">
+        <ShellContent ContentTemplate="{DataTemplate views:InternationalDeliveryPage}" Route="international" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Sign Up / Log In">
+        <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
+    </FlyoutItem>
+
+    <!-- Checkout is reached via navigation, not the flyout 
+    <ShellContent ContentTemplate="{DataTemplate views:CheckoutPage}" Route="checkout"
+                  Shell.FlyoutItemIsVisible="False" Shell.NavBarIsVisible="False" />-->
+
+</Shell>

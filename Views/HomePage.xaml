@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:HomeViewModel"
+             x:Class="AfroPhloem.Views.HomePage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Afro-Phloem">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <controls:AppHeaderBar Grid.Row="0"
+                                Countries="{Binding Countries}"
+                                SelectedCountry="{Binding SelectedCountry}"
+                                SearchText="{Binding SearchText}"
+                                ShowSearch="True"
+                                ShowBackButton="False"/>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- ============ GREETING HERO ============ -->
+                <Border StrokeShape="Rectangle" Stroke="Transparent" Padding="20,22">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#2B3A25" Offset="0.0" />
+                            <GradientStop Color="#3F5A2E" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="4" MaximumWidthRequest="900" HorizontalOptions="Center">
+                        <Label Text="Good to see you 👋" TextColor="{StaticResource BrandGoldLight}" FontSize="14" />
+                        <Label Text="What are you craving today?" TextColor="White" FontSize="22" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Padding="16" Spacing="20" MaximumWidthRequest="900" HorizontalOptions="Center">
+
+                    <!-- ============ QUICK ACTIONS ============ -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,-28,0,0">
+                        <Border Grid.Column="0" Style="{StaticResource QuickActionCard}">
+                            <Border.GestureRecognizers>
+                                <!--<TapGestureRecognizer Command="{Binding GoToBuyCommand}" />-->
+                                <TapGestureRecognizer Command="{Binding GoToVendorsCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandGreen}">
+                                    <Label Text="🧺" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Buy Food" FontAttributes="Bold" FontSize="15" HorizontalOptions="Center" TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="Browse local vendors" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource QuickActionCard}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToSellCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandGold}">
+                                    <Label Text="🏪" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Sell Food" FontAttributes="Bold" FontSize="15" HorizontalOptions="Center" TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="Start earning today" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <!-- ============ PROMO BANNER ============ -->
+                    <Border StrokeShape="RoundRectangle 16" Stroke="Transparent" Padding="16">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#E29A2D" Offset="0.0" />
+                                <GradientStop Color="#C9A24B" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Label Grid.Column="0" Text="✈️" FontSize="28" VerticalOptions="Center" Margin="0,0,12,0" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="Free delivery on your first UK order" TextColor="White" FontAttributes="Bold" FontSize="14.5" />
+                                <Label Text="Send authentic African food straight to family in the diaspora" TextColor="White" Opacity="0.9" FontSize="12" LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <!-- ============ CATEGORY PILLS ============ -->
+                    <CollectionView ItemsSource="{Binding Categories}" SelectionMode="Single"
+                                     SelectedItem="{Binding SelectedCategory}" HeightRequest="44">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Border x:Name="PillBorder" StrokeShape="RoundRectangle 20" Padding="16,9"
+                                        BackgroundColor="{StaticResource BrandCard}" Stroke="{StaticResource BrandBorder}">
+                                    <Label x:Name="PillText" Text="{Binding .}" Style="{StaticResource PillLabel}" />
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="Selected">
+                                                <VisualState.Setters>
+                                                    <Setter TargetName="PillBorder" Property="Border.BackgroundColor" Value="{StaticResource BrandGreen}" />
+                                                    <Setter TargetName="PillBorder" Property="Border.Stroke" Value="{StaticResource BrandGreen}" />
+                                                    <Setter TargetName="PillText" Property="Label.TextColor" Value="White" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- ============ POPULAR DISHES ============ -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Popular Dishes" Style="{StaticResource SectionTitle}" />
+                        <Label Grid.Column="1" Text="See all" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToBuyCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding FeaturedDishes}" HeightRequest="245">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="14" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Dish">
+                                <Border Style="{StaticResource DishCard}" WidthRequest="165">
+                                    <VerticalStackLayout Spacing="0">
+                                        <Grid HeightRequest="120">
+                                            <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
+                                            <Border Style="{StaticResource RatingBadge}" HorizontalOptions="End" VerticalOptions="Start" Margin="8">
+                                                <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                                            </Border>
+                                        </Grid>
+                                        <VerticalStackLayout Spacing="4" Padding="10,8,10,12">
+                                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="14.5"
+                                                   TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding VendorName}" Style="{StaticResource SubtleLabel}" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding Price, StringFormat='£{0:0.00}'}" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandGreen}" FontSize="15" />
+                                            <Button Text="Order" Style="{StaticResource PrimaryButton}" HeightRequest="34" FontSize="13"
+                                                    Command="{Binding BindingContext.AddToCartCommand, Source={x:Reference RootPage}}"
+                                                    CommandParameter="{Binding .}" />
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- ============ TOP SELLERS ============ -->
+                    <Label Text="Top Sellers" Style="{StaticResource SectionTitle}" />
+
+                    <CollectionView ItemsSource="{Binding TopSellers}" HeightRequest="215">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="14" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Vendor">
+                                <Border Style="{StaticResource VendorCard}" WidthRequest="175">
+                                    <VerticalStackLayout Spacing="0">
+
+                                        <!-- Cover banner + overlapping avatar + floating badges -->
+                                        <Grid HeightRequest="72">
+                                            <Border StrokeShape="Rectangle" Stroke="Transparent">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#3F5A2E" Offset="0.0" />
+                                                        <GradientStop Color="#2B3A25" Offset="1.0" />
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+
+                                            <!-- Verified badge, top-left -->
+                                            <Border Style="{StaticResource RatingBadge}" HorizontalOptions="Start" VerticalOptions="Start"
+                                                    Margin="8" IsVisible="{Binding IsVerified}">
+                                                <Label Text="✅ Verified" TextColor="White" FontSize="10" FontAttributes="Bold" />
+                                            </Border>
+
+                                            <!-- Rating badge, top-right -->
+                                            <Border Style="{StaticResource RatingBadge}" HorizontalOptions="End" VerticalOptions="Start" Margin="8">
+                                                <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                                            </Border>
+
+                                            <Border StrokeShape="RoundRectangle 30" Stroke="{StaticResource BrandCard}" StrokeThickness="3"
+                                                    WidthRequest="60" HeightRequest="60" VerticalOptions="End" Margin="0,0,0,-30"
+                                                    BackgroundColor="{StaticResource BrandCream}">
+                                                <Image Source="header_logo.png" Aspect="AspectFit" Margin="6" />
+                                            </Border>
+                                        </Grid>
+
+                                        <VerticalStackLayout Spacing="4" Padding="12,36,12,14" HorizontalOptions="Center">
+                                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="14"
+                                                    TextColor="{StaticResource BrandTextDark}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                                            <Button Text="View Shop" Style="{StaticResource OutlineButton}" FontSize="12" HeightRequest="34"
+                                                    Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
+                                                    CommandParameter="{Binding .}" />
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <!-- Checkout bar -->
+        <Grid Grid.Row="2" Padding="16" BackgroundColor="{StaticResource BrandDark}"
+                IsVisible="{Binding CartCount, Converter={StaticResource IntToBoolConverter}}">
+            <Button Text="{Binding CartCount, StringFormat='Checkout · {0} item(s) →'}"
+            Style="{StaticResource CtaButton}" Command="{Binding GoToCheckoutCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>

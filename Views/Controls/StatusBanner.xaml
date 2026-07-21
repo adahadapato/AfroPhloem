@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AfroPhloem.Views.Controls.StatusBanner"
+             x:Name="Root">
+
+    <Border x:Name="StatusBorder" StrokeShape="RoundRectangle 10" Padding="12,10"
+            IsVisible="{Binding Message, Source={x:Reference Root}, Converter={StaticResource StringNotEmptyConverter}}">
+
+        <Label x:Name="MessageLabel" Text="{Binding Message, Source={x:Reference Root}}"
+               HorizontalTextAlignment="Center" FontSize="14" />
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="StatusStates">
+                <VisualState x:Name="Success">
+                    <VisualState.Setters>
+                        <Setter TargetName="MessageLabel" Property="Label.TextColor" Value="{StaticResource BrandSuccess}" />
+                        <Setter Property="BackgroundColor" Value="#E9F1E4" />
+                        <Setter Property="Stroke" Value="{StaticResource BrandSuccess}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Error">
+                    <VisualState.Setters>
+                        <Setter TargetName="MessageLabel" Property="Label.TextColor" Value="{StaticResource BrandDanger}" />
+                        <Setter Property="BackgroundColor" Value="#FBEAE8" />
+                        <Setter Property="Stroke" Value="{StaticResource BrandDanger}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+    </Border>
+</ContentView>

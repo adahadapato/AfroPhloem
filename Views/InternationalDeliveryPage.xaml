@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:models="clr-namespace:AfroPhloem.Models"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:InternationalDeliveryViewModel"
+             x:Class="AfroPhloem.Views.InternationalDeliveryPage"
+             Shell.NavBarIsVisible="False"
+             Title="Deliver to UK">
+
+    <Grid RowDefinitions="Auto,*">
+        <controls:AppHeaderBar Grid.Row="0" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
+
+                <Label Text="✈️ Send African Food to the UK" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+                <Label Text="Dry foods, packaged African items, and bulk diaspora orders — delivered legally and reliably."
+                   Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Sender Name" Text="{Binding SenderName}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Recipient Name" Text="{Binding RecipientName}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Editor Placeholder="UK Delivery Address" Text="{Binding UkAddress}" BackgroundColor="Transparent" HeightRequest="80" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="What are you sending? (e.g., dried plantain, egusi, spices)"
+                       Text="{Binding ItemDescription}" BackgroundColor="Transparent" />
+                </Border>
+
+                <Label Text="Delivery Type" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                <CollectionView ItemsSource="{Binding SpeedOptions}" SelectionMode="Single"
+                        SelectedItem="{Binding SelectedSpeed}" HeightRequest="150">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:DeliverySpeed">
+                            <Grid Padding="10,8">
+                                <Label x:Name="OptionLabel" Text="{Binding .}" TextColor="{StaticResource BrandGold}" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="OptionLabel" Property="Label.TextColor" Value="White" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="{Binding EstimatedFee, StringFormat='Estimated fee: £{0:0.00}'}" FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" />
+
+                <Button Text="Schedule Delivery →" Style="{StaticResource CtaButton}" Command="{Binding ScheduleDeliveryCommand}" />
+
+                 <!-- <Label Text="{Binding StatusMessage}" TextColor="{StaticResource BrandDanger}" HorizontalTextAlignment="Center" />-->
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

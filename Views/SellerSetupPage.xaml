@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:SellerSetupViewModel"
+             x:Class="AfroPhloem.Views.SellerSetupPage"
+             Shell.NavBarIsVisible="False"
+             Title="Become a Seller">
+
+    <Grid RowDefinitions="Auto,*">
+        <controls:AppHeaderBar Grid.Row="0" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
+
+                <Label Text="Set Up Your Vendor Profile" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+                <Label Text="Home cooks, small businesses, and market vendors are all welcome." Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+
+                <Frame Style="{StaticResource CardFrame}">
+                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                        <Image Source="dotnet_bot.png" HeightRequest="80" WidthRequest="80" />
+                        <Button Text="Upload Shop Logo" Style="{StaticResource OutlineButton}" Command="{Binding PickLogoCommand}" />
+                        <Label Text="{Binding LogoFileName}" Style="{StaticResource SubtleLabel}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Business Name" Text="{Binding BusinessName}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Contact Details (phone or email)" Text="{Binding ContactDetails}" BackgroundColor="Transparent" />
+                </Border>
+
+                <Button Text="Create Vendor Profile" Style="{StaticResource PrimaryButton}" Command="{Binding CreateVendorProfileCommand}" />
+
+                <!--<Label Text="{Binding StatusMessage}" TextColor="{StaticResource BrandDanger}" HorizontalTextAlignment="Center" />-->
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

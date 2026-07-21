@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
+             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             x:DataType="vm:RegisterViewModel"
+             x:Class="AfroPhloem.Views.RegisterPage"
+             Shell.NavBarIsVisible="False"
+             Title="Sign Up">
+
+    <Grid RowDefinitions="Auto,*">
+        <controls:AppHeaderBar Grid.Row="0" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
+
+                <Label Text="Create your Afro-Phloem account" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+
+                <!-- Role toggle -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="0" HeightRequest="46">
+                    <Button Grid.Column="0" Text="Register as Buyer" Command="{Binding SelectBuyerCommand}" CornerRadius="0">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSellerRole}" Value="False">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
+                                <Setter Property="TextColor" Value="White" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSellerRole}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
+                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Grid.Column="1" Text="Register as Seller" Command="{Binding SelectSellerCommand}" CornerRadius="0">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSellerRole}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
+                                <Setter Property="TextColor" Value="White" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSellerRole}" Value="False">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
+                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </Grid>
+
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Full Name" Text="{Binding FullName}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Phone Number" Keyboard="Telephone" Text="{Binding PhoneNumber}" BackgroundColor="Transparent" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}">
+                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Password}" BackgroundColor="Transparent" />
+                </Border>
+
+                <!-- Seller-only extra field -->
+                <VerticalStackLayout Spacing="8" IsVisible="{Binding IsSellerRole}">
+                    <Label Text="Shop Logo" FontAttributes="Bold" />
+                    <Button Text="Upload Shop Logo" Style="{StaticResource OutlineButton}" Command="{Binding PickShopLogoCommand}" />
+                    <Label Text="{Binding ShopLogoFileName}" Style="{StaticResource SubtleLabel}" />
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout Spacing="8">
+                    <CheckBox IsChecked="{Binding AgreedToTerms}" />
+                    <Label Text="I agree to the Terms &amp; Conditions" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Button Text="Sign Up" Style="{StaticResource PrimaryButton}" Command="{Binding SignUpCommand}" />
+
+                <!--<Label Text="{Binding StatusMessage}" TextColor="{StaticResource BrandDanger}" HorizontalTextAlignment="Center" />-->
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
