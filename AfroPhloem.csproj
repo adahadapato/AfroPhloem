@@ -15,7 +15,7 @@
     <Nullable>enable</Nullable>
 
     <!-- Display name -->
-    <ApplicationTitle>Afro-Phloem</ApplicationTitle>
+    <ApplicationTitle>Phloem</ApplicationTitle>
 
     <!-- App Identifier -->
     <ApplicationId>com.afrophloem.app</ApplicationId>
@@ -69,6 +69,9 @@
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </MauiXaml>
     <MauiXaml Update="Views\Controls\StatusBanner.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\LoginPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </MauiXaml>
     <MauiXaml Update="Views\VendorsListPage.xaml">

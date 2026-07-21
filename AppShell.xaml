@@ -3,14 +3,14 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:AfroPhloem.Views"
        x:Class="AfroPhloem.AppShell"
-       Title="Afro-Phloem"
+       Title="Phloem"
        FlyoutBehavior="Flyout"
        BackgroundColor="{StaticResource BrandDark}">
 
     <Shell.FlyoutHeader>
         <Grid HeightRequest="140" BackgroundColor="{StaticResource BrandDark}" Padding="20">
             <VerticalStackLayout VerticalOptions="Center" Spacing="4">
-                <Label Text="Afro-Phloem" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource BrandGold}" />
+                <Label Text="Phloem" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource BrandGold}" />
                 <Label Text="Connecting Africa to its diaspora" FontSize="12" TextColor="White" Opacity="0.7" />
             </VerticalStackLayout>
         </Grid>
@@ -40,10 +40,18 @@
         <ShellContent ContentTemplate="{DataTemplate views:InternationalDeliveryPage}" Route="international" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Sign Up / Log In">
+    <!--<FlyoutItem Title="Sign Up / Log In">
         <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
+    </FlyoutItem>-->
+
+
+    <FlyoutItem Title="Log In">
+        <ShellContent ContentTemplate="{DataTemplate views:LoginPage}" Route="login" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Sign Up">
+        <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
+    </FlyoutItem>
     <!-- Checkout is reached via navigation, not the flyout 
     <ShellContent ContentTemplate="{DataTemplate views:CheckoutPage}" Route="checkout"
                   Shell.FlyoutItemIsVisible="False" Shell.NavBarIsVisible="False" />-->

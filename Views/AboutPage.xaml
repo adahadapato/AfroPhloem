@@ -5,7 +5,7 @@
              xmlns:models="clr-namespace:AfroPhloem.Models"
              x:Class="AfroPhloem.Views.AboutPage"
              Shell.NavBarIsVisible="False"
-             Title="About Afro-Phloem">
+             Title="About Phloem">
 
     <Grid RowDefinitions="Auto,*">
         <controls:AppHeaderBar Grid.Row="0" />
@@ -21,7 +21,7 @@
                     <VerticalStackLayout Padding="24,44" Spacing="10" HorizontalOptions="Center" MaximumWidthRequest="640">
                         <Image Source="logo_large.png" HeightRequest="110" WidthRequest="110" HorizontalOptions="Center" />
                         <Label Text="PLATFORM OVERVIEW" Style="{StaticResource EyebrowLabel}" HorizontalOptions="Center" Margin="0,10,0,0" />
-                        <Label Text="Afro-Phloem" Style="{StaticResource HeroTitle}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                        <Label Text="Phloem" Style="{StaticResource HeroTitle}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                         <Label Text="Connecting Africa to its diaspora, one meal at a time." Style="{StaticResource HeroSubtitle}"
                                HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
@@ -56,7 +56,7 @@
                     <Label LineBreakMode="WordWrap" FontSize="15" TextColor="{StaticResource BrandTextDark}">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="Afro-Phloem is a culturally focused food marketplace connecting buyers and sellers in " />
+                                <Span Text="Phloem is a culturally focused food marketplace connecting buyers and sellers in " />
                                 <Span Text="Ghana, Nigeria, and the UK" FontAttributes="Bold" />
                                 <Span Text=", with built-in support for " />
                                 <Span Text="local and cross-border African food trade" FontAttributes="Bold" />
@@ -70,7 +70,7 @@
 
                 <!-- ============ WHAT WE DO DIFFERENTLY ============ -->
                 <VerticalStackLayout Padding="24,30,24,10" Spacing="6" HorizontalOptions="Center">
-                    <Label Text="What Afro-Phloem Does Differently" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+                    <Label Text="What Phloem Does Differently" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
                     <Label Text="Existing platforms are a delivery company. Afro-Phloem is a cultural food ecosystem plus a cross-border trade platform — and that difference is massive."
                            Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" MaximumWidthRequest="600" />
                 </VerticalStackLayout>
@@ -115,7 +115,7 @@
                 <!-- ============ LONG-TERM STRATEGIC MOAT ============ -->
                 <VerticalStackLayout Padding="24,10,24,40" Spacing="10" MaximumWidthRequest="640" HorizontalOptions="Center">
                     <Label Text="Long-Term Strategic Moat" Style="{StaticResource SectionTitle}" />
-                    <Label Text="Afro-Phloem can evolve into:" FontSize="14" TextColor="{StaticResource BrandTextMuted}" />
+                    <Label Text="Phloem can evolve into:" FontSize="14" TextColor="{StaticResource BrandTextMuted}" />
 
                     <VerticalStackLayout Spacing="8">
                         <HorizontalStackLayout Spacing="8">
@@ -143,7 +143,7 @@
                 <!-- ============ FOOTER ============ -->
                 <Grid BackgroundColor="{StaticResource BrandDark}" Padding="24,18">
                     <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
-                        <Label Text="Afro-Phloem" TextColor="{StaticResource BrandGold}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Phloem" TextColor="{StaticResource BrandGold}" FontAttributes="Bold" HorizontalTextAlignment="Center" />
                         <Label Text="Version 1.0" TextColor="White" Opacity="0.6" FontSize="12" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Grid>

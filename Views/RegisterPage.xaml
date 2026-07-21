@@ -14,7 +14,7 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
 
-                <Label Text="Create your Afro-Phloem account" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
+                <Label Text="Create your Phloem account" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
 
                 <!-- Role toggle -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="0" HeightRequest="46">

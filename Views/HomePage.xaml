@@ -8,7 +8,7 @@
              x:Class="AfroPhloem.Views.HomePage"
              x:Name="RootPage"
              Shell.NavBarIsVisible="False"
-             Title="Afro-Phloem">
+             Title="Phloem">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
