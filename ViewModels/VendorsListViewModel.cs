@@ -22,7 +22,7 @@ public partial class VendorsListViewModel : ObservableObject
     public ObservableCollection<Vendor> Vendors { get; } = new();
 
     [ObservableProperty]
-    private CountryOption selectedCountry;
+    public partial CountryOption SelectedCountry { get; set; }
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -37,7 +37,7 @@ public partial class VendorsListViewModel : ObservableObject
     {
         _data = data;
         _cart = cart;
-        selectedCountry = _cart.SelectedCountry;
+        SelectedCountry = _cart.SelectedCountry;
         RefreshVendors();
     }
 

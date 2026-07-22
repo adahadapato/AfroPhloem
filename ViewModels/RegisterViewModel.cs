@@ -17,49 +17,49 @@ public partial class RegisterViewModel : ObservableObject
     /// property for the user's full name.
     /// </summary>
     [ObservableProperty]
-    private string fullName = string.Empty;
+    public partial string FullName { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's email address.
     /// </summary>
     [ObservableProperty]
-    private string email = string.Empty;
+    public partial string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's phone number.
     /// </summary>
     [ObservableProperty]
-    private string phoneNumber = string.Empty;
+    public partial string PhoneNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's delivery address.
     /// </summary>
     [ObservableProperty]
-    private string address = string.Empty;
+    public partial string Address { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's password.
     /// </summary>
     [ObservableProperty]
-    private string password = string.Empty;
+    public partial string Password { get; set; } = string.Empty;
 
     /// <summary>
     /// property indicating whether the user has agreed to the terms and conditions.
     /// </summary>
     [ObservableProperty]
-    private bool agreedToTerms;
+    public partial bool AgreedToTerms { get; set; }
 
     /// <summary>
     /// property for the status message to display to the user.
     /// </summary>
     [ObservableProperty]
-    private string statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     /// <summary>
     /// property indicating whether there is an error in the registration process.
     /// </summary>
     [ObservableProperty]
-    private bool isError;
+    public partial bool IsError { get; set; }
 
     /// <summary>
     /// creates a new instance of the RegisterViewModel class, initializing it with

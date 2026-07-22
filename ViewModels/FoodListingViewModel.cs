@@ -16,22 +16,22 @@ public partial class FoodListingViewModel : ObservableObject
     public ObservableCollection<Dish> Dishes { get; } = new();
 
     [ObservableProperty]
-    private CountryOption selectedCountry;
+    public partial CountryOption SelectedCountry { get; set; }
 
     [ObservableProperty]
-    private string selectedDeliveryTime;
+    public partial string SelectedDeliveryTime { get; set; }
 
     [ObservableProperty]
-    private int cartCount;
+    public partial int CartCount { get; set; }
 
     [ObservableProperty]
-    private decimal cartTotal;
+    public partial decimal CartTotal { get; set; }
 
     [ObservableProperty]
-    private string? filterVendorId;
+    public partial string? FilterVendorId { get; set; }
 
     [ObservableProperty]
-    private string filterVendorName = string.Empty;
+    public partial string FilterVendorName { get; set; } = string.Empty;
 
     public bool IsFilteredByVendor => !string.IsNullOrEmpty(FilterVendorId);
 
@@ -39,8 +39,8 @@ public partial class FoodListingViewModel : ObservableObject
     {
         _data = data;
         _cart = cart;
-        selectedCountry = _cart.SelectedCountry;
-        selectedDeliveryTime = DeliveryTimes[0];
+        SelectedCountry = _cart.SelectedCountry;
+        SelectedDeliveryTime = DeliveryTimes[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshCartSummary();
         RefreshDishes();
         RefreshCartSummary();

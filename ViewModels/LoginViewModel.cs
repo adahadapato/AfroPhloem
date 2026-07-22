@@ -18,31 +18,31 @@ public partial class LoginViewModel : ObservableObject
     /// property for the user's email address, which is observable and can be bound to the UI.
     /// </summary>
     [ObservableProperty]
-    private string email = string.Empty;
+    public partial string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's password, which is observable and can be bound to the UI.
     /// </summary>
     [ObservableProperty]
-    private string password = string.Empty;
+    public partial string Password { get; set; } = string.Empty;
 
     /// <summary>
     /// property indicating whether the user wants to be remembered for future logins, which is observable and can be bound to the UI.
     /// </summary>
     [ObservableProperty]
-    private bool rememberMe;
+    public partial bool RememberMe { get; set; }
 
     /// <summary>
     /// property for the status message displayed to the user, which is observable and can be bound to the UI.
     /// </summary>
     [ObservableProperty]
-    private string statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     /// <summary>
     /// property indicating whether there is an error state, which is observable and can be bound to the UI.
     /// </summary>
     [ObservableProperty]
-    private bool isError;
+    public partial bool IsError { get; set; }
 
     /// <summary>
     /// creates a new instance of the LoginViewModel class, initializing it with

@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace AfroPhloem.Views.Controls;
 
-	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class StatusBanner : ContentView
-	{
-		public StatusBanner ()
-		{
-			InitializeComponent ();
-            Loaded += (_, _) => ApplyState();
-        }
+[XamlCompilation(XamlCompilationOptions.Compile)]
+public partial class StatusBanner : ContentView
+{
+    public StatusBanner()
+    {
+        InitializeComponent();
+        Loaded += (_, _) => ApplyState();
+    }
 
     public static readonly BindableProperty MessageProperty =
     BindableProperty.Create(nameof(Message), typeof(string), typeof(StatusBanner), string.Empty);

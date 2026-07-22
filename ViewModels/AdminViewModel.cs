@@ -15,23 +15,23 @@ public partial class AdminViewModel : ObservableObject
     public ObservableCollection<DeliveryOrder> Shipments { get; } = new();
 
     [ObservableProperty]
-    private int totalVendors;
+    public partial int TotalVendors { get; set; }
 
     [ObservableProperty]
-    private int pendingApprovalCount;
+    public partial int PendingApprovalCount { get; set; }
 
     public bool HasPendingApprovals => PendingApprovalCount > 0;
 
     partial void OnPendingApprovalCountChanged(int value) => OnPropertyChanged(nameof(HasPendingApprovals));
 
     [ObservableProperty]
-    private int blockedCount;
+    public partial int BlockedCount { get; set; }
 
     [ObservableProperty]
-    private int totalShipments;
+    public partial int TotalShipments { get; set; }
 
     [ObservableProperty]
-    private string activeTab = "Sellers"; // "Sellers" or "Shipments"
+    public partial string ActiveTab { get; set; } = "Sellers";
 
     public AdminViewModel(MockDataService data)
     {

@@ -26,11 +26,11 @@ public partial class Vendor : ObservableObject
     public DateTime JoinedAt { get; set; } = DateTime.Now;
 
     [ObservableProperty]
-    private bool isVerified;
+    public partial bool IsVerified { get; set; }
 
     [ObservableProperty]
-    private bool isApproved = true;
+    public partial bool IsApproved { get; set; } = true;
 
     [ObservableProperty]
-    private bool isBlocked;
+    public partial bool IsBlocked { get; set; }
 }

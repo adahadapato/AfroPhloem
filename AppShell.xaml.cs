@@ -10,8 +10,8 @@ public partial class AppShell : Shell
     /// the shell and registering routes for navigation.
     /// </summary>
     public AppShell()
-	{
-		InitializeComponent();
+    {
+        InitializeComponent();
         Routing.RegisterRoute(nameof(Views.CheckoutPage), typeof(Views.CheckoutPage));
     }
 }

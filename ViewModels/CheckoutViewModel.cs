@@ -37,27 +37,27 @@ public partial class CheckoutViewModel : ObservableObject
     /// currently selected payment method,
     /// </summary>
     [ObservableProperty]
-    private PaymentMethodOption selectedPaymentMethod;
+    public partial PaymentMethodOption SelectedPaymentMethod { get; set; }
 
     /// <summary>
     /// property indicating whether the order has been placed,
     /// </summary>
     [ObservableProperty]
-    private bool orderPlaced;
+    public partial bool OrderPlaced { get; set; }
 
     /// <summary>
     /// property holding the confirmation message 
     /// displayed to the user after placing an order,
     /// </summary>
     [ObservableProperty]
-    private string confirmationMessage = string.Empty;
+    public partial string ConfirmationMessage { get; set; } = string.Empty;
 
     /// <summary>
     /// observable property storing the order 
     /// number generated upon order placement,
     /// </summary>
     [ObservableProperty]
-    private string orderNumber = string.Empty;
+    public partial string OrderNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets the currency symbol for the selected country.
@@ -110,7 +110,7 @@ public partial class CheckoutViewModel : ObservableObject
     {
         _cart = cart;
         _data = data;
-        selectedPaymentMethod = PaymentMethods[0];
+        SelectedPaymentMethod = PaymentMethods[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshTotals();
     }
 

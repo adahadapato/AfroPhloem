@@ -33,7 +33,7 @@ public static class DependencyInjection
         services.AddTransient<VendorsListViewModel>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<AdminViewModel>();
-        
+
         // ---- Pages ----
         services.AddTransient<AboutPage>();
         services.AddTransient<HomePage>();

@@ -36,7 +36,7 @@ public partial class HomeViewModel : ObservableObject
     public ObservableCollection<Vendor> TopSellers { get; } = new();
 
     [ObservableProperty]
-    private CountryOption selectedCountry;
+    public partial CountryOption SelectedCountry { get; set; }
 
     [ObservableProperty]
     private string selectedCategory = "Popular";
@@ -57,7 +57,7 @@ public partial class HomeViewModel : ObservableObject
     {
         _data = data;
         _cart = cart;
-        selectedCountry = _cart.SelectedCountry;
+        SelectedCountry = _cart.SelectedCountry;
         _cart.Items.CollectionChanged += (_, _) => RefreshCartCount();
         RefreshDishes();
         RefreshCartCount();

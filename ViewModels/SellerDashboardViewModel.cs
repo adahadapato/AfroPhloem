@@ -13,7 +13,7 @@ public partial class SellerDashboardViewModel : ObservableObject
     public ObservableCollection<Dish> MyDishes { get; } = new();
 
     [ObservableProperty]
-    private Vendor? currentVendor;
+    public partial Vendor? CurrentVendor { get; set; }
 
     public SellerDashboardViewModel(MockDataService data)
     {

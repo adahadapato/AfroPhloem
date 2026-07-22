@@ -10,22 +10,22 @@ public partial class SellerSetupViewModel : ObservableObject
     private readonly SessionService _session;
 
     [ObservableProperty]
-    private string businessName = string.Empty;
+    public partial string BusinessName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string businessEmail = string.Empty;
+    public partial string BusinessEmail { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string businessPhone = string.Empty;
+    public partial string BusinessPhone { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string logoFileName = string.Empty;
+    public partial string LogoFileName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private bool isError;
+    public partial bool IsError { get; set; }
 
     public bool IsLoggedIn => _session.IsLoggedIn;
 

@@ -7,13 +7,11 @@ public partial class Dish : ObservableObject
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     [ObservableProperty]
-    private string name = string.Empty;
-
+    public partial string Name { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = "dotnet_bot.png";
 
     [ObservableProperty]
-    private decimal price;
-
+    public partial decimal Price { get; set; }
     public double Rating { get; set; }
     public string Category { get; set; } = "Popular";
     public string Country { get; set; } = "Ghana";
