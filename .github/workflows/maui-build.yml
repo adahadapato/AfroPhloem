@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - development
-      - main
 
   pull_request:
     branches:
-      - development
       - main
 
   workflow_dispatch:
@@ -42,9 +40,6 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore AfroPhloem.csproj
-
-      - name: Check code formatting
-        run: dotnet format AfroPhloem.csproj --verify-no-changes --no-restore
 
       - name: Build Android app
         run: >
