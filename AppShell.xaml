@@ -43,7 +43,9 @@
     <!--<FlyoutItem Title="Sign Up / Log In">
         <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
     </FlyoutItem>-->
-
+    <FlyoutItem Title="Admin Dashboard">
+        <ShellContent ContentTemplate="{DataTemplate views:AdminPage}" Route="admin" />
+    </FlyoutItem>
 
     <FlyoutItem Title="Log In">
         <ShellContent ContentTemplate="{DataTemplate views:LoginPage}" Route="login" />

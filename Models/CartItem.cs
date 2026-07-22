@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
+
 namespace AfroPhloem.Models;
 
 public partial class CartItem : ObservableObject

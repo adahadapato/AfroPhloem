@@ -1,9 +1,9 @@
-﻿using System.Collections.ObjectModel;
-using System.Linq;
+﻿using AfroPhloem.Models;
+using AfroPhloem.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace AfroPhloem.ViewModels;
 
@@ -84,6 +84,8 @@ public partial class CheckoutViewModel : ObservableObject
     /// </summary>
     public int ItemCount => _cart.Items.Sum(i => i.Quantity);
 
+    private readonly MockDataService _data;
+
     /// <summary>
     /// Gets a value indicating whether the cart has a pending international delivery.
     /// </summary>
@@ -104,9 +106,10 @@ public partial class CheckoutViewModel : ObservableObject
     /// the provided cart service and setting up event handlers for cart item changes.
     /// </summary>
     /// <param name="cart"></param>
-    public CheckoutViewModel(CartService cart)
+    public CheckoutViewModel(CartService cart, MockDataService data)
     {
         _cart = cart;
+        _data = data;
         selectedPaymentMethod = PaymentMethods[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshTotals();
     }
@@ -160,6 +163,10 @@ public partial class CheckoutViewModel : ObservableObject
         OrderNumber = $"AP-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}";
         ConfirmationMessage = $"Your order has been placed and {SelectedPaymentMethod.Name} will be charged {CurrencySymbol}{Total:0.00}.";
         OrderPlaced = true;
+
+        if (_cart.PendingInternationalDelivery is not null)
+            _data.AddShipment(_cart.PendingInternationalDelivery);
+
         _cart.Clear();
         RefreshTotals();
     }

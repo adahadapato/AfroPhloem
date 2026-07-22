@@ -11,48 +11,54 @@
     <Grid RowDefinitions="Auto,*">
         <controls:AppHeaderBar Grid.Row="0" ShowBackButton="False" />
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="18" MaximumWidthRequest="440" HorizontalOptions="Center" VerticalOptions="Center">
+        <Grid Grid.Row="1">
+            <!--<Image Source="body_bg.png" Aspect="AspectFill" />
+            <BoxView BackgroundColor="Black" Opacity="0.25" />-->
 
-                <Image Source="logo_large.png" HeightRequest="90" WidthRequest="90" HorizontalOptions="Center" />
+            <ScrollView>
+                <VerticalStackLayout Padding="24" Spacing="18" MaximumWidthRequest="560" HorizontalOptions="Fill" VerticalOptions="Center">
 
-                <Label Text="Welcome back" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" FontSize="24" />
-                <Label Text="Log in to continue to Phloem" Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+                    <Image Source="logo_large.png" HeightRequest="90" WidthRequest="90" HorizontalOptions="Center" />
 
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" BackgroundColor="Transparent" />
-                </Border>
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Password}" BackgroundColor="Transparent" />
-                </Border>
+                    <Label Text="Welcome back" TextColor="{StaticResource BrandTextDark}" FontAttributes="Bold" FontSize="26" HorizontalTextAlignment="Center" />
+                    <Label Text="Log in to continue to Phloem" TextColor="{StaticResource BrandGoldLight}" HorizontalTextAlignment="Center" />
 
-                <Grid ColumnDefinitions="*,Auto">
-                    <HorizontalStackLayout Grid.Column="0" Spacing="8">
-                        <CheckBox IsChecked="{Binding RememberMe}" />
-                        <Label Text="Remember me" VerticalOptions="Center" FontSize="13" />
+                    <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
+                        <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" BackgroundColor="Transparent" HeightRequest="46" />
+                    </Border>
+                    <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
+                        <Entry Placeholder="Password" IsPassword="True" Text="{Binding Password}" BackgroundColor="Transparent" HeightRequest="46" />
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="8">
+                            <CheckBox IsChecked="{Binding RememberMe}" Color="{StaticResource BrandGoldLight}" />
+                            <Label Text="Remember me" VerticalOptions="Center" FontSize="13" TextColor="White" />
+                        </HorizontalStackLayout>
+                        <Label Grid.Column="1" Text="Forgot password?" TextColor="{StaticResource BrandGoldLight}"
+                               FontAttributes="Bold" FontSize="13" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ForgotPasswordCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+
+                    <Button Text="Log In" Style="{StaticResource PrimaryButton}" Command="{Binding LoginCommand}"
+                            HorizontalOptions="Fill" HeightRequest="52" />
+
+                    <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" HorizontalOptions="Fill" />
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,10,0,0">
+                        <Label Text="Don't have an account?" FontSize="13" TextColor="{StaticResource BrandTextDark}" Opacity="0.8" />
+                        <Label Text="Sign Up" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource BrandGoldLight}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding GoToRegisterCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </HorizontalStackLayout>
-                    <Label Grid.Column="1" Text="Forgot password?" TextColor="{StaticResource BrandGreen}"
-                           FontAttributes="Bold" FontSize="13" VerticalOptions="Center">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding ForgotPasswordCommand}" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                </Grid>
 
-                <Button Text="Log In" Style="{StaticResource PrimaryButton}" Command="{Binding LoginCommand}" />
-
-                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
-
-                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,10,0,0">
-                    <Label Text="Don't have an account?" FontSize="13" TextColor="{StaticResource BrandTextMuted}" />
-                    <Label Text="Sign Up" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource BrandGreen}">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding GoToRegisterCommand}" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                </HorizontalStackLayout>
-
-            </VerticalStackLayout>
-        </ScrollView>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
     </Grid>
 </ContentPage>

@@ -8,7 +8,8 @@
              Title="About Phloem">
 
     <Grid RowDefinitions="Auto,*">
-        <controls:AppHeaderBar Grid.Row="0" />
+        <controls:AppHeaderBar Grid.Row="0" 
+                               ShowSearch="False"/>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Spacing="0">

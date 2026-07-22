@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using AfroPhloem.Services;
 
 namespace AfroPhloem.ViewModels;
 
@@ -10,6 +11,9 @@ namespace AfroPhloem.ViewModels;
 /// state. Exposes commands for login, registration navigation, and password recovery.</remarks>
 public partial class LoginViewModel : ObservableObject
 {
+    private readonly MockDataService _data;
+    private readonly SessionService _session;
+
     /// <summary>
     /// property for the user's email address, which is observable and can be bound to the UI.
     /// </summary>
@@ -41,7 +45,20 @@ public partial class LoginViewModel : ObservableObject
     private bool isError;
 
     /// <summary>
-    /// command that handles the login process, validating user input and navigating to the home page upon successful login.
+    /// creates a new instance of the LoginViewModel class, initializing it with
+    /// the mock data service and session service used to authenticate and track the signed-in user.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="session"></param>
+    public LoginViewModel(MockDataService data, SessionService session)
+    {
+        _data = data;
+        _session = session;
+    }
+
+    /// <summary>
+    /// command that handles the login process, validating user input, authenticating against
+    /// stored accounts, and navigating to the home page upon successful login.
     /// </summary>
     /// <returns></returns>
     [RelayCommand]
@@ -54,9 +71,18 @@ public partial class LoginViewModel : ObservableObject
             return;
         }
 
-        // No real backend/auth yet - this is a mock sign-in for demo purposes.
+        // No real backend/auth yet - this checks against the in-memory mock user store.
+        var user = _data.Authenticate(Email, Password);
+        if (user is null)
+        {
+            IsError = true;
+            StatusMessage = "Invalid email or password.";
+            return;
+        }
+
+        _session.CurrentUser = user;
         IsError = false;
-        StatusMessage = "Welcome back!";
+        StatusMessage = $"Welcome back, {user.FullName}!";
         await Shell.Current.GoToAsync("//home");
     }
 

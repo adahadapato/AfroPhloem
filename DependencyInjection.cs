@@ -20,6 +20,7 @@ public static class DependencyInjection
         // ---- Services (singletons so mock "database" is shared across pages) ----
         services.AddSingleton<MockDataService>();
         services.AddSingleton<CartService>();
+        services.AddSingleton<SessionService>();
 
         // ---- ViewModels ----
         services.AddTransient<HomeViewModel>();
@@ -31,7 +32,8 @@ public static class DependencyInjection
         services.AddTransient<CheckoutViewModel>();
         services.AddTransient<VendorsListViewModel>();
         services.AddTransient<LoginViewModel>();
-
+        services.AddTransient<AdminViewModel>();
+        
         // ---- Pages ----
         services.AddTransient<AboutPage>();
         services.AddTransient<HomePage>();
@@ -43,5 +45,6 @@ public static class DependencyInjection
         services.AddTransient<CheckoutPage>();
         services.AddTransient<VendorsListPage>();
         services.AddTransient<LoginPage>();
+        services.AddTransient<AdminPage>();
     }
 }

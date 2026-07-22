@@ -4,32 +4,24 @@
              xmlns:models="clr-namespace:AfroPhloem.Models"
              x:Class="AfroPhloem.Views.Controls.AppHeaderBar"
              x:Name="Root">
-
     <!-- Full-width header with the stone texture background, flush against the top and sides of the screen -->
     <Border Stroke="Transparent"
             StrokeShape="RoundRectangle 0,0,0,0"
             Margin="0"
             Padding="0">
-
-        <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
-
+        <Grid RowDefinitions="Auto,Auto">
             <!-- Background texture, spans both rows, clipped to the Border's rounded corners -->
-            <Image Grid.RowSpan="2" Source="header_bg.jpg" Aspect="AspectFill" />
-
+            <Image Grid.RowSpan="2" Source="body_bg.png" Aspect="AspectFill" />
             <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10" Padding="16,12">
-
                 <!-- Hamburger -> opens the Shell flyout (text glyph, no image file dependency) -->
                 <Button Grid.Column="0" Text="☰" FontSize="22" FontAttributes="Bold"
                         BackgroundColor="Transparent" TextColor="{StaticResource BrandGoldLight}"
                         WidthRequest="40" HeightRequest="40" Padding="0"
                         Clicked="OnMenuClicked" VerticalOptions="Center" />
-
                 <!-- Circular logo badge -->
                 <Image Grid.Column="1" Source="header_logo.png" HeightRequest="36" WidthRequest="36" VerticalOptions="Center" />
-
                 <!-- App name -->
-                <Label Grid.Column="2" Text="Afro-Phloem" Style="{StaticResource LogoLabel}" FontSize="16" VerticalOptions="Center" />
-
+                <Label Grid.Column="2" Text="Phloem" Style="{StaticResource LogoLabel}" FontSize="16" VerticalOptions="Center" />
                 <!-- Country selector: flag-only pill, tap to choose -->
                 <Border Grid.Column="3" Stroke="Transparent" StrokeShape="RoundRectangle 18"
                         BackgroundColor="{StaticResource BrandCream}" Padding="10,0"
@@ -44,9 +36,8 @@
                     </HorizontalStackLayout>
                 </Border>
             </Grid>
-
             <!-- Search bar (optional per page) -->
-            <Border Grid.Row="1" Style="{StaticResource InputBorder}" Margin="16,0,16,12"
+            <Border Grid.Row="1" Style="{StaticResource InputBorder}" Margin="16,10,16,12"
                     IsVisible="{Binding ShowSearch, Source={x:Reference Root}}">
                 <Entry Placeholder="Search meals, ingredients, or vendors..."
                        Text="{Binding SearchText, Source={x:Reference Root}}" BackgroundColor="Transparent" />

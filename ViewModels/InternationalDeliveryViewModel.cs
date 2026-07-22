@@ -60,7 +60,8 @@ public partial class InternationalDeliveryViewModel : ObservableObject
             RecipientName = RecipientName,
             UkAddress = UkAddress,
             ItemDescription = ItemDescription,
-            Speed = SelectedSpeed
+            Speed = SelectedSpeed,
+            FromCountry = _cart.SelectedCountry?.Name ?? "Ghana"
         };
 
         IsError = false;

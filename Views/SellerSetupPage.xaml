@@ -11,31 +11,51 @@
     <Grid RowDefinitions="Auto,*">
         <controls:AppHeaderBar Grid.Row="0" />
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
+        <ScrollView Grid.Row="1" HorizontalOptions="Fill">
+            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="560" HorizontalOptions="Fill" WidthRequest="-1">
 
-                <Label Text="Set Up Your Vendor Profile" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
-                <Label Text="Home cooks, small businesses, and market vendors are all welcome." Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+                <Label Text="Set Up Your Vendor Profile" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" HorizontalOptions="Fill" />
+                <Label Text="Home cooks, small businesses, and market vendors are all welcome." Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" HorizontalOptions="Fill" />
 
-                <Frame Style="{StaticResource CardFrame}">
+                <Border StrokeShape="RoundRectangle 10" BackgroundColor="#EEF5EA" Stroke="{StaticResource BrandGreen}"
+                        Padding="12,8" IsVisible="{Binding IsLoggedIn}">
+                    <Label Text="{Binding LoggedInAsText}" FontSize="13" TextColor="{StaticResource BrandGreen}" />
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 10" BackgroundColor="#FBEAE8" Stroke="{StaticResource BrandDanger}"
+                        Padding="12,8" IsVisible="{Binding IsLoggedIn, Converter={StaticResource InvertedBoolConverter}}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="You need to log in first — a seller account is linked to your existing Phloem account."
+                               FontSize="13" TextColor="{StaticResource BrandDanger}" />
+                        <Button Text="Log In" Style="{StaticResource OutlineButton}" HeightRequest="36"
+                                Command="{Binding GoToLoginCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}" HorizontalOptions="Fill">
                     <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
                         <Image Source="dotnet_bot.png" HeightRequest="80" WidthRequest="80" />
                         <Button Text="Upload Shop Logo" Style="{StaticResource OutlineButton}" Command="{Binding PickLogoCommand}" />
                         <Label Text="{Binding LogoFileName}" Style="{StaticResource SubtleLabel}" />
                     </VerticalStackLayout>
-                </Frame>
-
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Business Name" Text="{Binding BusinessName}" BackgroundColor="Transparent" />
-                </Border>
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Contact Details (phone or email)" Text="{Binding ContactDetails}" BackgroundColor="Transparent" />
                 </Border>
 
-                <Button Text="Create Vendor Profile" Style="{StaticResource PrimaryButton}" Command="{Binding CreateVendorProfileCommand}" />
+                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill" WidthRequest="-1">
+                    <Entry Placeholder="Business Name" Text="{Binding BusinessName}" BackgroundColor="Transparent" HeightRequest="46" HorizontalOptions="Fill" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill" WidthRequest="-1">
+                    <Entry Placeholder="Business Email (leave blank to use your account email)" Keyboard="Email"
+                           Text="{Binding BusinessEmail}" BackgroundColor="Transparent" HeightRequest="46" HorizontalOptions="Fill" />
+                </Border>
+                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill" WidthRequest="-1">
+                    <Entry Placeholder="Business Phone (leave blank to use your account phone)" Keyboard="Telephone"
+                           Text="{Binding BusinessPhone}" BackgroundColor="Transparent" HeightRequest="46" HorizontalOptions="Fill" />
+                </Border>
 
-                <!--<Label Text="{Binding StatusMessage}" TextColor="{StaticResource BrandDanger}" HorizontalTextAlignment="Center" />-->
-                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+                <Button Text="Create Vendor Profile" Style="{StaticResource PrimaryButton}" Command="{Binding CreateVendorProfileCommand}"
+                        HorizontalOptions="Fill" HeightRequest="52" WidthRequest="-1" />
+
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" HorizontalOptions="Fill" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
