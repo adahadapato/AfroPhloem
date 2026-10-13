@@ -17,6 +17,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("admin", typeof(AdminPage));
         Routing.RegisterRoute("register", typeof(RegisterPage));
         Routing.RegisterRoute("international", typeof(InternationalDeliveryPage)); // Send Food to UK
+        Routing.RegisterRoute("address", typeof(DeliveryAddressPage));       // pick / add a delivery address
+
 
         // Checkout (was already reached with GoToAsync(nameof(CheckoutPage))).
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));

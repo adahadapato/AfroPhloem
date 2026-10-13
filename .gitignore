@@ -114,3 +114,8 @@ $RECYCLE.BIN/
 *.bak
 *.swp
 *~
+
+# Android signing credentials
+/Signing/
+*.jks
+*.keystore

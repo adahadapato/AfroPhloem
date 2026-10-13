@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    DeliveryAddressPage (NEW): pick a saved address or add a new one.
+    Opened from "Change delivery details" on Checkout and Orders (route "address").
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             x:DataType="vm:DeliveryAddressViewModel"
+             x:Class="Phloem.Views.DeliveryAddressPage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Delivery address">
+
+    <ContentPage.Resources>
+        <Style x:Key="LabelChip" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="Padding" Value="20,0" />
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <!-- Back -->
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="12"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,4">
+                    <Label Text="Delivery address" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="{Binding Subtitle}" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ GUEST NOTICE ============ -->
+                <Border BackgroundColor="{StaticResource BrandMintPale}" Stroke="{StaticResource BrandMint}"
+                        StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="14,12"
+                        IsVisible="{Binding IsGuest}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="Log in to save your addresses" FontSize="14" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandDark}" />
+                            <Label Text="You can still add one for this order below."
+                                   Style="{StaticResource SubtleLabel}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Log in" Command="{Binding GoToLoginCommand}"
+                                BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                FontAttributes="Bold" FontSize="13" CornerRadius="10"
+                                HeightRequest="36" Padding="16,0" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <!-- ============ SAVED ADDRESSES ============ -->
+                <Label Text="Saved addresses" Style="{StaticResource SectionTitle}" FontSize="17"
+                       Margin="2,6,0,0" IsVisible="{Binding HasAddresses}" />
+
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Addresses}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AddressOption">
+                            <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 14" Padding="14,12">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="Stroke" Value="{StaticResource BrandDark}" />
+                                        <Setter Property="StrokeThickness" Value="1.5" />
+                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding BindingContext.SelectCommand, Source={x:Reference RootPage}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <!-- Radio -->
+                                    <Grid WidthRequest="22" HeightRequest="22" VerticalOptions="Start" Margin="0,2,0,0">
+                                        <Ellipse Stroke="{StaticResource BrandDark}" StrokeThickness="2"
+                                                 WidthRequest="22" HeightRequest="22" />
+                                        <Ellipse Fill="{StaticResource BrandDark}" WidthRequest="12" HeightRequest="12"
+                                                 IsVisible="{Binding IsSelected}" />
+                                    </Grid>
+
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="{Binding Label}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                            <Border BackgroundColor="{StaticResource BrandMint}" StrokeThickness="0"
+                                                    StrokeShape="RoundRectangle 8" Padding="7,1" VerticalOptions="Center"
+                                                    IsVisible="{Binding IsDefault}">
+                                                <Label Text="Default" FontSize="10" FontAttributes="Bold"
+                                                       TextColor="{StaticResource BrandDark}" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding Details}" FontSize="13"
+                                               TextColor="{StaticResource BrandTextMuted}" LineBreakMode="WordWrap" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- "+ Add a new address" (hidden while the form is open) -->
+                <Border BackgroundColor="White" Stroke="{StaticResource BrandMint}" StrokeThickness="1.5"
+                        StrokeDashArray="4,3" StrokeShape="RoundRectangle 14" Padding="14,14"
+                        IsVisible="{Binding IsAddingNew, Converter={StaticResource InvertedBoolConverter}}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ShowAddFormCommand}" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                        <Path Data="M10,3 L10,17 M3,10 L17,10" Stroke="{StaticResource BrandDark}"
+                              StrokeThickness="2.4" StrokeLineCap="Round"
+                              WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                        <Label Text="Add a new address" FontSize="15" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandDark}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- ============ NEW ADDRESS FORM ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18"
+                        Padding="16,18" IsVisible="{Binding IsAddingNew}">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="16">
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="New address" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Grid.Column="1" Text="Cancel" FontSize="13" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center"
+                                   IsVisible="{Binding HasAddresses}">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding CancelAddCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
+
+                        <!-- Label chips -->
+                        <VerticalStackLayout>
+                            <Label Text="Save as" Style="{StaticResource FieldLabel}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Home" Style="{StaticResource LabelChip}"
+                                        Command="{Binding ChooseLabelCommand}" CommandParameter="Home">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding NewLabel}" Value="Home">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="Work" Style="{StaticResource LabelChip}"
+                                        Command="{Binding ChooseLabelCommand}" CommandParameter="Work">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding NewLabel}" Value="Work">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="Other" Style="{StaticResource LabelChip}"
+                                        Command="{Binding ChooseLabelCommand}" CommandParameter="Other">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding NewLabel}" Value="Other">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Address -->
+                        <VerticalStackLayout>
+                            <Label Text="Address" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" Padding="8,2">
+                                <Editor Placeholder="Street, city and postcode" Text="{Binding NewAddress}"
+                                        AutoSize="TextChanges" MinimumHeightRequest="70"
+                                        BackgroundColor="Transparent" FontSize="14"
+                                        TextColor="{StaticResource BrandTextDark}"
+                                        PlaceholderColor="{StaticResource BrandTextMuted}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Country -->
+                        <VerticalStackLayout>
+                            <Label Text="Country" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" HeightRequest="48">
+                                <Picker Title="Country" ItemsSource="{Binding Countries}"
+                                        SelectedItem="{Binding NewCountry}" ItemDisplayBinding="{Binding Name}"
+                                        BackgroundColor="Transparent" FontSize="14"
+                                        TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Default (signed-in users only) -->
+                        <HorizontalStackLayout Spacing="2" Margin="-6,0,0,0" IsVisible="{Binding IsLoggedIn}">
+                            <CheckBox IsChecked="{Binding SaveAsDefault}" Color="{StaticResource BrandGreen}"
+                                      VerticalOptions="Center" />
+                            <Label Text="Set as my default address" FontSize="13"
+                                   TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <Button Text="Save address" Command="{Binding SaveNewAddressCommand}"
+                                BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                FontAttributes="Bold" FontSize="15" CornerRadius="12" HeightRequest="48" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
+                <!-- ============ USE SELECTED ============ -->
+                <Button Text="Deliver to this address" Command="{Binding UseSelectedCommand}"
+                        Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,8,0,0"
+                        IsVisible="{Binding HasAddresses}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

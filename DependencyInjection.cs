@@ -22,7 +22,8 @@ public static class DependencyInjection
         services.AddSingleton<CartService>();
         services.AddSingleton<SessionService>();
         services.AddSingleton<OrderHistoryService>();
-        
+        services.AddSingleton<DeliveryAddressService>();
+
 
         // ---- ViewModels ----
         services.AddTransient<HomeViewModel>();
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddTransient<LoginViewModel>();
         services.AddTransient<AdminViewModel>();
         services.AddTransient<OrdersViewModel>();
+        services.AddTransient<DeliveryAddressViewModel>();
 
 
 
@@ -52,5 +54,6 @@ public static class DependencyInjection
         services.AddTransient<LoginPage>();
         services.AddTransient<AdminPage>();
         services.AddTransient<OrdersPage>();
+       services.AddTransient<DeliveryAddressPage>();
     }
 }

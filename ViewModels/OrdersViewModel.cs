@@ -13,6 +13,8 @@ public partial class OrdersViewModel : ObservableObject
 {
     private readonly CartService _cart;
     private readonly OrderHistoryService _history;
+    private readonly SessionService _session;
+    private readonly DeliveryAddressService _delivery;
 
     public ObservableCollection<CartItem> Items => _cart.Items;
     public ObservableCollection<PlacedOrder> PastOrders => _history.Orders;
@@ -27,10 +29,16 @@ public partial class OrdersViewModel : ObservableObject
     public bool IsBasketEmpty => !HasItems;
     public bool HasPastOrders => _history.Orders.Count > 0;
 
-    public OrdersViewModel(CartService cart, OrderHistoryService history)
+    /// <summary>"Home · 31 Camden High St, London" for the Deliver to card.</summary>
+    public string DeliveryAddressText => _delivery.Describe(_session.IsLoggedIn ? _session.CurrentUser : null);
+
+    public OrdersViewModel(CartService cart, OrderHistoryService history,
+                           SessionService session, DeliveryAddressService delivery)
     {
         _cart = cart;
         _history = history;
+        _session = session;
+        _delivery = delivery;
         _cart.Items.CollectionChanged += (_, _) => Refresh();
         _history.Orders.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasPastOrders));
     }
@@ -46,6 +54,7 @@ public partial class OrdersViewModel : ObservableObject
         OnPropertyChanged(nameof(IsBasketEmpty));
         OnPropertyChanged(nameof(HasPastOrders));
         OnPropertyChanged(nameof(SelectedCountry));
+        OnPropertyChanged(nameof(DeliveryAddressText));
     }
 
     [RelayCommand]
@@ -78,6 +87,10 @@ public partial class OrdersViewModel : ObservableObject
         if (!HasItems) return;
         await Shell.Current.GoToAsync(nameof(Views.CheckoutPage));
     }
+
+    /// <summary>"Change delivery details →" opens the Delivery address page.</summary>
+    [RelayCommand]
+    private async Task ChangeDeliveryAddress() => await Shell.Current.GoToAsync("address");
 
     [RelayCommand]
     private async Task ContinueShopping() => await Shell.Current.GoToAsync("//listing");

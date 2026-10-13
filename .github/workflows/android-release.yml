@@ -104,8 +104,8 @@ jobs:
 
           Write-Host "Checking signed Android release packages..."
 
-          $apkPath = Join-Path $releaseDir "com.phloem.app-Signed.apk"
-          $aabPath = Join-Path $releaseDir "publish/com.phloem.app-Signed.aab"
+          $apkPath = Join-Path $releaseDir "com.zayun.phloem-Signed.apk"
+          $aabPath = Join-Path $releaseDir "publish/com.zayun.phloem-Signed.aab"
 
           if (-not (Test-Path $apkPath -PathType Leaf)) {
             throw "Signed APK not found: $apkPath"

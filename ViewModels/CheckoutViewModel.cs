@@ -17,6 +17,7 @@ public partial class CheckoutViewModel : ObservableObject
     private readonly MockDataService _data;
     private readonly SessionService _session;
     private readonly OrderHistoryService _history;
+    private readonly DeliveryAddressService _delivery;
 
     /// <summary>
     /// observable collection of cart items, reflecting 
@@ -113,12 +114,8 @@ public partial class CheckoutViewModel : ObservableObject
             if (_cart.PendingInternationalDelivery is { } intl)
                 return $"{intl.RecipientName} · {intl.UkAddress}";
 
-            var user = _session.CurrentUser;
-            var address = user?.Addresses.FirstOrDefault(a => a.IsDefault) ?? user?.Addresses.FirstOrDefault();
-            if (address is not null)
-                return $"{address.Label} · {address.FullAddress}";
-
-            return $"No address yet · {_cart.SelectedCountry?.Name}";
+            // The address picked on the Delivery address page, or the user's default
+            return _delivery.Describe(_session.IsLoggedIn ? _session.CurrentUser : null);
         }
     }
 
@@ -126,12 +123,14 @@ public partial class CheckoutViewModel : ObservableObject
     /// creates a new instance of the CheckoutViewModel class, initializing it with 
     /// the provided cart service and setting up event handlers for cart item changes.
     /// </summary>
-    public CheckoutViewModel(CartService cart, MockDataService data, SessionService session, OrderHistoryService history)
+    public CheckoutViewModel(CartService cart, MockDataService data, SessionService session,
+                             OrderHistoryService history, DeliveryAddressService delivery)
     {
         _cart = cart;
         _data = data;
         _session = session;
         _history = history;
+        _delivery = delivery;
         SelectedPaymentMethod = PaymentMethods[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshTotals();
     }
@@ -187,12 +186,12 @@ public partial class CheckoutViewModel : ObservableObject
     }
 
     /// <summary>
-    /// NEW: "Change delivery details →". Goes back to the Send to UK form for international
-    /// orders, otherwise to the Account tab.
+    /// "Change delivery details →". Goes back to the Send to UK form for international
+    /// orders, otherwise to the Delivery address page (pick a saved address or add one).
     /// </summary>
     [RelayCommand]
     private async Task ChangeDeliveryDetails()
-        => await Shell.Current.GoToAsync(HasInternationalDelivery ? "//home/international" : "//login");
+        => await Shell.Current.GoToAsync(HasInternationalDelivery ? "//home/international" : "address");
 
     /// <summary>
     /// command method to place the order.
