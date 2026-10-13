@@ -1,6 +1,7 @@
 using Foundation;
+using Phloem;
 
-namespace AfroPhloem;
+namespace Phloem;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

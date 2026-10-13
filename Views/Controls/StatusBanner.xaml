@@ -1,29 +1,52 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    Success / error message banner, restyled for the new design.
+    Same x:Names (StatusBorder, MessageLabel) and the same "Success" / "Error" states,
+    so StatusBanner.xaml.cs does not change.
+-->
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="AfroPhloem.Views.Controls.StatusBanner"
+             x:Class="Phloem.Views.Controls.StatusBanner"
              x:Name="Root">
 
-    <Border x:Name="StatusBorder" StrokeShape="RoundRectangle 10" Padding="12,10"
+    <Border x:Name="StatusBorder" StrokeShape="RoundRectangle 12" StrokeThickness="1"
+            Padding="12,10"
+            BackgroundColor="{StaticResource BrandMintPale}" Stroke="{StaticResource BrandMint}"
             IsVisible="{Binding Message, Source={x:Reference Root}, Converter={StaticResource StringNotEmptyConverter}}">
 
-        <Label x:Name="MessageLabel" Text="{Binding Message, Source={x:Reference Root}}"
-               HorizontalTextAlignment="Center" FontSize="14" />
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+            <!-- Round icon: ✓ for success, ! for error -->
+            <Border x:Name="IconCircle" StrokeThickness="0" StrokeShape="Ellipse"
+                    WidthRequest="24" HeightRequest="24" VerticalOptions="Center"
+                    BackgroundColor="{StaticResource BrandGreen}">
+                <Label x:Name="IconLabel" Text="✓" FontSize="13" FontAttributes="Bold" TextColor="White"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <Label x:Name="MessageLabel" Grid.Column="1"
+                   Text="{Binding Message, Source={x:Reference Root}}"
+                   FontSize="14" FontAttributes="Bold" VerticalOptions="Center"
+                   TextColor="{StaticResource BrandGreen}" LineBreakMode="WordWrap" />
+        </Grid>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="StatusStates">
                 <VisualState x:Name="Success">
                     <VisualState.Setters>
-                        <Setter TargetName="MessageLabel" Property="Label.TextColor" Value="{StaticResource BrandSuccess}" />
-                        <Setter Property="BackgroundColor" Value="#E9F1E4" />
-                        <Setter Property="Stroke" Value="{StaticResource BrandSuccess}" />
+                        <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+                        <Setter Property="Stroke" Value="{StaticResource BrandMint}" />
+                        <Setter TargetName="MessageLabel" Property="Label.TextColor" Value="{StaticResource BrandGreen}" />
+                        <Setter TargetName="IconCircle" Property="Border.BackgroundColor" Value="{StaticResource BrandGreen}" />
+                        <Setter TargetName="IconLabel" Property="Label.Text" Value="✓" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Error">
                     <VisualState.Setters>
+                        <Setter Property="BackgroundColor" Value="#FDECEA" />
+                        <Setter Property="Stroke" Value="#F5C6C0" />
                         <Setter TargetName="MessageLabel" Property="Label.TextColor" Value="{StaticResource BrandDanger}" />
-                        <Setter Property="BackgroundColor" Value="#FBEAE8" />
-                        <Setter Property="Stroke" Value="{StaticResource BrandDanger}" />
+                        <Setter TargetName="IconCircle" Property="Border.BackgroundColor" Value="{StaticResource BrandDanger}" />
+                        <Setter TargetName="IconLabel" Property="Label.Text" Value="!" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

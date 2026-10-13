@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
-using AfroPhloem.Models;
+using Phloem.Models;
 
-namespace AfroPhloem.Services;
+namespace Phloem.Services;
 
 public class CartService
 {

@@ -1,11 +1,11 @@
-﻿using System.Collections.ObjectModel;
-using System.Linq;
+﻿using Phloem.Models;
+using Phloem.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
+using System.Collections.ObjectModel;
+using System.Linq;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 /// <summary>
 /// organizes and manages the checkout process, 
@@ -14,6 +14,9 @@ namespace AfroPhloem.ViewModels;
 public partial class CheckoutViewModel : ObservableObject
 {
     private readonly CartService _cart;
+    private readonly MockDataService _data;
+    private readonly SessionService _session;
+    private readonly OrderHistoryService _history;
 
     /// <summary>
     /// observable collection of cart items, reflecting 
@@ -27,9 +30,9 @@ public partial class CheckoutViewModel : ObservableObject
     /// </summary>
     public ObservableCollection<PaymentMethodOption> PaymentMethods { get; } = new()
     {
-        new PaymentMethodOption { Name = "Card", Subtitle = "Ending 3281", Icon = "💳" },
-        new PaymentMethodOption { Name = "Mobile Money", Subtitle = "MTN, Vodafone, Airtel", Icon = "📱" },
-        new PaymentMethodOption { Name = "Bank Transfer", Subtitle = "Direct transfer", Icon = "🏦" },
+        new PaymentMethodOption { Name = "Credit / debit card", Subtitle = "Ending 3281", Icon = "💳" },
+        new PaymentMethodOption { Name = "Mobile money", Subtitle = "MTN, Vodafone, Airtel", Icon = "📱" },
+        new PaymentMethodOption { Name = "Bank transfer", Subtitle = "Direct transfer", Icon = "🏦" },
     };
 
     /// <summary>
@@ -37,27 +40,27 @@ public partial class CheckoutViewModel : ObservableObject
     /// currently selected payment method,
     /// </summary>
     [ObservableProperty]
-    private PaymentMethodOption selectedPaymentMethod;
+    public partial PaymentMethodOption SelectedPaymentMethod { get; set; }
 
     /// <summary>
     /// property indicating whether the order has been placed,
     /// </summary>
     [ObservableProperty]
-    private bool orderPlaced;
+    public partial bool OrderPlaced { get; set; }
 
     /// <summary>
     /// property holding the confirmation message 
     /// displayed to the user after placing an order,
     /// </summary>
     [ObservableProperty]
-    private string confirmationMessage = string.Empty;
+    public partial string ConfirmationMessage { get; set; } = string.Empty;
 
     /// <summary>
     /// observable property storing the order 
     /// number generated upon order placement,
     /// </summary>
     [ObservableProperty]
-    private string orderNumber = string.Empty;
+    public partial string OrderNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets the currency symbol for the selected country.
@@ -100,14 +103,36 @@ public partial class CheckoutViewModel : ObservableObject
     public CountryOption SelectedCountry => _cart.SelectedCountry;
 
     /// <summary>
+    /// NEW: the line shown in the "Delivery address" card, e.g. "Home · 31 Camden High St, London".
+    /// Uses the "Send to UK" recipient when there is one, otherwise the signed-in user's default address.
+    /// </summary>
+    public string DeliveryAddressText
+    {
+        get
+        {
+            if (_cart.PendingInternationalDelivery is { } intl)
+                return $"{intl.RecipientName} · {intl.UkAddress}";
+
+            var user = _session.CurrentUser;
+            var address = user?.Addresses.FirstOrDefault(a => a.IsDefault) ?? user?.Addresses.FirstOrDefault();
+            if (address is not null)
+                return $"{address.Label} · {address.FullAddress}";
+
+            return $"No address yet · {_cart.SelectedCountry?.Name}";
+        }
+    }
+
+    /// <summary>
     /// creates a new instance of the CheckoutViewModel class, initializing it with 
     /// the provided cart service and setting up event handlers for cart item changes.
     /// </summary>
-    /// <param name="cart"></param>
-    public CheckoutViewModel(CartService cart)
+    public CheckoutViewModel(CartService cart, MockDataService data, SessionService session, OrderHistoryService history)
     {
         _cart = cart;
-        selectedPaymentMethod = PaymentMethods[0];
+        _data = data;
+        _session = session;
+        _history = history;
+        SelectedPaymentMethod = PaymentMethods[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshTotals();
     }
 
@@ -124,9 +149,22 @@ public partial class CheckoutViewModel : ObservableObject
     }
 
     /// <summary>
+    /// NEW: called by the page each time it appears, so totals, the delivery address,
+    /// the "Send to UK" details and the flag are always up to date.
+    /// </summary>
+    public void RefreshAll()
+    {
+        RefreshTotals();
+        OnPropertyChanged(nameof(DeliveryAddressText));
+        OnPropertyChanged(nameof(HasInternationalDelivery));
+        OnPropertyChanged(nameof(InternationalDelivery));
+        OnPropertyChanged(nameof(SelectedCountry));
+        OnPropertyChanged(nameof(CurrencySymbol));
+    }
+
+    /// <summary>
     /// command method to increase the quantity of a specified cart item,
     /// </summary>
-    /// <param name="item"></param>
     [RelayCommand]
     private void IncreaseQuantity(CartItem item)
     {
@@ -137,7 +175,6 @@ public partial class CheckoutViewModel : ObservableObject
     /// <summary>
     /// command method to decrease the quantity of a specified cart item.
     /// </summary>
-    /// <param name="item"></param>
     [RelayCommand]
     private void DecreaseQuantity(CartItem item)
     {
@@ -150,7 +187,15 @@ public partial class CheckoutViewModel : ObservableObject
     }
 
     /// <summary>
-    /// command method to remove a specified cart item from the shopping cart.
+    /// NEW: "Change delivery details →". Goes back to the Send to UK form for international
+    /// orders, otherwise to the Account tab.
+    /// </summary>
+    [RelayCommand]
+    private async Task ChangeDeliveryDetails()
+        => await Shell.Current.GoToAsync(HasInternationalDelivery ? "//home/international" : "//login");
+
+    /// <summary>
+    /// command method to place the order.
     /// </summary>
     [RelayCommand]
     private void PlaceOrder()
@@ -160,15 +205,29 @@ public partial class CheckoutViewModel : ObservableObject
         OrderNumber = $"AP-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}";
         ConfirmationMessage = $"Your order has been placed and {SelectedPaymentMethod.Name} will be charged {CurrencySymbol}{Total:0.00}.";
         OrderPlaced = true;
-        _cart.Clear();
-        RefreshTotals();
-    }
 
+        // Keep a record for "Recent orders" on the Orders page
+        _history.Add(new PlacedOrder
+        {
+            OrderNumber = OrderNumber,
+            ItemsSummary = string.Join(", ", _cart.Items.Select(i => $"{i.Dish.Name} ×{i.Quantity}")),
+            ItemCount = ItemCount,
+            Total = Total,
+            CurrencySymbol = CurrencySymbol,
+            PaymentMethod = SelectedPaymentMethod.Name,
+            IsInternational = _cart.PendingInternationalDelivery is not null
+        });
+
+        if (_cart.PendingInternationalDelivery is not null)
+            _data.AddShipment(_cart.PendingInternationalDelivery);
+
+        _cart.Clear();
+        RefreshAll();
+    }
 
     /// <summary>
     /// command method to navigate back to the shopping listing page after an order has been placed.
     /// </summary>
-    /// <returns></returns>
     [RelayCommand]
     private async Task BackToShopping()
     {

@@ -1,86 +1,216 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    SellerDashboardPage: redesigned to match "SellerDashboardPage.xaml / dashboard / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Uses SellerDashboardViewModel (existing commands + Greeting, WeeklySales, ViewAllDishes).
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:SellerDashboardViewModel"
-             x:Class="AfroPhloem.Views.SellerDashboardPage"
+             x:Class="Phloem.Views.SellerDashboardPage"
              x:Name="RootPage"
              Shell.NavBarIsVisible="False"
              Title="Seller Dashboard">
 
+    <ContentPage.Resources>
+        <!-- White stat tile -->
+        <Style x:Key="StatCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="14,14" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="StatNumberLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+        </Style>
+        <Style x:Key="StatCaptionLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <!-- Small − / + price buttons -->
+        <Style x:Key="TinyStepButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="WidthRequest" Value="30" />
+            <Setter Property="HeightRequest" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderWidth" Value="0" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
-        <controls:AppHeaderBar Grid.Row="0" />
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="16" Spacing="16" MaximumWidthRequest="700" HorizontalOptions="Center">
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
 
-                <!-- Vendor summary -->
-                <Frame Style="{StaticResource CardFrame}" BindingContext="{Binding CurrentVendor}" x:DataType="models:Vendor">
-                    <Grid ColumnDefinitions="60,*,Auto" ColumnSpacing="12">
-                        <Image Grid.Column="0" Source="dotnet_bot.png" HeightRequest="55" WidthRequest="55" />
-                        <VerticalStackLayout Grid.Column="1" Spacing="2">
-                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource BrandTextDark}"/>
-                            <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" Style="{StaticResource SubtleLabel}" />
-                        </VerticalStackLayout>
-                        <Label Grid.Column="2" Text="{Binding Balance, StringFormat='£{0:0.00}'}"
-                           FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
-                    </Grid>
-                </Frame>
-
-                <!-- Stats -->
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" BindingContext="{Binding CurrentVendor}" x:DataType="models:Vendor">
-                    <Frame Grid.Column="0" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
-                        <VerticalStackLayout HorizontalOptions="Center">
-                            <Label Text="{Binding TotalOrders}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center" 
-                                   TextColor="{StaticResource BrandTextDark}" />
-                            <Label Text="Total Orders" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
-                        </VerticalStackLayout>
-                    </Frame>
-                    <Frame Grid.Column="1" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
-                        <VerticalStackLayout HorizontalOptions="Center">
-                            <Label Text="{Binding PendingOrders}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center"
-                                   TextColor="{StaticResource BrandTextDark}"/>
-                            <Label Text="Pending" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
-                        </VerticalStackLayout>
-                    </Frame>
-                    <Frame Grid.Column="2" Style="{StaticResource CardFrame}" HorizontalOptions="Fill">
-                        <VerticalStackLayout HorizontalOptions="Center">
-                            <Label Text="{Binding Balance, StringFormat='£{0:0}'}" FontAttributes="Bold" FontSize="20" HorizontalOptions="Center"
-                                   TextColor="{StaticResource BrandTextDark}"/>
-                            <Label Text="Balance" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
-                        </VerticalStackLayout>
-                    </Frame>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
                 </Grid>
 
-                <Button Text="Accept Next Pending Order" Style="{StaticResource SecondaryButton}" Command="{Binding AcceptNextOrderCommand}" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
 
-                <Label Text="Sales Overview" Style="{StaticResource SectionTitle}" />
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label x:Name="FlagLabel" Text="🌍" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
 
-                <CollectionView ItemsSource="{Binding MyDishes}">
-                    <CollectionView.ItemTemplate>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="700" HorizontalOptions="Fill">
+
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,2">
+                    <Label Text="Seller dashboard" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="{Binding Greeting}" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ STATS (2 × 2) ============ -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+
+                    <!-- Balance (mint) -->
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource StatCard}"
+                            BackgroundColor="{StaticResource BrandMintPale}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding CurrentVendor.Balance, StringFormat='£{0:#,0}'}"
+                                   Style="{StaticResource StatNumberLabel}" TextColor="{StaticResource BrandGreen}" />
+                            <Label Text="Available balance" Style="{StaticResource StatCaptionLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Total orders -->
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource StatCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding CurrentVendor.TotalOrders}" Style="{StaticResource StatNumberLabel}" />
+                            <Label Text="Total orders" Style="{StaticResource StatCaptionLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Pending orders -->
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource StatCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding CurrentVendor.PendingOrders, StringFormat='{0:00}'}"
+                                   Style="{StaticResource StatNumberLabel}" />
+                            <Label Text="Pending orders" Style="{StaticResource StatCaptionLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Store rating -->
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource StatCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Style="{StaticResource StatNumberLabel}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding CurrentVendor.Rating, StringFormat='{0:0.0}'}" />
+                                        <Span Text="  ★" TextColor="{StaticResource BrandStar}" FontSize="20" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="Store rating" Style="{StaticResource StatCaptionLabel}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- ============ ACCEPT ORDER ============ -->
+                <Button Text="Accept next pending order  →" Command="{Binding AcceptNextOrderCommand}"
+                        Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,4,0,0" />
+
+                <!-- ============ SALES OVERVIEW ============ -->
+                <Label Text="Sales overview" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />
+
+                <Border Style="{StaticResource StatCard}" Padding="10,16,10,10">
+                    <FlexLayout BindableLayout.ItemsSource="{Binding WeeklySales}"
+                                JustifyContent="SpaceEvenly" AlignItems="End" HeightRequest="96">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SalesBar">
+                                <VerticalStackLayout Spacing="6" VerticalOptions="End">
+                                    <Border WidthRequest="26" HeightRequest="{Binding BarHeight}"
+                                            StrokeThickness="0" StrokeShape="RoundRectangle 6"
+                                            BackgroundColor="{StaticResource BrandDark}"
+                                            HorizontalOptions="Center">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsWeekend}" Value="True">
+                                                <Setter Property="BackgroundColor" Value="{StaticResource BrandOrange}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                    </Border>
+                                    <Label Text="{Binding Day}" FontSize="11" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextMuted}" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </Border>
+
+                <!-- ============ MY DISHES ============ -->
+                <Grid ColumnDefinitions="*,Auto" Margin="2,10,0,0">
+                    <Label Text="My dishes" Style="{StaticResource SectionTitle}" />
+                    <Label Grid.Column="1" Text="View all  →" Style="{StaticResource LinkLabel}"
+                           TextColor="{StaticResource BrandDark}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ViewAllDishesCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding MyDishes}">
+                    <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="models:Dish">
-                            <Frame Style="{StaticResource CardFrame}" Margin="0,0,0,8">
-                                <Grid ColumnDefinitions="55,*,Auto" ColumnSpacing="10">
-                                    <Image Grid.Column="0" Source="{Binding ImageUrl}" HeightRequest="50" WidthRequest="50" Aspect="AspectFill" />
-                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                        <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                        <Label Text="{Binding Price, StringFormat='£{0:0.00}'}" TextColor="{StaticResource BrandGreen}" />
-                                    </VerticalStackLayout>
-                                    <HorizontalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center">
-                                        <Button Text="−" WidthRequest="36" HeightRequest="36" Padding="0"
-                                            Command="{Binding BindingContext.DecreasePriceCommand, Source={x:Reference RootPage}}"
-                                            CommandParameter="{Binding .}" Style="{StaticResource CircleIconButton}" />
-                                        <Button Text="+" WidthRequest="36" HeightRequest="36" Padding="0"
-                                            Command="{Binding BindingContext.IncreasePriceCommand, Source={x:Reference RootPage}}"
-                                            CommandParameter="{Binding .}"  Style="{StaticResource CircleIconButton}"/>
+                            <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 14" Padding="14,6">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                    <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Grid.Column="1" Text="{Binding Price, StringFormat='£{0:0.00}'}"
+                                           Style="{StaticResource PriceLabel}" VerticalOptions="Center" />
+                                    <HorizontalStackLayout Grid.Column="2" Spacing="0" VerticalOptions="Center">
+                                        <Button Text="−" Style="{StaticResource TinyStepButton}"
+                                                Command="{Binding BindingContext.DecreasePriceCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="+" Style="{StaticResource TinyStepButton}"
+                                                Command="{Binding BindingContext.IncreasePriceCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
 
             </VerticalStackLayout>
         </ScrollView>

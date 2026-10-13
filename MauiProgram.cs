@@ -1,54 +1,44 @@
-using AfroPhloem.Services;
-using AfroPhloem.ViewModels;
-using AfroPhloem.Views;
+using Phloem;
+using Phloem.Services;
+using Phloem.ViewModels;
+using Phloem.Views;
 using Microsoft.Extensions.Logging;
 
-namespace AfroPhloem;
+namespace Phloem;
 
+/// <summary>
+/// class MauiProgram is the entry point for the .NET MAUI application. 
+/// It sets up the application builder, configures fonts, 
+/// logging, and registers services for dependency injection.
+/// </summary>
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.ConfigureFonts(fonts =>
-			{
-				// Add custom .ttf files to Resources/Fonts and register them here if you
-				// want branded typography, e.g.:
-				// fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-			});
+    /// <summary>
+    /// creates and configures the MauiApp instance for the application.
+    /// </summary>
+    /// <returns></returns>
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>()
+            .ConfigureFonts(fonts =>
+            {
+                // Add custom .ttf files to Resources/Fonts and register them here if you
+                // want branded typography, e.g.:
+                // fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            }).ConfigureMauiHandlers(handlers =>
+          {
+#if ANDROID
+              handlers.AddHandler(typeof(Shell), typeof(Phloem.Platforms.PhloemShellRenderer));
+#endif
+          });
 
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
-
-		// ---- Services (singletons so mock "database" is shared across pages) ----
-		builder.Services.AddSingleton<MockDataService>();
-		builder.Services.AddSingleton<CartService>();
-
-        // ---- ViewModels ----
-       
-        builder.Services.AddTransient<HomeViewModel>();
-		builder.Services.AddTransient<RegisterViewModel>();
-		builder.Services.AddTransient<SellerSetupViewModel>();
-		builder.Services.AddTransient<FoodListingViewModel>();
-		builder.Services.AddTransient<SellerDashboardViewModel>();
-		builder.Services.AddTransient<InternationalDeliveryViewModel>();
-		builder.Services.AddTransient<CheckoutViewModel>();
-        builder.Services.AddTransient<VendorsListViewModel>();
-
-        // ---- Pages ----
-        builder.Services.AddTransient<AboutPage>();
-        builder.Services.AddTransient<HomePage>();
-		builder.Services.AddTransient<RegisterPage>();
-		builder.Services.AddTransient<SellerSetupPage>();
-		builder.Services.AddTransient<FoodListingPage>();
-		builder.Services.AddTransient<SellerDashboardPage>();
-		builder.Services.AddTransient<InternationalDeliveryPage>();
-		builder.Services.AddTransient<CheckoutPage>();
-        builder.Services.AddTransient<VendorsListPage>();
+        DependencyInjection.RegisterServices(builder.Services);
 
         return builder.Build();
-	}
+    }
 }

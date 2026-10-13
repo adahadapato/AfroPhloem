@@ -1,56 +1,97 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    Shared green header for every page: menu, logo, "Phloem", flag pill, optional search bar.
+    Same bindable properties and event handlers as before (OnMenuClicked, OnCountryTapped),
+    so AppHeaderBar.xaml.cs does not change.
+
+    Default background is the deep emerald. A page can show its own wallpaper behind it with:
+        <controls:AppHeaderBar BackgroundColor="Transparent" ... />
+-->
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             x:Class="AfroPhloem.Views.Controls.AppHeaderBar"
-             x:Name="Root">
+             xmlns:models="clr-namespace:Phloem.Models"
+             x:Class="Phloem.Views.Controls.AppHeaderBar"
+             x:Name="Root"
+             BackgroundColor="{StaticResource BrandDark}">
 
-    <!-- Full-width header with the stone texture background, flush against the top and sides of the screen -->
-    <Border Stroke="Transparent"
-            StrokeShape="RoundRectangle 0,0,0,0"
-            Margin="0"
-            Padding="0">
+    <Grid RowDefinitions="Auto,Auto">
 
-        <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+        <!-- Faint decorative curve (top-left), like the design -->
+        <Ellipse Grid.RowSpan="2" Stroke="#1AFFFFFF" StrokeThickness="10"
+                 WidthRequest="320" HeightRequest="320"
+                 HorizontalOptions="Start" VerticalOptions="Start"
+                 Margin="-60,-30,0,0" InputTransparent="True" />
 
-            <!-- Background texture, spans both rows, clipped to the Border's rounded corners -->
-            <Image Grid.RowSpan="2" Source="header_bg.jpg" Aspect="AspectFill" />
+        <!-- ============ Top row ============ -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10"
+              Padding="12,14,16,12">
 
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10" Padding="16,12">
-
-                <!-- Hamburger -> opens the Shell flyout (text glyph, no image file dependency) -->
-                <Button Grid.Column="0" Text="☰" FontSize="22" FontAttributes="Bold"
-                        BackgroundColor="Transparent" TextColor="{StaticResource BrandGoldLight}"
-                        WidthRequest="40" HeightRequest="40" Padding="0"
-                        Clicked="OnMenuClicked" VerticalOptions="Center" />
-
-                <!-- Circular logo badge -->
-                <Image Grid.Column="1" Source="header_logo.png" HeightRequest="36" WidthRequest="36" VerticalOptions="Center" />
-
-                <!-- App name -->
-                <Label Grid.Column="2" Text="Afro-Phloem" Style="{StaticResource LogoLabel}" FontSize="16" VerticalOptions="Center" />
-
-                <!-- Country selector: flag-only pill, tap to choose -->
-                <Border Grid.Column="3" Stroke="Transparent" StrokeShape="RoundRectangle 18"
-                        BackgroundColor="{StaticResource BrandCream}" Padding="10,0"
-                        HeightRequest="34" VerticalOptions="Center">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnCountryTapped" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                        <Label Text="{Binding SelectedCountry.FlagEmoji, Source={x:Reference Root}}"
-                               FontSize="20" VerticalOptions="Center" />
-                        <Label Text="▾" FontSize="13" TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
+            <!-- Menu: drawn icon with an invisible button on top (keeps OnMenuClicked) -->
+            <Grid Grid.Column="0" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                      Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                      WidthRequest="24" HeightRequest="24"
+                      HorizontalOptions="Center" VerticalOptions="Center" />
+                <Button BackgroundColor="Transparent" BorderWidth="0" Padding="0"
+                        Clicked="OnMenuClicked" />
             </Grid>
 
-            <!-- Search bar (optional per page) -->
-            <Border Grid.Row="1" Style="{StaticResource InputBorder}" Margin="16,0,16,12"
-                    IsVisible="{Binding ShowSearch, Source={x:Reference Root}}">
-                <Entry Placeholder="Search meals, ingredients, or vendors..."
-                       Text="{Binding SearchText, Source={x:Reference Root}}" BackgroundColor="Transparent" />
+            <!-- Logo -->
+            <Image Grid.Column="1" Source="header_logo.png"
+                   HeightRequest="36" WidthRequest="36" VerticalOptions="Center" />
+
+            <!-- App name -->
+            <Label Grid.Column="2" Text="Phloem" TextColor="White"
+                   FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+
+            <!-- Country pill: flag + chevron, tap to choose -->
+            <Border Grid.Column="3" BackgroundColor="White" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 18" Padding="12,0"
+                    HeightRequest="36" VerticalOptions="Center">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.12" Radius="6" Offset="0,2" />
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCountryTapped" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                    <Label Text="{Binding SelectedCountry.FlagEmoji, Source={x:Reference Root}}"
+                           FontSize="20" VerticalOptions="Center" />
+                    <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                          StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                          WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                </HorizontalStackLayout>
             </Border>
         </Grid>
-    </Border>
+
+        <!-- ============ Search bar (optional per page) ============ -->
+        <Border Grid.Row="1" Margin="16,0,16,14" HeightRequest="46"
+                BackgroundColor="{StaticResource BrandCard}"
+                StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,0"
+                IsVisible="{Binding ShowSearch, Source={x:Reference Root}}">
+            <Border.Shadow>
+                <Shadow Brush="Black" Opacity="0.15" Radius="10" Offset="0,3" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                <!-- Magnifier -->
+                <Path Data="M3,10 A7,7 0 1 0 17,10 A7,7 0 1 0 3,10 M15.5,15.5 L21,21"
+                      Stroke="{StaticResource BrandTextDark}" StrokeThickness="2" StrokeLineCap="Round"
+                      WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+                <Entry Grid.Column="1"
+                       Placeholder="Search meals, ingredients, or vendors..."
+                       PlaceholderColor="{StaticResource BrandTextMuted}"
+                       TextColor="{StaticResource BrandTextDark}"
+                       Text="{Binding SearchText, Source={x:Reference Root}}"
+                       BackgroundColor="Transparent" FontSize="14" ReturnType="Search"
+                       VerticalOptions="Center" />
+                <BoxView Grid.Column="2" WidthRequest="1" HeightRequest="24"
+                         Color="{StaticResource BrandBorder}" VerticalOptions="Center" />
+                <!-- Filter (sliders) -->
+                <Path Grid.Column="3"
+                      Data="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18 M7,4 L7,8 M16,10 L16,14 M10,16 L10,20"
+                      Stroke="{StaticResource BrandTextDark}" StrokeThickness="2" StrokeLineCap="Round"
+                      WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+            </Grid>
+        </Border>
+    </Grid>
 </ContentView>

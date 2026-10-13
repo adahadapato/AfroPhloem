@@ -1,8 +1,9 @@
 using Android.App;
-using Android.Runtime; // Add this using directive for JniHandleOwnership.
+using Android.Runtime;
+using Phloem; // Add this using directive for JniHandleOwnership.
 
 
-namespace AfroPhloem;
+namespace Phloem;
 
 [global::Android.App.Application]
 public class MainApplication : MauiApplication

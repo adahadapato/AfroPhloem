@@ -1,11 +1,11 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
-using AfroPhloem.Views;
+using Phloem.Models;
+using Phloem.Services;
+using Phloem.Views;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 /// <summary>
 /// View model for the home page, managing the display of 
 /// countries, categories, featured dishes, and top sellers.
@@ -14,6 +14,7 @@ public partial class HomeViewModel : ObservableObject
 {
     private readonly MockDataService _data;
     private readonly CartService _cart;
+    private readonly SessionService _session;
 
     /// <summary>
     /// Gets the collection of available countries.
@@ -36,7 +37,7 @@ public partial class HomeViewModel : ObservableObject
     public ObservableCollection<Vendor> TopSellers { get; } = new();
 
     [ObservableProperty]
-    private CountryOption selectedCountry;
+    public partial CountryOption SelectedCountry { get; set; }
 
     [ObservableProperty]
     private string selectedCategory = "Popular";
@@ -53,11 +54,13 @@ public partial class HomeViewModel : ObservableObject
     /// </summary>
     /// <param name="data">The service that provides mock data.</param>
     /// <param name="cart">The service that manages the shopping cart.</param>
-    public HomeViewModel(MockDataService data, CartService cart)
+    /// <param name="session">The signed-in user (used by Sell Food).</param>
+    public HomeViewModel(MockDataService data, CartService cart, SessionService session)
     {
         _data = data;
         _cart = cart;
-        selectedCountry = _cart.SelectedCountry;
+        _session = session;
+        SelectedCountry = _cart.SelectedCountry;
         _cart.Items.CollectionChanged += (_, _) => RefreshCartCount();
         RefreshDishes();
         RefreshCartCount();
@@ -97,14 +100,33 @@ public partial class HomeViewModel : ObservableObject
         await Shell.Current.GoToAsync(nameof(CheckoutPage));
     }
 
+    /// <summary>Buy Food → Browse &amp; Order (Explore tab).</summary>
     [RelayCommand]
     private async Task GoToBuy() => await Shell.Current.GoToAsync("//listing");
 
     [RelayCommand]
-    private async Task GoToVendors() => await Shell.Current.GoToAsync("//vendors");
+    private async Task GoToVendors() => await Shell.Current.GoToAsync("//home/vendors");
 
+    /// <summary>
+    /// Sell Food:
+    ///   not logged in                 → Log in
+    ///   logged in and owns a shop     → Seller dashboard
+    ///   logged in without a shop yet  → Become a seller
+    /// </summary>
     [RelayCommand]
-    private async Task GoToSell() => await Shell.Current.GoToAsync("//sellersetup");
+    private async Task GoToSell()
+    {
+        if (!_session.IsLoggedIn || _session.CurrentUser is null)
+        {
+            await Shell.Current.GoToAsync("//login");
+            return;
+        }
+
+        var userId = _session.CurrentUser.Id;
+        var isSeller = _data.Vendors.Any(v => v.UserId == userId);
+
+        await Shell.Current.GoToAsync(isSeller ? "//home/dashboard" : "//home/sellersetup");
+    }
 
     [RelayCommand]
     private async Task ViewShop(Vendor vendor) =>

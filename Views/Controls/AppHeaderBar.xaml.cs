@@ -1,8 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
-using AfroPhloem.Models;
+using Phloem.Models;
 
-namespace AfroPhloem.Views.Controls;
+namespace Phloem.Views.Controls;
 
 public partial class AppHeaderBar : ContentView
 {

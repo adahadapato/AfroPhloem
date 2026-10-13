@@ -1,10 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
+using Phloem.Models;
+using Phloem.Services;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 public partial class FoodListingViewModel : ObservableObject
 {
@@ -16,31 +16,46 @@ public partial class FoodListingViewModel : ObservableObject
     public ObservableCollection<Dish> Dishes { get; } = new();
 
     [ObservableProperty]
-    private CountryOption selectedCountry;
+    public partial CountryOption SelectedCountry { get; set; }
 
     [ObservableProperty]
-    private string selectedDeliveryTime;
+    public partial string SelectedDeliveryTime { get; set; }
 
     [ObservableProperty]
-    private int cartCount;
+    public partial int CartCount { get; set; }
 
     [ObservableProperty]
-    private decimal cartTotal;
+    public partial decimal CartTotal { get; set; }
 
     [ObservableProperty]
-    private string? filterVendorId;
+    public partial string? FilterVendorId { get; set; }
 
     [ObservableProperty]
-    private string filterVendorName = string.Empty;
+    public partial string FilterVendorName { get; set; } = string.Empty;
+
+    /// <summary>NEW: text typed in the search bar.</summary>
+    [ObservableProperty]
+    public partial string SearchText { get; set; } = string.Empty;
+
+    /// <summary>NEW: selected chip: "All", "Local Meals", "Snacks" or "Drinks".</summary>
+    [ObservableProperty]
+    public partial string SelectedCategory { get; set; } = "All";
+
+    /// <summary>NEW: "Rating", "PriceLow" or "PriceHigh" (set from the Filter link).</summary>
+    [ObservableProperty]
+    public partial string SortBy { get; set; } = "Rating";
 
     public bool IsFilteredByVendor => !string.IsNullOrEmpty(FilterVendorId);
+
+    /// <summary>NEW: true when nothing matches the search / chip.</summary>
+    public bool IsEmpty => Dishes.Count == 0;
 
     public FoodListingViewModel(MockDataService data, CartService cart)
     {
         _data = data;
         _cart = cart;
-        selectedCountry = _cart.SelectedCountry;
-        selectedDeliveryTime = DeliveryTimes[0];
+        SelectedCountry = _cart.SelectedCountry;
+        SelectedDeliveryTime = DeliveryTimes[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshCartSummary();
         RefreshDishes();
         RefreshCartSummary();
@@ -58,22 +73,52 @@ public partial class FoodListingViewModel : ObservableObject
     [RelayCommand]
     private void ClearVendorFilter() => SetVendorFilter(null, null);
 
+    /// <summary>NEW: the All / Local Meals / Snacks / Drinks chips.</summary>
+    [RelayCommand]
+    private void FilterCategory(string category) => SelectedCategory = category;
+
     partial void OnSelectedCountryChanged(CountryOption value)
     {
         _cart.SelectedCountry = value;
         RefreshDishes();
     }
 
+    partial void OnSearchTextChanged(string value) => RefreshDishes();
+    partial void OnSelectedCategoryChanged(string value) => RefreshDishes();
+    partial void OnSortByChanged(string value) => RefreshDishes();
+
+    /// <summary>NEW: called by the page each time it appears (country may have changed on Home).</summary>
+    public void Reload()
+    {
+        if (SelectedCountry != _cart.SelectedCountry)
+            SelectedCountry = _cart.SelectedCountry;   // triggers RefreshDishes
+        else
+            RefreshDishes();
+        RefreshCartSummary();
+    }
+
     private void RefreshDishes()
     {
         Dishes.Clear();
-        var results = _data.GetDishes(SelectedCountry?.Name);
+
+        // GetDishes treats "Popular" as "no category filter"
+        var category = SelectedCategory == "All" ? "Popular" : SelectedCategory;
+        var results = _data.GetDishes(SelectedCountry?.Name, category, SearchText);
 
         if (IsFilteredByVendor)
             results = results.Where(d => d.VendorId == FilterVendorId);
 
+        results = SortBy switch
+        {
+            "PriceLow" => results.OrderBy(d => d.Price),
+            "PriceHigh" => results.OrderByDescending(d => d.Price),
+            _ => results.OrderByDescending(d => d.Rating)
+        };
+
         foreach (var dish in results)
             Dishes.Add(dish);
+
+        OnPropertyChanged(nameof(IsEmpty));
     }
 
     private void RefreshCartSummary()

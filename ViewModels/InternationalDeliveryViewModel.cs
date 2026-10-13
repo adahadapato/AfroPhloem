@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
-using AfroPhloem.Views;
+using Phloem.Models;
+using Phloem.Services;
+using Phloem.Views;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 public partial class InternationalDeliveryViewModel : ObservableObject
 {
@@ -15,25 +15,25 @@ public partial class InternationalDeliveryViewModel : ObservableObject
         new(Enum.GetValues<DeliverySpeed>());
 
     [ObservableProperty]
-    private string senderName = string.Empty;
+    public partial string SenderName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string recipientName = string.Empty;
+    public partial string RecipientName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string ukAddress = string.Empty;
+    public partial string UkAddress { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string itemDescription = string.Empty;
+    public partial string ItemDescription { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private DeliverySpeed selectedSpeed = DeliverySpeed.Standard;
+    public partial DeliverySpeed SelectedSpeed { get; set; } = DeliverySpeed.Standard;
 
     [ObservableProperty]
-    private string statusMessage = string.Empty;
+    public partial string StatusMessage { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private bool isError;
+    public partial bool IsError { get; set; }
 
     public decimal EstimatedFee => new DeliveryOrder { Speed = SelectedSpeed }.Fee;
 
@@ -43,6 +43,10 @@ public partial class InternationalDeliveryViewModel : ObservableObject
     {
         _cart = cart;
     }
+
+    /// <summary>NEW: the Standard / Express / Bulk pills.</summary>
+    [RelayCommand]
+    private void SelectSpeed(DeliverySpeed speed) => SelectedSpeed = speed;
 
     [RelayCommand]
     private async Task ScheduleDelivery()
@@ -60,7 +64,8 @@ public partial class InternationalDeliveryViewModel : ObservableObject
             RecipientName = RecipientName,
             UkAddress = UkAddress,
             ItemDescription = ItemDescription,
-            Speed = SelectedSpeed
+            Speed = SelectedSpeed,
+            FromCountry = _cart.SelectedCountry?.Name ?? "Ghana"
         };
 
         IsError = false;

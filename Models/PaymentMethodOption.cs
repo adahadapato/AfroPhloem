@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AfroPhloem.Models
+namespace Phloem.Models
 {
     public class PaymentMethodOption
     {

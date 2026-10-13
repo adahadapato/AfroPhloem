@@ -13,7 +13,7 @@ app is click-through and demoable with zero backend — swap those two classes f
 ## Project layout
 
 ```
-AfroPhloem/
+Phloem/
   Models/            Vendor, Dish, CartItem, CountryOption, DeliveryOrder
   Services/          MockDataService (seed data), CartService (shared cart state)
   ViewModels/        One per screen, CommunityToolkit.Mvvm [ObservableProperty]/[RelayCommand]
@@ -57,7 +57,7 @@ matching the blueprint's "one app, multiple countries" behavior.
 ## Running it
 
 ```bash
-cd AfroPhloem
+cd Phloem
 dotnet restore
 dotnet build -t:Run -f net8.0-windows10.0.19041.0   # Windows desktop
 dotnet build -t:Run -f net8.0-maccatalyst           # Mac desktop
