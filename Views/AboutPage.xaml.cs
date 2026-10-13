@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿
+using System;
+using System.Collections.ObjectModel;
 using Phloem.Models;
 
 namespace Phloem.Views;
@@ -10,8 +12,35 @@ public partial class AboutPage : ContentPage
     public AboutPage()
     {
         InitializeComponent();
+
         BindingContext = this;
+
         LoadFeatures();
+    }
+
+    private async void OnMenuTapped(
+        object sender,
+        TappedEventArgs e)
+    {
+        try
+        {
+            if (Shell.Current is not null)
+            {
+                Shell.Current.FlyoutIsPresented = true;
+            }
+            else
+            {
+                await DisplayAlertAsync(
+                    "Navigation",
+                    "The navigation menu is currently unavailable.",
+                    "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"Unable to open navigation menu: {ex.Message}");
+        }
     }
 
     private void LoadFeatures()
