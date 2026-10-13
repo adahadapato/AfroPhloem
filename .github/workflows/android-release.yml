@@ -99,58 +99,36 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          Write-Host "Searching for generated Android packages..."
+          $releaseDir = "./bin/Release/net10.0-android"
+          $outputDir = "./release-output"
 
-          $files = @(
-            Get-ChildItem -Path "./bin/Release/net10.0-android" `
-              -Recurse -File |
-              Where-Object {
-                $_.Extension -in ".apk", ".aab"
-              }
-          )
+          Write-Host "Checking signed Android release packages..."
 
-          if ($files.Count -eq 0) {
-            throw "No APK or AAB files were generated."
+          $apkPath = Join-Path $releaseDir "com.phloem.app-Signed.apk"
+          $aabPath = Join-Path $releaseDir "publish/com.phloem.app-Signed.aab"
+
+          if (-not (Test-Path $apkPath -PathType Leaf)) {
+            throw "Signed APK not found: $apkPath"
           }
 
-          $files |
-            Select-Object FullName, Length |
-            Format-Table -AutoSize
-
-          $apk = @(
-            $files |
-              Where-Object {
-                $_.Extension -eq ".apk" -and
-                $_.Name -match "Signed"
-              }
-          )
-
-          $aab = @(
-            $files |
-              Where-Object {
-                $_.Extension -eq ".aab" -and
-                $_.Name -match "Signed"
-              }
-          )
-
-          if ($apk.Count -ne 1) {
-            throw "Expected exactly one signed APK; found $($apk.Count)."
-          }
-
-          if ($aab.Count -ne 1) {
-            throw "Expected exactly one signed AAB; found $($aab.Count)."
+          if (-not (Test-Path $aabPath -PathType Leaf)) {
+            throw "Signed AAB not found: $aabPath"
           }
 
           New-Item -ItemType Directory `
-            -Path "./release-output" -Force | Out-Null
+            -Path $outputDir -Force | Out-Null
 
-          Copy-Item $apk[0].FullName `
-            "./release-output/Phloem-Signed.apk"
+          Copy-Item $apkPath `
+            (Join-Path $outputDir "Phloem-Signed.apk")
 
-          Copy-Item $aab[0].FullName `
-            "./release-output/Phloem-Signed.aab"
+          Copy-Item $aabPath `
+            (Join-Path $outputDir "Phloem-Signed.aab")
 
-          Write-Host "Release packages prepared successfully."
+          Write-Host "Signed release packages prepared successfully."
+
+          Get-ChildItem $outputDir |
+            Select-Object Name, Length |
+            Format-Table -AutoSize
 
       - name: Upload signed Android APK
         uses: actions/upload-artifact@v4
