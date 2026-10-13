@@ -1,9 +1,10 @@
-using AfroPhloem.Services;
-using AfroPhloem.ViewModels;
-using AfroPhloem.Views;
+using Phloem;
+using Phloem.Services;
+using Phloem.ViewModels;
+using Phloem.Views;
 using Microsoft.Extensions.Logging;
 
-namespace AfroPhloem;
+namespace Phloem;
 
 /// <summary>
 /// class MauiProgram is the entry point for the .NET MAUI application. 
@@ -26,7 +27,12 @@ public static class MauiProgram
                 // Add custom .ttf files to Resources/Fonts and register them here if you
                 // want branded typography, e.g.:
                 // fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-            });
+            }).ConfigureMauiHandlers(handlers =>
+          {
+#if ANDROID
+              handlers.AddHandler(typeof(Shell), typeof(Phloem.Platforms.PhloemShellRenderer));
+#endif
+          });
 
 #if DEBUG
         builder.Logging.AddDebug();

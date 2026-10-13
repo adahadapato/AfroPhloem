@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
-using AfroPhloem.Views;
+using Phloem.Models;
+using Phloem.Services;
+using Phloem.Views;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 public partial class InternationalDeliveryViewModel : ObservableObject
 {
@@ -43,6 +43,10 @@ public partial class InternationalDeliveryViewModel : ObservableObject
     {
         _cart = cart;
     }
+
+    /// <summary>NEW: the Standard / Express / Bulk pills.</summary>
+    [RelayCommand]
+    private void SelectSpeed(DeliverySpeed speed) => SelectedSpeed = speed;
 
     [RelayCommand]
     private async Task ScheduleDelivery()

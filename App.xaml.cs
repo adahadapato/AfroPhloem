@@ -1,4 +1,4 @@
-namespace AfroPhloem;
+namespace Phloem;
 
 public partial class App : Application
 {

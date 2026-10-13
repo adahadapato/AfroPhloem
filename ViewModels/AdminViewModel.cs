@@ -1,10 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Models;
-using AfroPhloem.Services;
+using Phloem.Models;
+using Phloem.Services;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 public partial class AdminViewModel : ObservableObject
 {
@@ -14,8 +14,15 @@ public partial class AdminViewModel : ObservableObject
     public ObservableCollection<Vendor> ActiveVendors { get; } = new();
     public ObservableCollection<DeliveryOrder> Shipments { get; } = new();
 
+    /// <summary>NEW: everyone who has signed up (for the Users tab).</summary>
+    public ObservableCollection<User> Users { get; } = new();
+
     [ObservableProperty]
     public partial int TotalVendors { get; set; }
+
+    /// <summary>NEW: number of registered users (stat tile).</summary>
+    [ObservableProperty]
+    public partial int TotalUsers { get; set; }
 
     [ObservableProperty]
     public partial int PendingApprovalCount { get; set; }
@@ -42,14 +49,22 @@ public partial class AdminViewModel : ObservableObject
     [RelayCommand]
     private void ShowSellers() => ActiveTab = "Sellers";
 
+    /// <summary>NEW: the Users pill.</summary>
+    [RelayCommand]
+    private void ShowUsers() => ActiveTab = "Users";
+
     [RelayCommand]
     private void ShowShipments() => ActiveTab = "Shipments";
+
+    /// <summary>Called by the page each time it appears, so new sign-ups and shops show up.</summary>
+    public void Reload() => Refresh();
 
     private void Refresh()
     {
         PendingVendors.Clear();
         ActiveVendors.Clear();
         Shipments.Clear();
+        Users.Clear();
 
         foreach (var vendor in _data.Vendors.Where(v => !v.IsApproved).OrderByDescending(v => v.JoinedAt))
             PendingVendors.Add(vendor);
@@ -60,7 +75,12 @@ public partial class AdminViewModel : ObservableObject
         foreach (var shipment in _data.Shipments.OrderByDescending(s => s.CreatedAt))
             Shipments.Add(shipment);
 
+        // Admin accounts are not listed as customers
+        foreach (var user in _data.Users.Where(u => !u.IsAdmin).OrderByDescending(u => u.JoinedAt))
+            Users.Add(user);
+
         TotalVendors = _data.Vendors.Count;
+        TotalUsers = Users.Count;
         PendingApprovalCount = PendingVendors.Count;
         BlockedCount = _data.Vendors.Count(v => v.IsBlocked);
         TotalShipments = Shipments.Count;
@@ -89,6 +109,6 @@ public partial class AdminViewModel : ObservableObject
 
     [RelayCommand]
     private async Task ViewShop(Vendor vendor) =>
-    await Shell.Current.GoToAsync(
-        $"//listing?vendorId={Uri.EscapeDataString(vendor.Id)}&vendorName={Uri.EscapeDataString(vendor.Name)}");
+        await Shell.Current.GoToAsync(
+            $"//listing?vendorId={Uri.EscapeDataString(vendor.Id)}&vendorName={Uri.EscapeDataString(vendor.Name)}");
 }

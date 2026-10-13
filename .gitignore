@@ -1,3 +1,116 @@
+# =========================================================
+#  .gitignore for Phloem (.NET MAUI, Visual Studio)
+#  Put this file next to your .sln file.
+# =========================================================
+
+# ---------- Build output ----------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+publish/
+
+# ---------- Visual Studio ----------
 .vs/
-bin/
-obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.rsuser
+*.cache
+*.pdb
+*.ilk
+*.ipdb
+*.iobj
+*.tlog
+*.vspscc
+*.vssscc
+*.VisualState.xml
+_ReSharper*/
+*.DotSettings.user
+
+# ---------- Rider / VS Code ----------
+.idea/
+*.sln.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ---------- NuGet ----------
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+# ---------- .NET MAUI / Android ----------
+# Generated files
+Resource.designer.cs
+**/Resources/Resource.designer.cs
+*.binlog
+# App packages
+*.apk
+*.aab
+*.ipa
+*.msix
+*.appx
+*.appxbundle
+*.app/
+# Signing keys - NEVER commit these
+*.keystore
+*.jks
+# Android Studio / Gradle leftovers
+.gradle/
+local.properties
+captures/
+
+# ---------- iOS / Mac Catalyst ----------
+*.mobileprovision
+*.p12
+*.cer
+*.dSYM/
+*.dSYM.zip
+xcuserdata/
+*.xcuserstate
+
+# ---------- Tests ----------
+[Tt]est[Rr]esult*/
+TestResults/
+coverage*.json
+coverage*.xml
+*.coverage
+*.coveragexml
+
+# ---------- Secrets / local settings ----------
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+secrets.json
+
+# ---------- OS files ----------
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------- Misc ----------
+*.tmp
+*.bak
+*.swp
+*~

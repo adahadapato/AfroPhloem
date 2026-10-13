@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace AfroPhloem.Converters;
+namespace Phloem.Converters;
 
 public class InvertedBoolConverter : IValueConverter
 {

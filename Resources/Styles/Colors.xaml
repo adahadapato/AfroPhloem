@@ -3,25 +3,64 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Brand palette pulled from the Afro-Phloem blueprint -->
-    <Color x:Key="BrandDark">#2B3A25</Color>       <!-- deep bronze-green header -->
-    <Color x:Key="BrandGreen">#3F5A2E</Color>      <!-- primary buttons (Buy Food) -->
-    <Color x:Key="BrandGreenDark">#2E4321</Color>
-    <Color x:Key="BrandGold">#C9A24B</Color>       <!-- accent / logo ring -->
-    <Color x:Key="BrandGoldLight">#E8D9AE</Color>
-    <Color x:Key="BrandOrange">#E29A2D</Color>     <!-- Place Order CTA -->
-    <Color x:Key="BrandCream">#FBF3DD</Color>      <!-- page background -->
-    <Color x:Key="BrandCard">#FFFFFF</Color>
-    <Color x:Key="BrandTextDark">#2B2B2B</Color>
-    <Color x:Key="BrandTextMuted">#6B6B6B</Color>
-    <Color x:Key="BrandBorder">#E3DCC6</Color>
+    <!--
+        Phloem "Premium Green & Cream" palette (Option 3).
+        The original key names are kept so every existing page keeps working;
+        only their values changed. New keys are added below them.
+    -->
+
+    <!-- ===== Existing keys, new values ===== -->
+    <Color x:Key="BrandDark">#043D1F</Color>
+    <!-- Deep Emerald Green: main header background -->
+    <Color x:Key="BrandGreen">#046334</Color>
+    <!-- Button Green: add-to-cart and primary controls -->
+    <Color x:Key="BrandGreenDark">#012411</Color>
+    <!-- Dark Forest Green: dark end of hero gradient -->
+    <Color x:Key="BrandGold">#F4A51A</Color>
+    <!-- Golden Yellow: star ratings and accents -->
+    <Color x:Key="BrandGoldLight">#D0EBD9</Color>
+    <!-- Light Mint: soft text on green, green button highlights -->
+    <Color x:Key="BrandOrange">#E23902</Color>
+    <!-- Deep Orange: CTA buttons (white text) -->
+    <Color x:Key="BrandCream">#F8F5EF</Color>
+    <!-- Warm Cream: page background -->
+    <Color x:Key="BrandCard">#FCFBFA</Color>
+    <!-- Soft White: search and product cards -->
+    <Color x:Key="BrandTextDark">#070F19</Color>
+    <!-- Almost Black: headings and labels -->
+    <Color x:Key="BrandTextMuted">#4A5861</Color>
+    <!-- Slate Grey: secondary text on cream -->
+    <Color x:Key="BrandBorder">#E7E2D7</Color>
+    <!-- Hairline borders on cream -->
     <Color x:Key="BrandDanger">#C0392B</Color>
-    <Color x:Key="BrandSuccess">#3F5A2E</Color>
+    <Color x:Key="BrandSuccess">#046334</Color>
+
+    <!-- ===== New keys from the palette ===== -->
+    <Color x:Key="BrandHeroGreen">#013A1D</Color>
+    <!-- Primary Green: hero background -->
+    <Color x:Key="BrandLeafGreen">#125329</Color>
+    <!-- Leaf Green: decorative shapes -->
+    <Color x:Key="BrandNavGreen">#002F1D</Color>
+    <!-- Navigation Green: bottom navigation -->
+    <Color x:Key="BrandMintPale">#F2F9F3</Color>
+    <!-- Pale Mint Green: Buy Food card -->
+    <Color x:Key="BrandMint">#D0EBD9</Color>
+    <!-- Light Mint: green button highlights -->
+    <Color x:Key="BrandPeach">#FDF3E6</Color>
+    <!-- Pale Peach: Sell Food card accents -->
+    <Color x:Key="BrandOrangeLight">#F44D08</Color>
+    <!-- Light Orange: promo gradient, lighter side -->
+    <Color x:Key="BrandOrangeDark">#B22A01</Color>
+    <!-- Darker orange behind small white text (accessible) -->
+    <Color x:Key="BrandPrice">#E34B11</Color>
+    <!-- Red Orange: price accents -->
+    <Color x:Key="BrandStar">#F4A51A</Color>
+    <!-- Golden Yellow: star ratings -->
 
     <Color x:Key="White">#FFFFFF</Color>
     <Color x:Key="Black">#000000</Color>
     <Color x:Key="Gray100">#F5F5F5</Color>
     <Color x:Key="Gray300">#D9D9D9</Color>
-    <Color x:Key="Gray600">#6B6B6B</Color>
+    <Color x:Key="Gray600">#4A5861</Color>
 
 </ResourceDictionary>

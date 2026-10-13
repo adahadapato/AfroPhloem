@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Services;
+using Phloem.Services;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 /// <summary>
 /// Represents the view model for user login, providing properties and commands for authentication and navigation.
@@ -91,7 +91,8 @@ public partial class LoginViewModel : ObservableObject
     /// </summary>
     /// <returns></returns>
     [RelayCommand]
-    private async Task GoToRegister() => await Shell.Current.GoToAsync("//register");
+    //private async Task GoToRegister() => await Shell.Current.GoToAsync("//register");
+    private async Task GoToRegister() => await Shell.Current.GoToAsync("//login/register");
 
     /// <summary>
     /// command that handles the password recovery process, providing 

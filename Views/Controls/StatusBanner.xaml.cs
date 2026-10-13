@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AfroPhloem.Views.Controls;
+namespace Phloem.Views.Controls;
 
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class StatusBanner : ContentView

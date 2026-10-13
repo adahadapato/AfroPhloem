@@ -1,61 +1,108 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AppShell: the container every page loads inside.
+
+    Bottom bar (always visible): Home · Explore · Orders (basket + recent orders) · Account
+    Every other page opens ON TOP of a tab, so the bottom bar stays on screen:
+        About, Sign Up, Admin      → open under the Account tab (Account stays highlighted)
+        Vendors, Become a Seller,
+        Seller Dashboard           → open under the Home tab
+    Those page routes are registered in AppShell.xaml.cs.
+-->
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-       xmlns:views="clr-namespace:AfroPhloem.Views"
-       x:Class="AfroPhloem.AppShell"
+       xmlns:views="clr-namespace:Phloem.Views"
+       x:Class="Phloem.AppShell"
        Title="Phloem"
        FlyoutBehavior="Flyout"
-       BackgroundColor="{StaticResource BrandDark}">
+       FlyoutBackgroundColor="{StaticResource BrandCream}"
+       BackgroundColor="{StaticResource BrandDark}"
+       Shell.TabBarBackgroundColor="{StaticResource BrandNavGreen}"
+       Shell.TabBarForegroundColor="{StaticResource BrandOrangeLight}"
+       Shell.TabBarTitleColor="{StaticResource BrandOrangeLight}"
+       Shell.TabBarUnselectedColor="{StaticResource BrandMint}">
 
+    <!-- ============ Side menu header ============ -->
     <Shell.FlyoutHeader>
-        <Grid HeightRequest="140" BackgroundColor="{StaticResource BrandDark}" Padding="20">
-            <VerticalStackLayout VerticalOptions="Center" Spacing="4">
-                <Label Text="Phloem" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource BrandGold}" />
-                <Label Text="Connecting Africa to its diaspora" FontSize="12" TextColor="White" Opacity="0.7" />
-            </VerticalStackLayout>
+        <Grid HeightRequest="150" BackgroundColor="{StaticResource BrandDark}" Padding="20,0">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10" WidthRequest="300" HeightRequest="300"
+                     HorizontalOptions="Start" VerticalOptions="Start" Margin="-90,-40,0,0" />
+            <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                <Image Source="header_logo.png" WidthRequest="48" HeightRequest="48" VerticalOptions="Center" />
+                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                    <Label Text="Phloem" FontSize="24" FontAttributes="Bold" TextColor="White" />
+                    <Label Text="Connecting Africa to its diaspora" FontSize="12"
+                           TextColor="{StaticResource BrandGoldLight}" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
         </Grid>
     </Shell.FlyoutHeader>
-   
-    <FlyoutItem Title="Home">
-        <ShellContent ContentTemplate="{DataTemplate views:HomePage}" Route="home" />
-    </FlyoutItem>
-    <FlyoutItem Title="About">
-        <ShellContent ContentTemplate="{DataTemplate views:AboutPage}" Route="about" />
-    </FlyoutItem>
-    <FlyoutItem Title="Browse &amp; Order">
-        <ShellContent ContentTemplate="{DataTemplate views:FoodListingPage}" Route="listing" />
-    </FlyoutItem>
-    <FlyoutItem Title="Sellers &amp; Vendors">
-        <ShellContent ContentTemplate="{DataTemplate views:VendorsListPage}" Route="vendors" />
-    </FlyoutItem>
-    <FlyoutItem Title="Become a Seller">
-        <ShellContent ContentTemplate="{DataTemplate views:SellerSetupPage}" Route="sellersetup" />
+
+    <!-- ============ Side menu: style for the tab entries ============ -->
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid Padding="12,3">
+                <Border x:Name="ItemBorder" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                        Padding="14,12" BackgroundColor="Transparent">
+                    <Label x:Name="ItemLabel" Text="{Binding Title}" FontSize="15"
+                           TextColor="{StaticResource BrandTextDark}" />
+                </Border>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Selected">
+                                <VisualState.Setters>
+                                    <Setter TargetName="ItemBorder" Property="Border.BackgroundColor"
+                                            Value="{StaticResource BrandMint}" />
+                                    <Setter TargetName="ItemLabel" Property="Label.TextColor"
+                                            Value="{StaticResource BrandDark}" />
+                                    <Setter TargetName="ItemLabel" Property="Label.FontAttributes" Value="Bold" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
+    <!-- ============ Side menu: style for the other pages (same look) ============ -->
+    <Shell.MenuItemTemplate>
+        <DataTemplate>
+            <Grid Padding="12,3">
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                        Padding="14,12" BackgroundColor="Transparent">
+                    <Label Text="{Binding Text}" FontSize="15"
+                           TextColor="{StaticResource BrandTextDark}" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </Shell.MenuItemTemplate>
+
+    <!-- ============ Bottom bar: 4 tabs ============ -->
+    <FlyoutItem Title="Phloem" Route="main" FlyoutDisplayOptions="AsMultipleItems">
+        <Tab Title="Home" Icon="tab_home.png">
+            <ShellContent Title="Home" ContentTemplate="{DataTemplate views:HomePage}" Route="home" />
+        </Tab>
+        <Tab Title="Explore" Icon="tab_explore.png">
+            <ShellContent Title="Browse &amp; Order" ContentTemplate="{DataTemplate views:FoodListingPage}" Route="listing" />
+        </Tab>
+        <Tab Title="Orders" Icon="tab_orders.png">
+            <ShellContent Title="My Orders" ContentTemplate="{DataTemplate views:OrdersPage}" Route="orders" />
+        </Tab>
+        <Tab Title="Account" Icon="tab_account.png">
+            <ShellContent Title="Log In" ContentTemplate="{DataTemplate views:LoginPage}" Route="login" />
+        </Tab>
     </FlyoutItem>
 
-    <FlyoutItem Title="Seller Dashboard">
-        <ShellContent ContentTemplate="{DataTemplate views:SellerDashboardPage}" Route="dashboard" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Send Food to UK">
-        <ShellContent ContentTemplate="{DataTemplate views:InternationalDeliveryPage}" Route="international" />
-    </FlyoutItem>
-
-    <!--<FlyoutItem Title="Sign Up / Log In">
-        <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
-    </FlyoutItem>-->
-    <FlyoutItem Title="Admin Dashboard">
-        <ShellContent ContentTemplate="{DataTemplate views:AdminPage}" Route="admin" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Log In">
-        <ShellContent ContentTemplate="{DataTemplate views:LoginPage}" Route="login" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Sign Up">
-        <ShellContent ContentTemplate="{DataTemplate views:RegisterPage}" Route="register" />
-    </FlyoutItem>
-    <!-- Checkout is reached via navigation, not the flyout 
-    <ShellContent ContentTemplate="{DataTemplate views:CheckoutPage}" Route="checkout"
-                  Shell.FlyoutItemIsVisible="False" Shell.NavBarIsVisible="False" />-->
+    <!-- ============ Side menu: other pages (open on top of a tab, bottom bar stays) ============ -->
+    <MenuItem Text="Send Food to UK"  CommandParameter="//home/international" Clicked="OnMenuItemClicked" />
+    <MenuItem Text="About"            CommandParameter="//login/about"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Sellers &amp; Vendors" CommandParameter="//home/vendors" Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Become a Seller"  CommandParameter="//home/sellersetup" Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Seller Dashboard" CommandParameter="//home/dashboard"   Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Admin Dashboard"  CommandParameter="//login/admin"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Sign Up"          CommandParameter="//login/register"   Clicked="OnMenuItemClicked" />
 
 </Shell>

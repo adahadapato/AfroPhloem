@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using AfroPhloem.Services;
+using Phloem.Services;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 public partial class SellerSetupViewModel : ObservableObject
 {
@@ -37,6 +37,16 @@ public partial class SellerSetupViewModel : ObservableObject
     {
         _data = data;
         _session = session;
+    }
+
+    /// <summary>
+    /// Called by the page each time it appears, so the signed-in / not-signed-in
+    /// notice updates after the person logs in or creates an account.
+    /// </summary>
+    public void RefreshSession()
+    {
+        OnPropertyChanged(nameof(IsLoggedIn));
+        OnPropertyChanged(nameof(LoggedInAsText));
     }
 
     [RelayCommand]

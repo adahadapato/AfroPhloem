@@ -1,83 +1,222 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    VendorsListPage: redesigned to match "VendorsListPage.xaml / vendors / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Uses VendorsListViewModel (VendorListItem cards, CountryFilter chips, search).
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
              x:DataType="vm:VendorsListViewModel"
-             x:Class="AfroPhloem.Views.VendorsListPage"
+             x:Class="Phloem.Views.VendorsListPage"
              x:Name="RootPage"
              Shell.NavBarIsVisible="False"
              Title="Vendors">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <ContentPage.Resources>
+        <!-- Country chips (unselected look) -->
+        <Style x:Key="CountryChip" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="Padding" Value="18,0" />
+        </Style>
+    </ContentPage.Resources>
 
-        <controls:AppHeaderBar Grid.Row="0"
-                                Countries="{Binding Countries}"
-                                SelectedCountry="{Binding SelectedCountry}"
-                                SearchText="{Binding SearchText}"
-                                ShowSearch="True" />
+    <Grid RowDefinitions="Auto,*">
 
-        <Grid Grid.Row="1" Padding="16,12,16,4">
-            <Label Text="Sellers &amp; Vendors" Style="{StaticResource SectionTitle}" />
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <!-- Flag pill: tap to change country -->
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="{Binding SelectedCountry.FlagEmoji}" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCountryTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
         </Grid>
 
-        <CollectionView Grid.Row="2" ItemsSource="{Binding Vendors}" Margin="16">
-            <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:Vendor">
-                    <Border Style="{StaticResource VendorCard}">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer
-                                Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
-                                CommandParameter="{Binding .}" />
-                        </Border.GestureRecognizers>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="700" HorizontalOptions="Fill">
 
-                        <VerticalStackLayout Spacing="0">
-                            <!-- Cover banner + overlapping avatar + floating badges -->
-                            <Grid HeightRequest="72">
-                                <Border StrokeShape="Rectangle" Stroke="Transparent">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#3F5A2E" Offset="0.0" />
-                                            <GradientStop Color="#2B3A25" Offset="1.0" />
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="Meet local vendors" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Authentic African food, trusted sellers"
+                           Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
 
-                                <!-- Verified badge, top-left -->
-                                <Border Style="{StaticResource RatingBadge}" HorizontalOptions="Start" VerticalOptions="Start"
-                                        Margin="8" IsVisible="{Binding IsVerified}">
-                                    <Label Text="✅ Verified" TextColor="White" FontSize="10" FontAttributes="Bold" />
-                                </Border>
+                <!-- ============ SEARCH ============ -->
+                <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                        StrokeShape="RoundRectangle 12" Padding="14,0" HeightRequest="48">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Path Data="M3,10 A7,7 0 1 0 17,10 A7,7 0 1 0 3,10 M15.5,15.5 L21,21"
+                              Stroke="{StaticResource BrandTextMuted}" StrokeThickness="2" StrokeLineCap="Round"
+                              WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                        <Entry Grid.Column="1" Placeholder="Search shops and sellers"
+                               Text="{Binding SearchText}" ReturnType="Search"
+                               BackgroundColor="Transparent" FontSize="14"
+                               TextColor="{StaticResource BrandTextDark}"
+                               PlaceholderColor="{StaticResource BrandTextMuted}"
+                               VerticalOptions="Center" />
+                        <Path Grid.Column="2"
+                              Data="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18 M7,4 L7,8 M16,10 L16,14 M10,16 L10,20"
+                              Stroke="{StaticResource BrandTextMuted}" StrokeThickness="2" StrokeLineCap="Round"
+                              WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
 
-                                <!-- Rating badge, top-right -->
-                                <Border Style="{StaticResource RatingBadge}" HorizontalOptions="End" VerticalOptions="Start" Margin="8">
-                                    <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" TextColor="White" FontSize="11" FontAttributes="Bold" />
-                                </Border>
+                <!-- ============ COUNTRY CHIPS ============ -->
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="All vendors" Style="{StaticResource CountryChip}"
+                                Command="{Binding FilterCountryCommand}" CommandParameter="All">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CountryFilter}" Value="All">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Ghana" Style="{StaticResource CountryChip}"
+                                Command="{Binding FilterCountryCommand}" CommandParameter="Ghana">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CountryFilter}" Value="Ghana">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Nigeria" Style="{StaticResource CountryChip}"
+                                Command="{Binding FilterCountryCommand}" CommandParameter="Nigeria">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CountryFilter}" Value="Nigeria">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="UK" Style="{StaticResource CountryChip}"
+                                Command="{Binding FilterCountryCommand}" CommandParameter="United Kingdom">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CountryFilter}" Value="United Kingdom">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </HorizontalStackLayout>
+                </ScrollView>
 
-                                <Border StrokeShape="RoundRectangle 30" Stroke="{StaticResource BrandCard}" StrokeThickness="3"
-                                        WidthRequest="60" HeightRequest="60" VerticalOptions="End" Margin="0,0,0,-30"
-                                        BackgroundColor="{StaticResource BrandCream}">
-                                    <Image Source="header_logo.png" Aspect="AspectFit" Margin="6" />
-                                </Border>
-                            </Grid>
+                <!-- ============ LIST ============ -->
+                <Label Text="Verified &amp; popular" Style="{StaticResource SectionTitle}" Margin="2,8,0,0" />
 
-                            <VerticalStackLayout Spacing="4" Padding="12,36,12,14" HorizontalOptions="Center">
-                                <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="14"
-                                       TextColor="{StaticResource BrandTextDark}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" />
-                                <Label Text="{Binding DishCount, StringFormat='{0} dishes'}" Style="{StaticResource SubtleLabel}" HorizontalOptions="Center" />
-                                <Button Text="View Shop" Style="{StaticResource OutlineButton}" FontSize="12" HeightRequest="34"
+                <Label Text="No vendors match your search yet." Style="{StaticResource SubtleLabel}"
+                       Margin="2,0,0,0" IsVisible="{Binding IsEmpty}" />
+
+                <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Vendors}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:VendorListItem">
+                            <Border BackgroundColor="White" StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 16" Padding="8">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                                </Border.Shadow>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
                                         Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
                                         CommandParameter="{Binding .}" />
-                            </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                                </Border.GestureRecognizers>
 
+                                <Grid ColumnDefinitions="88,*" ColumnSpacing="12">
+                                    <!-- Dish photo -->
+                                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                            WidthRequest="88" HeightRequest="68">
+                                        <Image Source="{Binding CoverImage}" Aspect="AspectFill" />
+                                    </Border>
+
+                                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto"
+                                          RowSpacing="3" Padding="0,2,4,0" VerticalOptions="Center">
+                                        <Label Text="{Binding Vendor.Name}" FontSize="16" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" />
+                                        <Label Grid.Column="1" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandOrange}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="★ " />
+                                                    <Span Text="{Binding Vendor.Rating, StringFormat='{0:0.0}'}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+
+                                        <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="12"
+                                               TextColor="{StaticResource BrandTextMuted}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Tagline}" />
+                                                    <Span Text="  ·  " />
+                                                    <Span Text="{Binding DishCount, StringFormat='{0} dishes'}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+
+                                        <Label Grid.Row="2" Text="✓  Verified" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandDark}"
+                                               IsVisible="{Binding Vendor.IsVerified}" />
+                                        <Label Grid.Row="2" Grid.Column="1" Text="View  →" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandDark}" />
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>

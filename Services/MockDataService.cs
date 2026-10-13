@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using AfroPhloem.Models;
+using Phloem.Models;
 
-namespace AfroPhloem.Services;
+namespace Phloem.Services;
 
 /// <summary>
 /// In-memory data source standing in for a real API. Swap the methods below
@@ -52,17 +52,17 @@ public class MockDataService
     {
         Dishes = new List<Dish>
         {
-            new() { Name = "Jollof Rice",      Price = 25.00m, Rating = 4.8, Category = "Local Meals", Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id },
-            new() { Name = "Waakye",           Price = 20.00m, Rating = 4.5, Category = "Local Meals", Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id },
-            new() { Name = "Egusi Soup",       Price = 28.00m, Rating = 4.7, Category = "Local Meals", Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id },
-            new() { Name = "Suya Skewers",     Price = 15.00m, Rating = 4.9, Category = "Snacks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id },
-            new() { Name = "Chin Chin",        Price = 8.00m,  Rating = 4.4, Category = "Snacks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id },
-            new() { Name = "Zobo Drink",       Price = 6.00m,  Rating = 4.3, Category = "Drinks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id },
-            new() { Name = "Kelewele",         Price = 10.00m, Rating = 4.6, Category = "Snacks",      Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id },
-            new() { Name = "Sobolo",           Price = 6.00m,  Rating = 4.5, Category = "Drinks",      Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id },
-            new() { Name = "Pounded Yam & Egusi", Price = 30.00m, Rating = 4.9, Category = "Local Meals", Country = "United Kingdom", VendorName = "Diaspora Delights", VendorId = Vendors[2].Id },
-            new() { Name = "Banku & Tilapia", Price = 27.00m, Rating = 4.7, Category = "Local Meals", Country = "Ghana", VendorName = "Food Affairs Ltd", VendorId = Vendors[3].Id },
-            new() { Name = "Meat Pie",         Price = 9.00m,  Rating = 4.6, Category = "Snacks",      Country = "Ghana",   VendorName = "Food Affairs Ltd",   VendorId = Vendors[3].Id },
+            new() { Name = "Jollof Rice",      Price = 25.00m, Rating = 4.8, Category = "Local Meals", Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id, ImageUrl = "jollof_rice.png" },
+            new() { Name = "Waakye",           Price = 20.00m, Rating = 4.5, Category = "Local Meals", Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[1].Id, ImageUrl = "waakye.png" },
+            new() { Name = "Egusi Soup",       Price = 28.00m, Rating = 4.7, Category = "Local Meals", Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[0].Id, ImageUrl = "egusi_soup.png" },
+            new() { Name = "Suya Skewers",     Price = 15.00m, Rating = 4.9, Category = "Snacks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id, ImageUrl = "suya_skewers.png" },
+            new() { Name = "Chin Chin",        Price = 8.00m,  Rating = 4.4, Category = "Snacks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id, ImageUrl = "chin_chin.png" },
+            new() { Name = "Zobo Drink",       Price = 6.00m,  Rating = 4.3, Category = "Drinks",      Country = "Nigeria", VendorName = "Lagos Flavours",      VendorId = Vendors[1].Id, ImageUrl = "zobo_drink.png" },
+            new() { Name = "Kelewele",         Price = 10.00m, Rating = 4.6, Category = "Snacks",      Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id, ImageUrl = "kelewele.png" },
+            new() { Name = "Sobolo",           Price = 6.00m,  Rating = 4.5, Category = "Drinks",      Country = "Ghana",   VendorName = "Mama Ama's Kitchen", VendorId = Vendors[0].Id, ImageUrl = "sobolo.png" },
+            new() { Name = "Pounded Yam & Egusi", Price = 30.00m, Rating = 4.9, Category = "Local Meals", Country = "United Kingdom", VendorName = "Diaspora Delights", VendorId = Vendors[2].Id, ImageUrl = "pounded_yam_egusi.png" },
+            new() { Name = "Banku & Tilapia", Price = 27.00m, Rating = 4.7, Category = "Local Meals", Country = "Ghana", VendorName = "Food Affairs Ltd", VendorId = Vendors[3].Id, ImageUrl = "banku_tilapia.png" },
+            new() { Name = "Meat Pie",         Price = 9.00m,  Rating = 4.6, Category = "Snacks",      Country = "Ghana",   VendorName = "Food Affairs Ltd",   VendorId = Vendors[3].Id, ImageUrl = "meat_pie.png" },
         };
     }
 

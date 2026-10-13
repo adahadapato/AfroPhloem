@@ -1,45 +1,238 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    RegisterPage: redesigned to match "RegisterPage.xaml / register / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Same RegisterViewModel bindings as before, plus IsSeller (Buyer | Seller choice).
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
              x:DataType="vm:RegisterViewModel"
-             x:Class="AfroPhloem.Views.RegisterPage"
+             x:Class="Phloem.Views.RegisterPage"
              Shell.NavBarIsVisible="False"
              Title="Sign Up">
 
+    <ContentPage.Resources>
+        <!-- Field label above each input -->
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <!-- Rounded input box -->
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HeightRequest" Value="48" />
+        </Style>
+        <Style x:Key="FieldEntry" TargetType="Entry">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="PlaceholderColor" Value="{StaticResource BrandTextMuted}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
-        <controls:AppHeaderBar Grid.Row="0" ShowBackButton="False" />
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="560" HorizontalOptions="Center">
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
 
-                <Label Text="Create your Phloem account" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
-                <Label Text="Selling instead? Head to Become a Seller from the menu once you're signed up."
-                       Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <!-- Menu (opens the side menu) -->
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
 
-                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
-                    <Entry Placeholder="Full Name" Text="{Binding FullName}" BackgroundColor="Transparent" />
-                </Border>
-                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
-                    <Entry Placeholder="Email" Keyboard="Email" Text="{Binding Email}" BackgroundColor="Transparent" />
-                </Border>
-                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
-                    <Entry Placeholder="Phone Number" Keyboard="Telephone" Text="{Binding PhoneNumber}" BackgroundColor="Transparent" />
-                </Border>
-                <Border Style="{StaticResource InputBorder}" HorizontalOptions="Fill">
-                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Password}" BackgroundColor="Transparent" />
-                </Border>
-
-                <HorizontalStackLayout Spacing="8">
-                    <CheckBox IsChecked="{Binding AgreedToTerms}" />
-                    <Label Text="I agree to the Terms &amp; Conditions" VerticalOptions="Center" TextColor="{StaticResource BrandTextDark}" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
                 </HorizontalStackLayout>
 
-                <Button Text="Sign Up" Style="{StaticResource PrimaryButton}" Command="{Binding SignUpCommand}"
-                        HorizontalOptions="Fill" />
+                <!-- Flag pill (country chosen on Home) -->
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label x:Name="FlagLabel" Text="🌍" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="Create your account" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Join food lovers across Africa and the UK"
+                           Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ ACCOUNT TYPE: Buyer | Seller ============ -->
+                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14" Padding="4" HeightRequest="50">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+
+                        <!-- Buyer -->
+                        <Border x:Name="BuyerOption" StrokeThickness="0" StrokeShape="RoundRectangle 11"
+                                BackgroundColor="{StaticResource BrandDark}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSeller}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBuyerTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="🧺  I want to buy" FontSize="14" FontAttributes="Bold" TextColor="White"
+                                   HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsSeller}" Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+
+                        <!-- Seller -->
+                        <Border Grid.Column="1" StrokeThickness="0" StrokeShape="RoundRectangle 11"
+                                BackgroundColor="Transparent">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSeller}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource BrandOrange}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSellerTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="🏪  I want to sell" FontSize="14" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextMuted}"
+                                   HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsSeller}" Value="True">
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Shown only when Seller is chosen -->
+                <Label IsVisible="{Binding IsSeller}" Margin="4,-4,4,0" FontSize="12"
+                       TextColor="{StaticResource BrandTextMuted}"
+                       Text="After creating your account you'll set up your shop: logo, business name and contact details." />
+
+                <!-- ============ FORM CARD ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18" Padding="16,18">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+
+                    <VerticalStackLayout Spacing="16">
+
+                        <VerticalStackLayout>
+                            <Label Text="Full name" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Enter your name" Text="{Binding FullName}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Email address" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="you@example.com" Keyboard="Email" Text="{Binding Email}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Password" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Create a strong password" IsPassword="True" Text="{Binding Password}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Phone number" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="+44 7xxx xxx xxx" Keyboard="Telephone" Text="{Binding PhoneNumber}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Delivery address" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Street, city and postcode" Text="{Binding Address}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Terms -->
+                        <HorizontalStackLayout Spacing="4" Margin="-6,0,0,0">
+                            <CheckBox IsChecked="{Binding AgreedToTerms}" Color="{StaticResource BrandGreen}"
+                                      VerticalOptions="Center" />
+                            <Label Text="I agree to the Terms &amp; Conditions" FontSize="13"
+                                   TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ SUBMIT ============ -->
+                <Button Text="Create account" Command="{Binding SignUpCommand}"
+                        BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                        FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsSeller}" Value="True">
+                            <Setter Property="Text" Value="Create account &amp; set up shop" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
 
                 <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
+                <!-- Already registered -->
+                <Label HorizontalOptions="Center" FontSize="13" Margin="0,2,0,0">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Already have an account? " TextColor="{StaticResource BrandTextMuted}" />
+                            <Span Text="Log in" TextColor="{StaticResource BrandGreen}" FontAttributes="Bold">
+                                <Span.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLogInTapped" />
+                                </Span.GestureRecognizers>
+                            </Span>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

@@ -1,66 +1,232 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    InternationalDeliveryPage: redesigned to match
+    "InternationalDeliveryPage.xaml / international / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Same InternationalDeliveryViewModel bindings, plus SelectSpeedCommand for the pills.
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
              x:DataType="vm:InternationalDeliveryViewModel"
-             x:Class="AfroPhloem.Views.InternationalDeliveryPage"
+             x:Class="Phloem.Views.InternationalDeliveryPage"
              Shell.NavBarIsVisible="False"
              Title="Deliver to UK">
 
+    <ContentPage.Resources>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HeightRequest" Value="48" />
+        </Style>
+        <Style x:Key="FieldEntry" TargetType="Entry">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="PlaceholderColor" Value="{StaticResource BrandTextMuted}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <!-- Standard / Express / Bulk pills (unselected look) -->
+        <Style x:Key="SpeedPill" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="Padding" Value="22,0" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
-        <controls:AppHeaderBar Grid.Row="0" />
+
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label x:Name="FlagLabel" Text="🌍" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Center">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
 
-                <Label Text="✈️ Send African Food to the UK" Style="{StaticResource SectionTitle}" HorizontalTextAlignment="Center" />
-                <Label Text="Dry foods, packaged African items, and bulk diaspora orders — delivered legally and reliably."
-                   Style="{StaticResource SubtleLabel}" HorizontalTextAlignment="Center" />
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="Send food to the UK" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="African flavours, delivered globally"
+                           Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
 
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Sender Name" Text="{Binding SenderName}" BackgroundColor="Transparent" />
+                <!-- ============ ORANGE BANNER ============ -->
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="16,14">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="{StaticResource BrandOrange}" Offset="0.0" />
+                            <GradientStop Color="{StaticResource BrandOrangeDark}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <VerticalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="10">
+                            <!-- Plane icon -->
+                            <Path Data="M21,16 L21,14 L13,9 L13,3.5 A1.5,1.5 0 0 0 10,3.5 L10,9 L2,14 L2,16 L10,13.5 L10,19 L8,20.5 L8,22 L11.5,21 L15,22 L15,20.5 L13,19 L13,13.5 Z"
+                                  Fill="White" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"
+                                  Rotation="90" />
+                            <Label Text="Ship from Ghana or Nigeria" FontSize="17" FontAttributes="Bold"
+                                   TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Label Text="Reliable delivery to loved ones in the UK" FontSize="12" TextColor="White" />
+                    </VerticalStackLayout>
                 </Border>
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="Recipient Name" Text="{Binding RecipientName}" BackgroundColor="Transparent" />
+
+                <!-- ============ FORM CARD ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18" Padding="16,18">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+
+                    <VerticalStackLayout Spacing="16">
+                        <VerticalStackLayout>
+                            <Label Text="Sender name" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Full name" Text="{Binding SenderName}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Recipient name" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Full name in the UK" Text="{Binding RecipientName}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="UK delivery address" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="Street, city and postcode" Text="{Binding UkAddress}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Description of goods" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Placeholder="e.g. Packaged dry foods" Text="{Binding ItemDescription}"
+                                       Style="{StaticResource FieldEntry}" />
+                            </Border>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
                 </Border>
-                <Border Style="{StaticResource InputBorder}">
-                    <Editor Placeholder="UK Delivery Address" Text="{Binding UkAddress}" BackgroundColor="Transparent" HeightRequest="80" />
+
+                <!-- ============ DELIVERY OPTION ============ -->
+                <Label Text="Delivery option" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,8,0,0" />
+
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Standard" Style="{StaticResource SpeedPill}"
+                            Command="{Binding SelectSpeedCommand}"
+                            CommandParameter="{x:Static models:DeliverySpeed.Standard}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
+                                         Value="{x:Static models:DeliverySpeed.Standard}">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="TextColor" Value="White" />
+                                <Setter Property="FontAttributes" Value="Bold" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Text="Express" Style="{StaticResource SpeedPill}"
+                            Command="{Binding SelectSpeedCommand}"
+                            CommandParameter="{x:Static models:DeliverySpeed.Express}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
+                                         Value="{x:Static models:DeliverySpeed.Express}">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="TextColor" Value="White" />
+                                <Setter Property="FontAttributes" Value="Bold" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Text="Bulk" Style="{StaticResource SpeedPill}"
+                            Command="{Binding SelectSpeedCommand}"
+                            CommandParameter="{x:Static models:DeliverySpeed.Bulk}">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
+                                         Value="{x:Static models:DeliverySpeed.Bulk}">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="TextColor" Value="White" />
+                                <Setter Property="FontAttributes" Value="Bold" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </HorizontalStackLayout>
+
+                <!-- Estimated fee -->
+                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="14,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Estimated shipping fee" FontSize="13"
+                               TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding EstimatedFee, StringFormat='£{0:0.00}'}"
+                               FontSize="16" FontAttributes="Bold" TextColor="{StaticResource BrandDark}"
+                               VerticalOptions="Center" />
+                    </Grid>
                 </Border>
-                <Border Style="{StaticResource InputBorder}">
-                    <Entry Placeholder="What are you sending? (e.g., dried plantain, egusi, spices)"
-                       Text="{Binding ItemDescription}" BackgroundColor="Transparent" />
-                </Border>
 
-                <Label Text="Delivery Type" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                <CollectionView ItemsSource="{Binding SpeedOptions}" SelectionMode="Single"
-                        SelectedItem="{Binding SelectedSpeed}" HeightRequest="150">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:DeliverySpeed">
-                            <Grid Padding="10,8">
-                                <Label x:Name="OptionLabel" Text="{Binding .}" TextColor="{StaticResource BrandGold}" />
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroup x:Name="CommonStates">
-                                        <VisualState x:Name="Normal" />
-                                        <VisualState x:Name="Selected">
-                                            <VisualState.Setters>
-                                                <Setter TargetName="OptionLabel" Property="Label.TextColor" Value="White" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateManager.VisualStateGroups>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                <!-- ============ SUBMIT ============ -->
+                <Button Text="Schedule delivery" Command="{Binding ScheduleDeliveryCommand}"
+                        Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,4,0,0" />
 
-                <Label Text="{Binding EstimatedFee, StringFormat='Estimated fee: £{0:0.00}'}" FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" />
-
-                <Button Text="Schedule Delivery →" Style="{StaticResource CtaButton}" Command="{Binding ScheduleDeliveryCommand}" />
-
-                 <!-- <Label Text="{Binding StatusMessage}" TextColor="{StaticResource BrandDanger}" HorizontalTextAlignment="Center" />-->
                 <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

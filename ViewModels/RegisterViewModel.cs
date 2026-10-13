@@ -1,8 +1,8 @@
-using AfroPhloem.Services;
+using Phloem.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace AfroPhloem.ViewModels;
+namespace Phloem.ViewModels;
 
 /// <summary>
 /// contains the properties and commands for the RegisterPage view.
@@ -50,6 +50,13 @@ public partial class RegisterViewModel : ObservableObject
     public partial bool AgreedToTerms { get; set; }
 
     /// <summary>
+    /// true when the person chose "I want to sell" on the Buyer | Seller toggle.
+    /// After sign-up they are taken straight to seller setup instead of Home.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsSeller { get; set; }
+
+    /// <summary>
     /// property for the status message to display to the user.
     /// </summary>
     [ObservableProperty]
@@ -78,6 +85,7 @@ public partial class RegisterViewModel : ObservableObject
     /// <summary>
     /// command to handle the sign-up process when the user clicks the sign-up button.
     /// Validates the form, persists the new account, and signs the user in automatically.
+    /// Sellers then continue to seller setup; buyers go to Home.
     /// </summary>
     /// <returns></returns>
     [RelayCommand]
@@ -111,7 +119,11 @@ public partial class RegisterViewModel : ObservableObject
         _session.CurrentUser = user;
 
         IsError = false;
-        StatusMessage = $"Welcome, {FullName}! Your account is ready.";
-        await Shell.Current.GoToAsync("//home");
+        StatusMessage = IsSeller
+            ? $"Welcome, {FullName}! Now let's set up your shop."
+            : $"Welcome, {FullName}! Your account is ready.";
+
+        // Sellers continue to shop setup (business name, logo, contact details).
+        await Shell.Current.GoToAsync(IsSeller ? "//home/sellersetup" : "//home");
     }
 }

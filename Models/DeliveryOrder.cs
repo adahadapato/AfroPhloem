@@ -1,4 +1,4 @@
-namespace AfroPhloem.Models;
+namespace Phloem.Models;
 
 /// <summary>
 /// enumeration representing the different delivery speeds available for shipment,

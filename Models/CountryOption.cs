@@ -1,4 +1,4 @@
-namespace AfroPhloem.Models;
+namespace Phloem.Models;
 
 public class CountryOption
 {

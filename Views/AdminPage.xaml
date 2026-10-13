@@ -1,191 +1,312 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AdminPage: redesigned to match "AdminPage.xaml / admin / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Uses AdminViewModel (existing commands + Users, TotalUsers, ShowUsers).
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             xmlns:conv="clr-namespace:Phloem.Converters"
              x:DataType="vm:AdminViewModel"
-             x:Class="AfroPhloem.Views.AdminPage"
+             x:Class="Phloem.Views.AdminPage"
              x:Name="RootPage"
              Shell.NavBarIsVisible="False"
              Title="Admin Dashboard">
 
+    <ContentPage.Resources>
+        <conv:RelativeDateConverter x:Key="RelativeDate" />
+
+        <!-- White card -->
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TileNumber" TargetType="Label">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandDark}" />
+        </Style>
+        <Style x:Key="TileCaption" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <!-- Sellers / Users / Shipments pills -->
+        <Style x:Key="TabPill" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="Padding" Value="20,0" />
+        </Style>
+        <!-- Small Approve / Reject chips -->
+        <Style x:Key="ChipButton" TargetType="Button">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HeightRequest" Value="30" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="BorderWidth" Value="0" />
+        </Style>
+        <Style x:Key="SmallSubtle" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
-        <controls:AppHeaderBar Grid.Row="0" />
+
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label x:Name="FlagLabel" Text="🌍" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="16" Spacing="16" MaximumWidthRequest="700" HorizontalOptions="Center">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="700" HorizontalOptions="Fill">
 
-                <Label Text="Admin Dashboard" Style="{StaticResource SectionTitle}" />
-                <Label Text="Manage sellers and monitor cross-border shipments." Style="{StaticResource SubtleLabel}" />
+                <!-- ============ TITLE ============ -->
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,2">
+                    <Label Text="Admin dashboard" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Manage the Phloem marketplace" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
 
-                <!-- Stats strip -->
-                <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="8">
-                    <Border Grid.Column="0" Style="{StaticResource StatTile}" WidthRequest="-1" HorizontalOptions="Fill">
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Text="{Binding TotalVendors}" Style="{StaticResource StatNumber}" />
-                            <Label Text="Total Sellers" Style="{StaticResource StatCaption}" />
+                <!-- ============ STATS (2 × 2) ============ -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource WhiteCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding TotalVendors, StringFormat='{0:N0}'}" Style="{StaticResource TileNumber}" />
+                            <Label Text="Total sellers" Style="{StaticResource TileCaption}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="1" Style="{StaticResource StatTile}" WidthRequest="-1" HorizontalOptions="Fill">
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Text="{Binding TotalUsers}" Style="{StaticResource StatNumber}" TextColor="{StaticResource BrandGreen}" />
-                            <Label Text="Total Users" Style="{StaticResource StatCaption}" />
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource WhiteCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding TotalUsers, StringFormat='{0:N0}'}" Style="{StaticResource TileNumber}" />
+                            <Label Text="Total users" Style="{StaticResource TileCaption}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="2" Style="{StaticResource StatTile}" WidthRequest="-1" HorizontalOptions="Fill">
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Text="{Binding PendingApprovalCount}" Style="{StaticResource StatNumber}" TextColor="{StaticResource BrandOrange}" />
-                            <Label Text="Pending Approval" Style="{StaticResource StatCaption}" />
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource WhiteCard}"
+                            BackgroundColor="{StaticResource BrandMintPale}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding PendingApprovalCount}" Style="{StaticResource TileNumber}"
+                                   TextColor="{StaticResource BrandOrange}" />
+                            <Label Text="Pending reviews" Style="{StaticResource TileCaption}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="3" Style="{StaticResource StatTile}" WidthRequest="-1" HorizontalOptions="Fill">
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Text="{Binding BlockedCount}" Style="{StaticResource StatNumber}" TextColor="{StaticResource BrandDanger}" />
-                            <Label Text="Blocked" Style="{StaticResource StatCaption}" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border Grid.Column="4" Style="{StaticResource StatTile}" WidthRequest="-1" HorizontalOptions="Fill">
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <Label Text="{Binding TotalShipments}" Style="{StaticResource StatNumber}" />
-                            <Label Text="Shipments" Style="{StaticResource StatCaption}" />
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource WhiteCard}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding TotalShipments}" Style="{StaticResource TileNumber}" />
+                            <Label Text="Shipments" Style="{StaticResource TileCaption}" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
 
-                <!-- Tab toggle -->
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="0" HeightRequest="46">
-                    <Button Grid.Column="0" Text="Sellers" Command="{Binding ShowSellersCommand}" CornerRadius="0">
+                <!-- ============ TAB PILLS ============ -->
+                <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
+                    <Button Text="Sellers" Style="{StaticResource TabPill}" Command="{Binding ShowSellersCommand}">
                         <Button.Triggers>
                             <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Sellers">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
                                 <Setter Property="TextColor" Value="White" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Shipments">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Users">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                                <Setter Property="FontAttributes" Value="Bold" />
                             </DataTrigger>
                         </Button.Triggers>
                     </Button>
-                    <Button Grid.Column="1" Text="Shipments" Command="{Binding ShowShipmentsCommand}" CornerRadius="0">
+                    <Button Text="Users" Style="{StaticResource TabPill}" Command="{Binding ShowUsersCommand}">
                         <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Shipments">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
-                                <Setter Property="TextColor" Value="White" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Sellers">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
-                            </DataTrigger>
                             <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Users">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="TextColor" Value="White" />
+                                <Setter Property="FontAttributes" Value="Bold" />
                             </DataTrigger>
                         </Button.Triggers>
                     </Button>
-                    <Button Grid.Column="2" Text="Users" Command="{Binding ShowUsersCommand}" CornerRadius="0">
+                    <Button Text="Shipments" Style="{StaticResource TabPill}" Command="{Binding ShowShipmentsCommand}">
                         <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Users">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
-                                <Setter Property="TextColor" Value="White" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Sellers">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
-                            </DataTrigger>
                             <DataTrigger TargetType="Button" Binding="{Binding ActiveTab}" Value="Shipments">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandGoldLight}" />
-                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
+                                <Setter Property="TextColor" Value="White" />
+                                <Setter Property="FontAttributes" Value="Bold" />
                             </DataTrigger>
                         </Button.Triggers>
                     </Button>
-                </Grid>
+                </HorizontalStackLayout>
 
-                <!-- ============ SELLERS TAB ============ -->
-                <VerticalStackLayout Spacing="14" IsVisible="False">
+                <!-- =================================================== -->
+                <!-- ================ SELLERS TAB ====================== -->
+                <!-- =================================================== -->
+                <VerticalStackLayout Spacing="12" IsVisible="False">
                     <VerticalStackLayout.Triggers>
                         <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding ActiveTab}" Value="Sellers">
                             <Setter Property="IsVisible" Value="True" />
                         </DataTrigger>
                     </VerticalStackLayout.Triggers>
 
-                    <Label Text="Pending Approval" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Pending vendor approvals" Style="{StaticResource SectionTitle}" Margin="2,4,0,0" />
                     <Label Text="No sellers awaiting approval." Style="{StaticResource SubtleLabel}"
                            IsVisible="{Binding HasPendingApprovals, Converter={StaticResource InvertedBoolConverter}}" />
 
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PendingVendors}">
+                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding PendingVendors}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:Vendor">
-                                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
-                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                            <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                            <Label Text="{Binding Country}" Style="{StaticResource SubtleLabel}" />
-                                            <Label Text="{Binding BusinessEmail}" Style="{StaticResource SubtleLabel}" />
+                                <Border Style="{StaticResource WhiteCard}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                        <Border StrokeThickness="0" StrokeShape="Ellipse"
+                                                WidthRequest="44" HeightRequest="44" VerticalOptions="Center"
+                                                BackgroundColor="{StaticResource BrandMintPale}">
+                                            <Label Text="✦" FontSize="16" TextColor="{StaticResource BrandDark}"
+                                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" />
+                                            <Label Style="{StaticResource SmallSubtle}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="Registered " />
+                                                        <Span Text="{Binding JoinedAt, Converter={StaticResource RelativeDate}}" />
+                                                        <Span Text="  ·  " />
+                                                        <Span Text="{Binding Country}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                            <Label Text="{Binding BusinessEmail}" Style="{StaticResource SmallSubtle}" FontSize="11" />
+                                            <HorizontalStackLayout Spacing="8" Margin="0,6,0,0">
+                                                <Button Text="Approve" Style="{StaticResource ChipButton}"
+                                                        BackgroundColor="{StaticResource BrandMint}" TextColor="{StaticResource BrandDark}"
+                                                        Command="{Binding BindingContext.ApproveVendorCommand, Source={x:Reference RootPage}}"
+                                                        CommandParameter="{Binding .}" />
+                                                <Button Text="Reject" Style="{StaticResource ChipButton}"
+                                                        BackgroundColor="{StaticResource BrandPeach}" TextColor="{StaticResource BrandOrange}"
+                                                        Command="{Binding BindingContext.RejectVendorCommand, Source={x:Reference RootPage}}"
+                                                        CommandParameter="{Binding .}" />
+                                            </HorizontalStackLayout>
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="1" Text="Approve" BackgroundColor="{StaticResource BrandGreen}"
-                                                TextColor="White" FontSize="12" HeightRequest="34" CornerRadius="8"
-                                                Command="{Binding BindingContext.ApproveVendorCommand, Source={x:Reference RootPage}}"
-                                                CommandParameter="{Binding .}" />
-                                        <Button Grid.Column="2" Text="Reject" BackgroundColor="{StaticResource BrandDanger}"
-                                                TextColor="White" FontSize="12" HeightRequest="34" CornerRadius="8"
-                                                Command="{Binding BindingContext.RejectVendorCommand, Source={x:Reference RootPage}}"
-                                                CommandParameter="{Binding .}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
-                    <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" Margin="0,6" />
+                    <!-- Active sellers -->
+                    <Grid ColumnDefinitions="*,Auto" Margin="2,14,0,0">
+                        <Label Text="Active sellers" Style="{StaticResource SectionTitle}" />
+                        <Label Grid.Column="1" Text="{Binding BlockedCount, StringFormat='{0} blocked'}"
+                               FontSize="12" FontAttributes="Bold" TextColor="{StaticResource BrandDanger}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                    <Label Text="Verified shops  ·  Block / Unblock" FontSize="13" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandDark}" Margin="2,-6,0,0" />
 
-                    <Label Text="Active Sellers" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource BrandTextDark}" />
-
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding ActiveVendors}">
+                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding ActiveVendors}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:Vendor">
-                                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
+                                <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 16" Padding="14,12">
                                     <VerticalStackLayout Spacing="10">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                            <VerticalStackLayout Spacing="3">
                                                 <HorizontalStackLayout Spacing="6">
-                                                    <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                                    <Border BackgroundColor="{StaticResource BrandDanger}" StrokeShape="RoundRectangle 6"
-                                                            Padding="6,1" IsVisible="{Binding IsBlocked}">
+                                                    <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
+                                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                                    <Border BackgroundColor="{StaticResource BrandDanger}" StrokeThickness="0"
+                                                            StrokeShape="RoundRectangle 6" Padding="6,1" VerticalOptions="Center"
+                                                            IsVisible="{Binding IsBlocked}">
                                                         <Label Text="BLOCKED" TextColor="White" FontSize="9" FontAttributes="Bold" />
                                                     </Border>
                                                 </HorizontalStackLayout>
-                                                <Label Text="{Binding Country}" Style="{StaticResource SubtleLabel}" />
-                                                <Label Text="{Binding Rating, StringFormat='⭐ {0:0.0}'}" Style="{StaticResource SubtleLabel}" />
+                                                <Label Style="{StaticResource SmallSubtle}">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="{Binding Country}" />
+                                                            <Span Text="  ·  " />
+                                                            <Span Text="★ " TextColor="{StaticResource BrandStar}" />
+                                                            <Span Text="{Binding Rating, StringFormat='{0:0.0}'}" />
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
                                             </VerticalStackLayout>
-                                            <Button Grid.Column="1" Text="Block" BackgroundColor="{StaticResource BrandDanger}"
-                                                    TextColor="White" FontSize="12" HeightRequest="34" WidthRequest="90" CornerRadius="8"
+                                            <!-- Block / Unblock -->
+                                            <Button Grid.Column="1" Text="Block" Style="{StaticResource ChipButton}"
+                                                    BackgroundColor="{StaticResource BrandPeach}" TextColor="{StaticResource BrandDanger}"
+                                                    VerticalOptions="Center"
                                                     Command="{Binding BindingContext.ToggleBlockCommand, Source={x:Reference RootPage}}"
                                                     CommandParameter="{Binding .}">
                                                 <Button.Triggers>
                                                     <DataTrigger TargetType="Button" Binding="{Binding IsBlocked}" Value="True">
                                                         <Setter Property="Text" Value="Unblock" />
-                                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandGreen}" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandMint}" />
+                                                        <Setter Property="TextColor" Value="{StaticResource BrandDark}" />
                                                     </DataTrigger>
                                                 </Button.Triggers>
                                             </Button>
                                         </Grid>
 
-                                        <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" />
+                                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" />
 
                                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <HorizontalStackLayout Grid.Column="0" Spacing="6" VerticalOptions="Center">
-                                                <CheckBox IsChecked="{Binding IsVerified}" Color="{StaticResource BrandGreen}" />
-                                                <Label Text="Verified seller" FontSize="13" TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                            <HorizontalStackLayout Spacing="2" Margin="-6,0,0,0">
+                                                <CheckBox IsChecked="{Binding IsVerified}" Color="{StaticResource BrandGreen}"
+                                                          VerticalOptions="Center" />
+                                                <Label Text="Verified seller" FontSize="13"
+                                                       TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
                                             </HorizontalStackLayout>
-                                            <Button Grid.Column="1" Text="View Shop" Style="{StaticResource OutlineButton}"
-                                                    FontSize="12" HeightRequest="34"
-                                                    Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
-                                                    CommandParameter="{Binding .}" />
+                                            <Label Grid.Column="1" Text="View shop  →" Style="{StaticResource LinkLabel}"
+                                                   TextColor="{StaticResource BrandDark}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding BindingContext.ViewShopCommand, Source={x:Reference RootPage}}"
+                                                        CommandParameter="{Binding .}" />
+                                                </Label.GestureRecognizers>
+                                            </Label>
                                         </Grid>
                                     </VerticalStackLayout>
                                 </Border>
@@ -194,62 +315,111 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 
-                <!-- ============ SHIPMENTS TAB ============ -->
-                <VerticalStackLayout Spacing="10" IsVisible="False">
-                    <VerticalStackLayout.Triggers>
-                        <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding ActiveTab}" Value="Shipments">
-                            <Setter Property="IsVisible" Value="True" />
-                        </DataTrigger>
-                    </VerticalStackLayout.Triggers>
-
-                    <Label Text="Cross-Border Shipments" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource BrandTextDark}" />
-
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Shipments}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:DeliveryOrder">
-                                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
-                                    <VerticalStackLayout Spacing="4">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <Label Grid.Column="0" Text="{Binding ItemDescription}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                            <Label Grid.Column="1" Text="{Binding Status}" FontAttributes="Bold" FontSize="11" TextColor="{StaticResource BrandGreen}" />
-                                        </Grid>
-                                        <Label Text="{Binding SenderName, StringFormat='From: {0}'}" Style="{StaticResource SubtleLabel}" />
-                                        <Label Text="{Binding RecipientName, StringFormat='To: {0}'}" Style="{StaticResource SubtleLabel}" />
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <Label Grid.Column="0" Text="{Binding FromCountry, StringFormat='{0} → UK'}" Style="{StaticResource SubtleLabel}" />
-                                            <Label Grid.Column="1" Text="{Binding Speed}" Style="{StaticResource SubtleLabel}" />
-                                        </Grid>
-                                        <Label Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy · h:mm tt}'}" Style="{StaticResource SubtleLabel}" FontSize="11" />
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-
-                <!-- ============ USERS TAB ============ -->
-                <VerticalStackLayout Spacing="10" IsVisible="False">
+                <!-- =================================================== -->
+                <!-- ================= USERS TAB ======================= -->
+                <!-- =================================================== -->
+                <VerticalStackLayout Spacing="12" IsVisible="False">
                     <VerticalStackLayout.Triggers>
                         <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding ActiveTab}" Value="Users">
                             <Setter Property="IsVisible" Value="True" />
                         </DataTrigger>
                     </VerticalStackLayout.Triggers>
 
-                    <Label Text="Registered Users" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource BrandTextDark}" />
-                    <Label Text="Passwords are never stored or shown here." Style="{StaticResource SubtleLabel}" FontAttributes="Italic" />
+                    <VerticalStackLayout Spacing="2" Margin="2,4,0,0">
+                        <Label Text="Registered users" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Passwords are never shown here." Style="{StaticResource SmallSubtle}" />
+                    </VerticalStackLayout>
 
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Users}">
+                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Users}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:User">
-                                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10">
-                                    <VerticalStackLayout Spacing="4">
-                                        <Label Text="{Binding FullName}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                        <Label Text="{Binding Email, StringFormat='📧 {0}'}" Style="{StaticResource SubtleLabel}" />
-                                        <Label Text="{Binding PhoneNumber, StringFormat='📞 {0}'}" Style="{StaticResource SubtleLabel}" />
-                                        <Label Text="{Binding DefaultAddress.FullAddress, StringFormat='📍 {0}'}" Style="{StaticResource SubtleLabel}" />
-                                        <Label Text="{Binding Addresses.Count, StringFormat='{0} saved address(es)'}" Style="{StaticResource SubtleLabel}" FontSize="11" />
-                                        <Label Text="{Binding Country}" Style="{StaticResource SubtleLabel}" />
-                                        <Label Text="{Binding JoinedAt, StringFormat='Joined {0:MMM d, yyyy}'}" Style="{StaticResource SubtleLabel}" FontSize="11" />
+                                <Border Style="{StaticResource WhiteCard}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                        <Border StrokeThickness="0" StrokeShape="Ellipse"
+                                                WidthRequest="44" HeightRequest="44" VerticalOptions="Start"
+                                                BackgroundColor="{StaticResource BrandMintPale}">
+                                            <Path Data="M12,12 A4,4 0 1 0 12,4 A4,4 0 1 0 12,12 M4,21 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,21"
+                                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineCap="Round"
+                                                  WidthRequest="22" HeightRequest="22"
+                                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                            <Label Text="{Binding FullName}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" />
+                                            <Label Text="{Binding Email}" Style="{StaticResource SmallSubtle}" />
+                                            <Label Text="{Binding PhoneNumber}" Style="{StaticResource SmallSubtle}" />
+                                            <Label Text="{Binding DefaultAddress.FullAddress}" Style="{StaticResource SmallSubtle}" />
+                                            <Label Style="{StaticResource SmallSubtle}" FontSize="11" Margin="0,2,0,0">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Country}" />
+                                                        <Span Text="  ·  Joined " />
+                                                        <Span Text="{Binding JoinedAt, StringFormat='{0:d MMM yyyy}'}" />
+                                                        <Span Text="  ·  " />
+                                                        <Span Text="{Binding Addresses.Count, StringFormat='{0} address(es)'}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- =================================================== -->
+                <!-- =============== SHIPMENTS TAB ===================== -->
+                <!-- =================================================== -->
+                <VerticalStackLayout Spacing="12" IsVisible="False">
+                    <VerticalStackLayout.Triggers>
+                        <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding ActiveTab}" Value="Shipments">
+                            <Setter Property="IsVisible" Value="True" />
+                        </DataTrigger>
+                    </VerticalStackLayout.Triggers>
+
+                    <Label Text="Cross-border shipments" Style="{StaticResource SectionTitle}" Margin="2,4,0,0" />
+
+                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Shipments}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:DeliveryOrder">
+                                <Border Style="{StaticResource WhiteCard}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding ItemDescription}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" />
+                                            <!-- Status chip -->
+                                            <Border Grid.Column="1" BackgroundColor="{StaticResource BrandMintPale}"
+                                                    StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="8,3"
+                                                    VerticalOptions="Start">
+                                                <Label Text="{Binding Status}" FontSize="11" FontAttributes="Bold"
+                                                       TextColor="{StaticResource BrandDark}" />
+                                            </Border>
+                                        </Grid>
+                                        <Label Style="{StaticResource SmallSubtle}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding SenderName}" />
+                                                    <Span Text="  →  " TextColor="{StaticResource BrandOrange}" FontAttributes="Bold" />
+                                                    <Span Text="{Binding RecipientName}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <Label Text="{Binding UkAddress}" Style="{StaticResource SmallSubtle}" />
+                                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="0,4" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="{Binding FromCountry, StringFormat='{0} → UK'}" FontSize="12"
+                                                   FontAttributes="Bold" TextColor="{StaticResource BrandDark}" />
+                                            <Label Grid.Column="1" FontSize="12" TextColor="{StaticResource BrandTextMuted}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Speed}" FontAttributes="Bold" />
+                                                        <Span Text="  ·  " />
+                                                        <Span Text="{Binding CreatedAt, StringFormat='{0:d MMM, HH:mm}'}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </Grid>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>

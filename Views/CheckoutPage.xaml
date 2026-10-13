@@ -1,124 +1,230 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    CheckoutPage: redesigned to match "CheckoutPage.xaml / checkout / Proposed redesign".
+    No AppHeaderBar: the green header is built into the page.
+    Same CheckoutViewModel bindings and commands, plus DeliveryAddressText and
+    ChangeDeliveryDetailsCommand for the "Delivery address" card.
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AfroPhloem.ViewModels"
-             xmlns:models="clr-namespace:AfroPhloem.Models"
-             xmlns:controls="clr-namespace:AfroPhloem.Views.Controls"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:CheckoutViewModel"
-             x:Class="AfroPhloem.Views.CheckoutPage"
+             x:Class="Phloem.Views.CheckoutPage"
              x:Name="RootPage"
              Shell.NavBarIsVisible="False"
              Title="Checkout">
 
+    <ContentPage.Resources>
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TinyStepButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="WidthRequest" Value="30" />
+            <Setter Property="HeightRequest" Value="30" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderWidth" Value="0" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
-        <!--<controls:AppHeaderBar Grid.Row="0" ShowSearch="False" />-->
-        <controls:AppHeaderBar Grid.Row="0" ShowSearch="False"
-                        SelectedCountry="{Binding SelectedCountry}" />
+
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <!-- Flag of the selected country -->
+                <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="{Binding SelectedCountry.FlagEmoji}" FontSize="18" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Grid>
 
         <Grid Grid.Row="1">
 
-            <!-- ============ ORDER FORM ============ -->
+            <!-- ======================================================= -->
+            <!-- ===================== ORDER FORM ====================== -->
+            <!-- ======================================================= -->
             <ScrollView IsVisible="{Binding OrderPlaced, Converter={StaticResource InvertedBoolConverter}}">
-                <VerticalStackLayout Padding="16" Spacing="18" MaximumWidthRequest="560" HorizontalOptions="Center">
+                <VerticalStackLayout Padding="16,18,16,28" Spacing="12"
+                                     MaximumWidthRequest="560" HorizontalOptions="Fill">
 
-                    <Label Text="{Binding ItemCount, StringFormat='Order Summary · {0} item(s)'}" Style="{StaticResource SectionTitle}" />
-                   
-                    <!-- Order items -->
+                    <!-- Title -->
+                    <VerticalStackLayout Spacing="2" Margin="2,0,0,4">
+                        <Label Text="Checkout" FontSize="26" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" />
+                        <Label Text="Review and place your order"
+                               Style="{StaticResource SubtleLabel}" FontSize="13" />
+                    </VerticalStackLayout>
+
+                    <!-- ============ YOUR BASKET ============ -->
+                    <Grid ColumnDefinitions="*,Auto" Margin="2,4,0,0">
+                        <Label Text="Your basket" Style="{StaticResource SectionTitle}" FontSize="17" />
+                        <Label Grid.Column="1" Text="{Binding ItemCount, StringFormat='{0} item(s)'}"
+                               FontSize="12" FontAttributes="Bold" TextColor="{StaticResource BrandDark}"
+                               VerticalOptions="Center" />
+                    </Grid>
+
+                    <!-- Shown only when the basket is empty -->
+                    <Label Text="Your basket is empty." Style="{StaticResource SubtleLabel}" Margin="2,0,0,0"
+                           IsVisible="False">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding ItemCount}" Value="0">
+                                <Setter Property="IsVisible" Value="True" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
                     <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Items}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:CartItem">
-                                <Border Style="{StaticResource CardBorder}">
-                                    <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="12">
-                                        <Border Grid.Column="0" StrokeShape="RoundRectangle 10" Stroke="Transparent"
-                                                WidthRequest="54" HeightRequest="54" Padding="0">
+                                <Border Style="{StaticResource WhiteCard}">
+                                    <Grid ColumnDefinitions="76,*,Auto" ColumnSpacing="12">
+                                        <Border StrokeThickness="0" StrokeShape="RoundRectangle 10"
+                                                WidthRequest="76" HeightRequest="52">
                                             <Image Source="{Binding Dish.ImageUrl}" Aspect="AspectFill" />
                                         </Border>
 
-                                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                            <Label Text="{Binding Dish.Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                            <Label Text="{Binding Dish.Price, StringFormat='£{0:0.00} each'}" Style="{StaticResource SubtleLabel}" />
-                                            <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
-                                                <Button Text="−" Style="{StaticResource CircleIconButton}" WidthRequest="28" HeightRequest="28" FontSize="14"
-                                                        Command="{Binding BindingContext.DecreaseQuantityCommand, Source={x:Reference RootPage}}"
-                                                        CommandParameter="{Binding .}" />
-                                                <Label Text="{Binding Quantity}" VerticalOptions="Center" FontAttributes="Bold"
-                                                       TextColor="{StaticResource BrandTextDark}" WidthRequest="20" HorizontalTextAlignment="Center" />
-                                                <Button Text="+" Style="{StaticResource CircleIconButton}" WidthRequest="28" HeightRequest="28" FontSize="14"
-                                                        Command="{Binding BindingContext.IncreaseQuantityCommand, Source={x:Reference RootPage}}"
-                                                        CommandParameter="{Binding .}" />
-                                            </HorizontalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                            <Label Text="{Binding Dish.Name}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding LineTotal, StringFormat='£{0:0.00}'}"
+                                                   Style="{StaticResource PriceLabel}" />
                                         </VerticalStackLayout>
 
-                                        <Label Grid.Column="2" Text="{Binding LineTotal, StringFormat='£{0:0.00}'}"
-                                               FontAttributes="Bold" FontSize="15" TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
+                                        <!-- − qty + -->
+                                        <HorizontalStackLayout Grid.Column="2" Spacing="0" VerticalOptions="End">
+                                            <Button Text="−" Style="{StaticResource TinyStepButton}"
+                                                    Command="{Binding BindingContext.DecreaseQuantityCommand, Source={x:Reference RootPage}}"
+                                                    CommandParameter="{Binding .}" />
+                                            <Label Text="{Binding Quantity}" FontSize="14" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" WidthRequest="18"
+                                                   HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                                            <Button Text="+" Style="{StaticResource TinyStepButton}"
+                                                    Command="{Binding BindingContext.IncreaseQuantityCommand, Source={x:Reference RootPage}}"
+                                                    CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
-                    <!-- International shipment recap, only if the person came from the "Send to UK" flow -->
-                    <Border Style="{StaticResource CardBorder}" IsVisible="{Binding HasInternationalDelivery}">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <Border Grid.Column="0" Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandGold}" Margin="0,0,12,0">
-                                <Label Text="✈️" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
-                            </Border>
-                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                <Label Text="International Shipment" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                <Label Text="{Binding InternationalDelivery.RecipientName, StringFormat='To: {0}'}" Style="{StaticResource SubtleLabel}" />
-                                <Label Text="{Binding InternationalDelivery.UkAddress, StringFormat='Address: {0}'}" Style="{StaticResource SubtleLabel}" />
-                                <Label Text="{Binding InternationalDelivery.Speed, StringFormat='Speed: {0}'}" Style="{StaticResource SubtleLabel}" />
+                    <!-- ============ DELIVERY ADDRESS ============ -->
+                    <Label Text="Delivery address" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,10,0,0" />
+
+                    <Border Style="{StaticResource WhiteCard}" Padding="14,12">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <!-- Pin icon -->
+                            <Path Data="M12,22 C12,22 4,14.5 4,9 A8,8 0 0 1 20,9 C20,14.5 12,22 12,22 Z M9,9 A3,3 0 1 0 15,9 A3,3 0 1 0 9,9"
+                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8"
+                                  WidthRequest="22" HeightRequest="22" VerticalOptions="Start" Margin="0,2,0,0" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="{Binding DeliveryAddressText}" FontSize="15" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                                <!-- Only for "Send to UK" orders -->
+                                <Label IsVisible="{Binding HasInternationalDelivery}" FontSize="12"
+                                       TextColor="{StaticResource BrandTextMuted}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="✈  International · " />
+                                            <Span Text="{Binding InternationalDelivery.Speed}" FontAttributes="Bold" />
+                                            <Span Text="  ·  " />
+                                            <Span Text="{Binding InternationalDelivery.FromCountry, StringFormat='{0} → UK'}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <HorizontalStackLayout Spacing="6">
+                                    <Label Text="Change delivery details" FontSize="13"
+                                           TextColor="{StaticResource BrandDark}" VerticalOptions="Center" />
+                                    <Path Data="M2,8 L14,8 M9,3 L14,8 L9,13" Stroke="{StaticResource BrandDark}"
+                                          StrokeThickness="1.8" StrokeLineCap="Round" StrokeLineJoin="Round"
+                                          WidthRequest="14" HeightRequest="14" VerticalOptions="Center" />
+                                    <HorizontalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ChangeDeliveryDetailsCommand}" />
+                                    </HorizontalStackLayout.GestureRecognizers>
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
 
-                    <!-- Price breakdown -->
-                    <Border Style="{StaticResource CardBorder}">
-                        <VerticalStackLayout Spacing="10">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="Subtotal" TextColor="{StaticResource BrandTextMuted}" />
-                                <Label Grid.Column="1" Text="{Binding Subtotal, StringFormat='£{0:0.00}'}" TextColor="{StaticResource BrandTextDark}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="Delivery Fee" TextColor="{StaticResource BrandTextMuted}" />
-                                <Label Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='£{0:0.00}'}" TextColor="{StaticResource BrandTextDark}" />
-                            </Grid>
-                            <BoxView HeightRequest="1" BackgroundColor="{StaticResource BrandBorder}" />
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="Total" FontAttributes="Bold" FontSize="19" TextColor="{StaticResource BrandTextDark}" />
-                                <Label Grid.Column="1" Text="{Binding Total, StringFormat='£{0:0.00}'}" FontAttributes="Bold" FontSize="19" TextColor="{StaticResource BrandGreen}" />
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <!-- Payment method -->
-                    <Label Text="Payment Method" Style="{StaticResource SectionTitle}" FontSize="17" />
+                    <!-- ============ CHOOSE PAYMENT ============ -->
+                    <Label Text="Choose payment" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,10,0,0" />
 
                     <CollectionView ItemsSource="{Binding PaymentMethods}" SelectionMode="Single"
-                                     SelectedItem="{Binding SelectedPaymentMethod}">
+                                    SelectedItem="{Binding SelectedPaymentMethod}" HeightRequest="186">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
                         </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:PaymentMethodOption">
-                                <Border x:Name="PayBorder" Style="{StaticResource PaymentCard}">
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                        <Label Grid.Column="0" Text="{Binding Icon}" FontSize="22" VerticalOptions="Center" Margin="0,0,12,0" />
+                                <Border x:Name="PayBorder" BackgroundColor="White"
+                                        Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 12" Padding="12,10">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <!-- Radio circle -->
+                                        <Grid WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                                            <Ellipse Stroke="{StaticResource BrandDark}" StrokeThickness="2"
+                                                     WidthRequest="20" HeightRequest="20" />
+                                            <Ellipse x:Name="RadioDot" Fill="{StaticResource BrandDark}"
+                                                     WidthRequest="12" HeightRequest="12" Opacity="0" />
+                                        </Grid>
                                         <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                            <Label x:Name="NameLabel" Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
-                                            <Label Text="{Binding Subtitle}" Style="{StaticResource SubtleLabel}" />
+                                            <Label x:Name="PayName" Text="{Binding Name}" FontSize="14"
+                                                   TextColor="{StaticResource BrandTextDark}" />
+                                            <Label Text="{Binding Subtitle}" FontSize="11"
+                                                   TextColor="{StaticResource BrandTextMuted}" />
                                         </VerticalStackLayout>
-                                        <Label x:Name="CheckLabel" Grid.Column="2" Text="✓" FontSize="18" FontAttributes="Bold"
-                                               TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" Opacity="0" />
+                                        <Label Grid.Column="2" Text="{Binding Icon}" FontSize="18" VerticalOptions="Center" />
                                     </Grid>
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
                                             <VisualState x:Name="Normal" />
                                             <VisualState x:Name="Selected">
                                                 <VisualState.Setters>
-                                                    <Setter TargetName="PayBorder" Property="Border.Stroke" Value="{StaticResource BrandGreen}" />
-                                                    <Setter TargetName="PayBorder" Property="Border.BackgroundColor" Value="#EEF5EA" />
-                                                    <Setter TargetName="CheckLabel" Property="Label.Opacity" Value="1" />
+                                                    <Setter TargetName="PayBorder" Property="Border.Stroke" Value="{StaticResource BrandDark}" />
+                                                    <Setter TargetName="PayBorder" Property="Border.BackgroundColor" Value="{StaticResource BrandMintPale}" />
+                                                    <Setter TargetName="RadioDot" Property="Ellipse.Opacity" Value="1" />
+                                                    <Setter TargetName="PayName" Property="Label.FontAttributes" Value="Bold" />
                                                 </VisualState.Setters>
                                             </VisualState>
                                         </VisualStateGroup>
@@ -128,34 +234,68 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
-                    <Button Text="{Binding Total, StringFormat='Place Order · £{0:0.00}'}"
-                            Style="{StaticResource CtaButton}" Command="{Binding PlaceOrderCommand}" Margin="0,6,0,0" />
+                    <!-- ============ TOTALS ============ -->
+                    <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14" Padding="14,12" Margin="0,4,0,0">
+                        <VerticalStackLayout Spacing="4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="Subtotal" FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                                <Label Grid.Column="1" Text="{Binding Subtotal, StringFormat='£{0:0.00}'}"
+                                       FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="Delivery fee" FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                                <Label Grid.Column="1" Text="{Binding DeliveryFee, StringFormat='£{0:0.00}'}"
+                                       FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                            </Grid>
+                            <Label Text="{Binding Total, StringFormat='Total: £{0:0.00}'}" FontSize="18"
+                                   FontAttributes="Bold" TextColor="{StaticResource BrandDark}" Margin="0,2,0,0" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ============ PLACE ORDER ============ -->
+                    <Button Text="{Binding Total, StringFormat='Place order · £{0:0.00}'}"
+                            Command="{Binding PlaceOrderCommand}"
+                            BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                            FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" />
 
                 </VerticalStackLayout>
             </ScrollView>
 
-            <!-- ============ CONFIRMATION ============ -->
+            <!-- ======================================================= -->
+            <!-- ===================== CONFIRMATION ==================== -->
+            <!-- ======================================================= -->
             <ScrollView IsVisible="{Binding OrderPlaced}">
-                <VerticalStackLayout Padding="30" Spacing="14" VerticalOptions="Center" HorizontalOptions="Center" MaximumWidthRequest="440">
+                <VerticalStackLayout Padding="24,40" Spacing="14" VerticalOptions="Center"
+                                     HorizontalOptions="Fill" MaximumWidthRequest="440">
 
-                    <Border Style="{StaticResource SuccessCircle}" HorizontalOptions="Center">
-                        <Label Text="✓" FontSize="42" TextColor="White" FontAttributes="Bold"
-                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    <!-- Big mint circle with a green tick -->
+                    <Border StrokeThickness="0" StrokeShape="Ellipse" WidthRequest="110" HeightRequest="110"
+                            BackgroundColor="{StaticResource BrandMintPale}" HorizontalOptions="Center">
+                        <Border StrokeThickness="0" StrokeShape="Ellipse" WidthRequest="78" HeightRequest="78"
+                                BackgroundColor="{StaticResource BrandDark}">
+                            <Path Data="M5,12.5 L10,17.5 L19,7" Stroke="White" StrokeThickness="3"
+                                  StrokeLineCap="Round" StrokeLineJoin="Round"
+                                  WidthRequest="34" HeightRequest="34"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
                     </Border>
 
-                    <Label Text="Order Confirmed!" FontSize="24" FontAttributes="Bold"
-                           TextColor="{StaticResource BrandTextDark}" HorizontalOptions="Center" Margin="0,8,0,0" />
+                    <Label Text="Order confirmed!" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" HorizontalOptions="Center" Margin="0,10,0,0" />
 
-                    <Border StrokeShape="RoundRectangle 20" BackgroundColor="{StaticResource BrandCream}" Stroke="{StaticResource BrandBorder}"
-                            Padding="14,6" HorizontalOptions="Center">
-                        <Label Text="{Binding OrderNumber}" FontAttributes="Bold" TextColor="{StaticResource BrandGreen}" />
+                    <Border BackgroundColor="White" Stroke="{StaticResource BrandMint}" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18" Padding="16,6" HorizontalOptions="Center">
+                        <Label Text="{Binding OrderNumber}" FontSize="14" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandDark}" />
                     </Border>
 
-                    <Label Text="{Binding ConfirmationMessage}" HorizontalTextAlignment="Center"
-                           TextColor="{StaticResource BrandTextMuted}" Margin="0,4,0,10" />
+                    <Label Text="{Binding ConfirmationMessage}" HorizontalTextAlignment="Center" FontSize="14"
+                           TextColor="{StaticResource BrandTextMuted}" Margin="0,4,0,12" />
 
-                    <Button Text="Continue Shopping" Style="{StaticResource PrimaryButton}" Command="{Binding BackToShoppingCommand}"
-                            WidthRequest="240" />
+                    <Button Text="Continue shopping" Command="{Binding BackToShoppingCommand}"
+                            BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                            FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" />
                 </VerticalStackLayout>
             </ScrollView>
 

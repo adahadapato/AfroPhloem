@@ -1,12 +1,37 @@
-using AfroPhloem.ViewModels;
+﻿using Phloem.ViewModels;
 
-namespace AfroPhloem.Views;
+namespace Phloem.Views;
 
 public partial class RegisterPage : ContentPage
 {
+    readonly RegisterViewModel _vm;
+
     public RegisterPage(RegisterViewModel vm)
     {
         InitializeComponent();
-        BindingContext = vm;
+        BindingContext = _vm = vm;
     }
+
+    // Show the flag of the country picked on Home
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        var cart = IPlatformApplication.Current?.Services.GetService<Phloem.Services.CartService>();
+        FlagLabel.Text = cart?.SelectedCountry?.FlagEmoji ?? "🌍";
+    }
+
+    // ☰ opens the side menu
+    void OnMenuTapped(object? sender, TappedEventArgs e)
+    {
+        if (Shell.Current is not null)
+            Shell.Current.FlyoutIsPresented = true;
+    }
+
+    // "Already have an account? Log in" → Account tab
+    async void OnLogInTapped(object? sender, TappedEventArgs e)
+        => await Shell.Current.GoToAsync("//login");
+
+    // Buyer | Seller choice
+    void OnBuyerTapped(object? sender, TappedEventArgs e) => _vm.IsSeller = false;
+    void OnSellerTapped(object? sender, TappedEventArgs e) => _vm.IsSeller = true;
 }

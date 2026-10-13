@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AfroPhloem.Models;
+namespace Phloem.Models;
 
 public partial class Vendor : ObservableObject
 {

@@ -1,8 +1,8 @@
-﻿using AfroPhloem.Services;
-using AfroPhloem.ViewModels;
-using AfroPhloem.Views;
+﻿using Phloem.Services;
+using Phloem.ViewModels;
+using Phloem.Views;
 
-namespace AfroPhloem;
+namespace Phloem;
 
 /// <summary>
 /// class DependencyInjection is a static class that provides a method to 
@@ -21,6 +21,8 @@ public static class DependencyInjection
         services.AddSingleton<MockDataService>();
         services.AddSingleton<CartService>();
         services.AddSingleton<SessionService>();
+        services.AddSingleton<OrderHistoryService>();
+        
 
         // ---- ViewModels ----
         services.AddTransient<HomeViewModel>();
@@ -33,6 +35,9 @@ public static class DependencyInjection
         services.AddTransient<VendorsListViewModel>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<AdminViewModel>();
+        services.AddTransient<OrdersViewModel>();
+
+
 
         // ---- Pages ----
         services.AddTransient<AboutPage>();
@@ -46,5 +51,6 @@ public static class DependencyInjection
         services.AddTransient<VendorsListPage>();
         services.AddTransient<LoginPage>();
         services.AddTransient<AdminPage>();
+        services.AddTransient<OrdersPage>();
     }
 }

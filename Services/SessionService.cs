@@ -1,6 +1,6 @@
-﻿using AfroPhloem.Models;
+﻿using Phloem.Models;
 
-namespace AfroPhloem.Services;
+namespace Phloem.Services;
 
 public class SessionService
 {

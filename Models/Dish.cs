@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AfroPhloem.Models;
+namespace Phloem.Models;
 
 public partial class Dish : ObservableObject
 {
@@ -8,7 +8,7 @@ public partial class Dish : ObservableObject
 
     [ObservableProperty]
     public partial string Name { get; set; } = string.Empty;
-    public string ImageUrl { get; set; } = "dotnet_bot.png";
+    public string ImageUrl { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial decimal Price { get; set; }
