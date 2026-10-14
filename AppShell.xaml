@@ -4,7 +4,7 @@
 
     Bottom bar (always visible): Home · Explore · Orders (basket + recent orders) · Account
     Every other page opens ON TOP of a tab, so the bottom bar stays on screen:
-        About, Sign Up, Admin      → open under the Account tab (Account stays highlighted)
+        About, Log In, Sign Up, Admin → open under the Account tab (Account stays highlighted)
         Vendors, Become a Seller,
         Seller Dashboard           → open under the Home tab
     Those page routes are registered in AppShell.xaml.cs.
@@ -92,17 +92,17 @@
             <ShellContent Title="My Orders" ContentTemplate="{DataTemplate views:OrdersPage}" Route="orders" />
         </Tab>
         <Tab Title="Account" Icon="tab_account.png">
-            <ShellContent Title="Log In" ContentTemplate="{DataTemplate views:LoginPage}" Route="login" />
+            <ShellContent Title="My Account" ContentTemplate="{DataTemplate views:AccountPage}" Route="account" />
         </Tab>
     </FlyoutItem>
 
     <!-- ============ Side menu: other pages (open on top of a tab, bottom bar stays) ============ -->
     <MenuItem Text="Send Food to UK"  CommandParameter="//home/international" Clicked="OnMenuItemClicked" />
-    <MenuItem Text="About"            CommandParameter="//login/about"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="About"            CommandParameter="//account/about"      Clicked="OnMenuItemClicked" />
     <MenuItem Text="Sellers &amp; Vendors" CommandParameter="//home/vendors" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Become a Seller"  CommandParameter="//home/sellersetup" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Seller Dashboard" CommandParameter="//home/dashboard"   Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Admin Dashboard"  CommandParameter="//login/admin"      Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Sign Up"          CommandParameter="//login/register"   Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Admin Dashboard"  CommandParameter="//account/admin"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Sign Up"          CommandParameter="//account/register"   Clicked="OnMenuItemClicked" />
 
 </Shell>

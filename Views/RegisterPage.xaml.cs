@@ -29,7 +29,7 @@ public partial class RegisterPage : ContentPage
 
     // "Already have an account? Log in" → Account tab
     async void OnLogInTapped(object? sender, TappedEventArgs e)
-        => await Shell.Current.GoToAsync("//login");
+        => await Shell.Current.GoToAsync("//account/login");
 
     // Buyer | Seller choice
     void OnBuyerTapped(object? sender, TappedEventArgs e) => _vm.IsSeller = false;

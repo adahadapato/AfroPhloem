@@ -10,11 +10,22 @@ public partial class LoginPage : ContentPage
         BindingContext = vm;
     }
 
-    // Show the flag of the country picked on Home
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        var cart = IPlatformApplication.Current?.Services.GetService<Phloem.Services.CartService>();
+
+        var services = IPlatformApplication.Current?.Services;
+
+        // Already logged in? This page shouldn't be showing; go back to My Account.
+        var session = services?.GetService<Phloem.Services.SessionService>();
+        if (session?.CurrentUser is not null)
+        {
+            await Shell.Current.GoToAsync("..");
+            return;
+        }
+
+        // Flag of the country picked on Home
+        var cart = services?.GetService<Phloem.Services.CartService>();
         FlagLabel.Text = cart?.SelectedCountry?.FlagEmoji ?? "🌍";
     }
 

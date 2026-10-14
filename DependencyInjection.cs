@@ -38,6 +38,10 @@ public static class DependencyInjection
         services.AddTransient<AdminViewModel>();
         services.AddTransient<OrdersViewModel>();
         services.AddTransient<DeliveryAddressViewModel>();
+        services.AddTransient<OrderDetailsViewModel>();
+        services.AddTransient<AccountViewModel>();
+       
+
 
 
 
@@ -54,6 +58,8 @@ public static class DependencyInjection
         services.AddTransient<LoginPage>();
         services.AddTransient<AdminPage>();
         services.AddTransient<OrdersPage>();
-       services.AddTransient<DeliveryAddressPage>();
+        services.AddTransient<DeliveryAddressPage>();
+        services.AddTransient<OrderDetailsPage>();
+        services.AddTransient<AccountPage>();
     }
 }

@@ -83,6 +83,8 @@ public partial class LoginViewModel : ObservableObject
         _session.CurrentUser = user;
         IsError = false;
         StatusMessage = $"Welcome back, {user.FullName}!";
+        // Close the Log in page (it sits on top of My Account), then go Home
+        await Shell.Current.Navigation.PopToRootAsync(false);
         await Shell.Current.GoToAsync("//home");
     }
 
@@ -92,7 +94,7 @@ public partial class LoginViewModel : ObservableObject
     /// <returns></returns>
     [RelayCommand]
     //private async Task GoToRegister() => await Shell.Current.GoToAsync("//register");
-    private async Task GoToRegister() => await Shell.Current.GoToAsync("//login/register");
+    private async Task GoToRegister() => await Shell.Current.GoToAsync("//account/register");
 
     /// <summary>
     /// command that handles the password recovery process, providing 

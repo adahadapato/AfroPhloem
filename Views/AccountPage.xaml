@@ -1,0 +1,309 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AccountPage (NEW): the Account tab (route "account").
+    Logged in  → profile, shortcuts and Log out.
+    Logged out → Log in / Create account.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             x:DataType="vm:AccountViewModel"
+             x:Class="Phloem.Views.AccountPage"
+             Shell.NavBarIsVisible="False"
+             Title="My Account">
+
+    <ContentPage.Resources>
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RowTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+        </Style>
+        <Style x:Key="RowSub" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+        </Style>
+        <Style x:Key="RowIcon" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="Ellipse" />
+            <Setter Property="WidthRequest" Value="40" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Chevron" TargetType="Path">
+            <Setter Property="Data" Value="M5,3 L10,8 L5,13" />
+            <Setter Property="Stroke" Value="{StaticResource BrandTextMuted}" />
+            <Setter Property="StrokeThickness" Value="2" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="WidthRequest" Value="14" />
+            <Setter Property="HeightRequest" Value="14" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Stroke" Value="{StaticResource BrandDark}" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="WidthRequest" Value="20" />
+            <Setter Property="HeightRequest" Value="20" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="18,0,16,0">
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="12"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <Label Text="My account" FontSize="26" FontAttributes="Bold"
+                       TextColor="{StaticResource BrandTextDark}" Margin="2,0,0,4" />
+
+                <!-- =================================================== -->
+                <!-- ===================== GUEST ======================= -->
+                <!-- =================================================== -->
+                <Border Style="{StaticResource WhiteCard}" Padding="20,24" IsVisible="{Binding IsGuest}">
+                    <VerticalStackLayout Spacing="12" HorizontalOptions="Fill">
+                        <Border StrokeThickness="0" StrokeShape="Ellipse" WidthRequest="72" HeightRequest="72"
+                                BackgroundColor="{StaticResource BrandMintPale}" HorizontalOptions="Center">
+                            <Path Data="M12,12 A4,4 0 1 0 12,4 A4,4 0 1 0 12,12 M4,21 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,21"
+                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineCap="Round"
+                                  WidthRequest="34" HeightRequest="34"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Welcome to Phloem" FontSize="19" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" HorizontalOptions="Center" />
+                        <Label Text="Log in to see your orders, saved addresses and seller tools."
+                               Style="{StaticResource SubtleLabel}" FontSize="13"
+                               HorizontalTextAlignment="Center" HorizontalOptions="Center" />
+                        <Button Text="Log in" Command="{Binding LoginCommand}"
+                                BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="50"
+                                Margin="0,6,0,0" />
+                        <Button Text="Create an account" Command="{Binding RegisterCommand}"
+                                BackgroundColor="White" TextColor="{StaticResource BrandDark}"
+                                BorderColor="{StaticResource BrandDark}" BorderWidth="1.5"
+                                FontAttributes="Bold" FontSize="15" CornerRadius="12" HeightRequest="48" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- =================================================== -->
+                <!-- =================== LOGGED IN ===================== -->
+                <!-- =================================================== -->
+                <VerticalStackLayout Spacing="12" IsVisible="{Binding IsLoggedIn}">
+
+                    <!-- Profile card -->
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="18">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{StaticResource BrandDark}" Offset="0.0" />
+                                <GradientStop Color="{StaticResource BrandHeroGreen}" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <VerticalStackLayout Spacing="14">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <!-- Initials avatar -->
+                                <Border StrokeThickness="2" Stroke="White" StrokeShape="Ellipse"
+                                        WidthRequest="60" HeightRequest="60" BackgroundColor="{StaticResource BrandOrange}">
+                                    <Label Text="{Binding Initials}" FontSize="22" FontAttributes="Bold" TextColor="White"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                    <Label Text="{Binding FullName}" FontSize="19" FontAttributes="Bold" TextColor="White"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding MemberSince}" FontSize="12" TextColor="{StaticResource BrandGoldLight}" />
+                                    <!-- Role badge -->
+                                    <Border BackgroundColor="#26FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 8"
+                                            Padding="8,2" HorizontalOptions="Start" Margin="0,2,0,0">
+                                        <Label Text="{Binding RoleText}" FontSize="11" FontAttributes="Bold" TextColor="White" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="#26FFFFFF" />
+
+                            <!-- Contact details -->
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="22,*" ColumnSpacing="10">
+                                    <Path Data="M2,5 L22,5 L22,19 L2,19 Z M2,5 L12,13 L22,5" Stroke="White" StrokeThickness="1.6"
+                                          StrokeLineJoin="Round" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Email}" FontSize="14" TextColor="White"
+                                           LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                                </Grid>
+                                <Grid ColumnDefinitions="22,*" ColumnSpacing="10">
+                                    <Path Data="M5,3 L9,3 L11,8 L8.5,9.5 C9.8,12.4 11.6,14.2 14.5,15.5 L16,13 L21,15 L21,19 C21,20 20,21 19,21 C10.2,20.5 3.5,13.8 3,5 C3,4 4,3 5,3 Z"
+                                          Stroke="White" StrokeThickness="1.6" StrokeLineJoin="Round"
+                                          WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding PhoneNumber}" FontSize="14" TextColor="White"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                                <Grid ColumnDefinitions="22,*" ColumnSpacing="10">
+                                    <Path Data="M12,22 C12,22 4,14.5 4,9 A8,8 0 0 1 20,9 C20,14.5 12,22 12,22 Z M9,9 A3,3 0 1 0 15,9 A3,3 0 1 0 9,9"
+                                          Stroke="White" StrokeThickness="1.6"
+                                          WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Country}" FontSize="14" TextColor="White"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Shortcuts -->
+                    <Border Style="{StaticResource WhiteCard}" Padding="6,4">
+                        <VerticalStackLayout Spacing="0">
+
+                            <!-- My orders -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding MyOrdersCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M2.5,4 L5.5,4 L7.9,14.5 L18.1,14.5 L20.5,7 L7,7 M9.5,19 A1.6,1.6 0 1 0 9.51,19 M16.5,19 A1.6,1.6 0 1 0 16.51,19" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="My orders" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{Binding OrdersSummary}" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- Delivery addresses -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding AddressesCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M12,22 C12,22 4,14.5 4,9 A8,8 0 0 1 20,9 C20,14.5 12,22 12,22 Z M9,9 A3,3 0 1 0 15,9 A3,3 0 1 0 9,9" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Delivery addresses" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{Binding AddressSummary}" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- Seller dashboard / Become a seller -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SellerAreaCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}" BackgroundColor="{StaticResource BrandPeach}">
+                                    <Path Style="{StaticResource IconPath}" Stroke="{StaticResource BrandOrange}"
+                                          Data="M3,9 L5,4 L19,4 L21,9 M3,9 L21,9 M4,9 L4,20 L20,20 L20,9 M10,20 L10,14 L14,14 L14,20" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="{Binding SellerLinkText}" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{Binding SellerLinkSubtitle}" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+
+                            <!-- Admin (admins only) -->
+                            <VerticalStackLayout IsVisible="{Binding IsAdmin}">
+                                <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding AdminAreaCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border Style="{StaticResource RowIcon}">
+                                        <Path Style="{StaticResource IconPath}"
+                                              Data="M12,3 L20,6 L20,12 C20,16.5 16.5,20 12,21 C7.5,20 4,16.5 4,12 L4,6 Z M9,12 L11,14 L15,10" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                        <Label Text="Admin dashboard" Style="{StaticResource RowTitle}" />
+                                        <Label Text="Approve sellers, users and shipments" Style="{StaticResource RowSub}" />
+                                    </VerticalStackLayout>
+                                    <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                                </Grid>
+                            </VerticalStackLayout>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- Send food to the UK -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SendToUkCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M3,13 L21,6 L15,20 L12,14 Z M12,14 L21,6" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Send food to the UK" Style="{StaticResource RowTitle}" />
+                                    <Label Text="Ship from Ghana or Nigeria" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- About -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding AboutCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M12,3 A9,9 0 1 0 12.01,3 M12,11 L12,17 M12,7.5 L12,7.6" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="About Phloem" Style="{StaticResource RowTitle}" />
+                                    <Label Text="Our story" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Log out -->
+                    <Button Text="Log out" Command="{Binding LogoutCommand}"
+                            BackgroundColor="White" TextColor="{StaticResource BrandDanger}"
+                            BorderColor="{StaticResource BrandDanger}" BorderWidth="1.5"
+                            FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="50"
+                            Margin="0,8,0,0" />
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

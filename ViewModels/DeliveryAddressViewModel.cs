@@ -179,5 +179,5 @@ public partial class DeliveryAddressViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task GoToLogin() => await Shell.Current.GoToAsync("//login");
+    private async Task GoToLogin() => await Shell.Current.GoToAsync("//account/login");
 }

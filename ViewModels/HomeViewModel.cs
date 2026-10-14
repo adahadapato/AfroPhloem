@@ -118,7 +118,7 @@ public partial class HomeViewModel : ObservableObject
     {
         if (!_session.IsLoggedIn || _session.CurrentUser is null)
         {
-            await Shell.Current.GoToAsync("//login");
+            await Shell.Current.GoToAsync("//account/login");
             return;
         }
 

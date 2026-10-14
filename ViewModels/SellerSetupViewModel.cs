@@ -50,7 +50,7 @@ public partial class SellerSetupViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task GoToLogin() => await Shell.Current.GoToAsync("//login");
+    private async Task GoToLogin() => await Shell.Current.GoToAsync("//account/login");
 
     [RelayCommand]
     private async Task PickLogo()

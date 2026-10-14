@@ -238,13 +238,37 @@
                             <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
                                     StrokeShape="RoundRectangle 14" Padding="14,12">
                                 <VerticalStackLayout Spacing="6">
+                                    <!-- Tap the order number (or this row) to see the details -->
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <Label Text="{Binding OrderNumber}" FontSize="15" FontAttributes="Bold"
-                                               TextColor="{StaticResource BrandTextDark}" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding BindingContext.OpenOrderCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+                                        <Label FontSize="15" FontAttributes="Bold" TextColor="{StaticResource BrandDark}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding OrderNumber}" TextDecorations="Underline" />
+                                                    <Span Text="  ›" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <!-- Status chip: mint normally, red when cancelled -->
                                         <Border Grid.Column="1" BackgroundColor="{StaticResource BrandMintPale}"
                                                 StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="8,3">
+                                            <Border.Triggers>
+                                                <DataTrigger TargetType="Border" Binding="{Binding IsCancelled}" Value="True">
+                                                    <Setter Property="BackgroundColor" Value="#FDECEA" />
+                                                </DataTrigger>
+                                            </Border.Triggers>
                                             <Label Text="{Binding StatusText}" FontSize="11" FontAttributes="Bold"
-                                                   TextColor="{StaticResource BrandDark}" />
+                                                   TextColor="{StaticResource BrandDark}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                        <Setter Property="TextColor" Value="{StaticResource BrandDanger}" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
                                         </Border>
                                     </Grid>
                                     <Label Text="{Binding ItemsSummary}" FontSize="12"
@@ -260,8 +284,39 @@
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
+                                        <!-- Total: struck through when cancelled -->
                                         <Label Grid.Column="1" Text="{Binding TotalText}" FontSize="14"
-                                               FontAttributes="Bold" TextColor="{StaticResource BrandOrange}" />
+                                               FontAttributes="Bold" TextColor="{StaticResource BrandOrange}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                    <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                    <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Grid>
+
+                                    <!-- Buy again / Cancel order -->
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,6,0,0">
+                                        <Button Text="↻  Buy again"
+                                                Command="{Binding BindingContext.BuyAgainCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{StaticResource BrandMintPale}" TextColor="{StaticResource BrandDark}"
+                                                BorderColor="{StaticResource BrandMint}" BorderWidth="1"
+                                                FontAttributes="Bold" FontSize="13" CornerRadius="10" HeightRequest="40">
+                                            <!-- full width when Cancel isn't shown -->
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding CanCancel}" Value="False">
+                                                    <Setter Property="Grid.ColumnSpan" Value="2" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                        <Button Grid.Column="1" Text="Cancel order" IsVisible="{Binding CanCancel}"
+                                                Command="{Binding BindingContext.CancelOrderCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="White" TextColor="{StaticResource BrandDanger}"
+                                                BorderColor="{StaticResource BrandDanger}" BorderWidth="1"
+                                                FontAttributes="Bold" FontSize="13" CornerRadius="10" HeightRequest="40" />
                                     </Grid>
                                 </VerticalStackLayout>
                             </Border>

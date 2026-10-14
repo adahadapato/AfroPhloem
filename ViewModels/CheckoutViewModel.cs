@@ -66,7 +66,7 @@ public partial class CheckoutViewModel : ObservableObject
     /// <summary>
     /// Gets the currency symbol for the selected country.
     /// </summary>
-    public string CurrencySymbol => _cart.SelectedCountry.CurrencySymbol;
+    public string CurrencySymbol => _cart.SelectedCountry?.CurrencySymbol ?? "£";
 
     /// <summary>
     /// Gets the subtotal amount for all items in the cart.
@@ -197,31 +197,56 @@ public partial class CheckoutViewModel : ObservableObject
     /// command method to place the order.
     /// </summary>
     [RelayCommand]
-    private void PlaceOrder()
+    private async Task PlaceOrder()
     {
-        if (SelectedPaymentMethod is null) return;
-
-        OrderNumber = $"AP-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}";
-        ConfirmationMessage = $"Your order has been placed and {SelectedPaymentMethod.Name} will be charged {CurrencySymbol}{Total:0.00}.";
-        OrderPlaced = true;
-
-        // Keep a record for "Recent orders" on the Orders page
-        _history.Add(new PlacedOrder
+        try
         {
-            OrderNumber = OrderNumber,
-            ItemsSummary = string.Join(", ", _cart.Items.Select(i => $"{i.Dish.Name} ×{i.Quantity}")),
-            ItemCount = ItemCount,
-            Total = Total,
-            CurrencySymbol = CurrencySymbol,
-            PaymentMethod = SelectedPaymentMethod.Name,
-            IsInternational = _cart.PendingInternationalDelivery is not null
-        });
+            if (SelectedPaymentMethod is null || _cart.Items.Count == 0) return;
 
-        if (_cart.PendingInternationalDelivery is not null)
-            _data.AddShipment(_cart.PendingInternationalDelivery);
+            // Take everything we need BEFORE the basket is cleared
+            var subtotal = Subtotal;
+            var fee = DeliveryFee;
+            var total = Total;
+            var address = DeliveryAddressText;
+            var itemCount = ItemCount;
+            var currency = CurrencySymbol;
+            var payment = SelectedPaymentMethod.Name;
+            var lines = _cart.Items.Where(i => i.Dish is not null)
+                                       .Select(i => new OrderLine(i.Dish, i.Quantity)).ToList();
+            var summary = string.Join(", ", lines.Select(l => $"{l.Dish.Name} ×{l.Quantity}"));
+            var shipment = _cart.PendingInternationalDelivery;
 
-        _cart.Clear();
-        RefreshAll();
+            OrderNumber = $"AP-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}";
+            ConfirmationMessage = $"Your order has been placed and {payment} will be charged {currency}{total:0.00}. " +
+                                  $"You can cancel it from Orders within {PlacedOrder.CancelWindow.TotalMinutes:0} minutes.";
+
+            _history.Add(new PlacedOrder
+            {
+                OrderNumber = OrderNumber,
+                ItemsSummary = summary,
+                ItemCount = itemCount,
+                Subtotal = subtotal,
+                DeliveryFee = fee,
+                Total = total,
+                DeliveryAddress = address,
+                CurrencySymbol = currency,
+                PaymentMethod = payment,
+                Lines = lines,      // for "Buy again"
+                Shipment = shipment    // so "Cancel order" can withdraw it
+            });
+
+            if (shipment is not null)
+                _data.AddShipment(shipment);
+
+            _cart.Clear();
+            OrderPlaced = true;
+            RefreshAll();
+        }
+        catch (Exception ex)
+        {
+            // Show the real error instead of crashing
+            await Shell.Current.DisplayAlert("Couldn't place order", ex.ToString(), "OK");
+        }
     }
 
     /// <summary>
