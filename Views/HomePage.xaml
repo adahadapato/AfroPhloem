@@ -7,6 +7,7 @@
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
              xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:HomeViewModel"
@@ -55,6 +56,9 @@
                             </Grid>
 
                             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                <HorizontalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                                </HorizontalStackLayout.GestureRecognizers>
                                 <Image Source="header_logo.png" WidthRequest="36" HeightRequest="36" />
                                 <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
                                        VerticalOptions="Center" />
@@ -152,44 +156,65 @@
                     <!-- ============ BUY / SELL CARDS (overlap the hero) ============ -->
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,-28,0,0">
 
+                        <!-- Buy Food -->
                         <Border Grid.Column="0" Style="{StaticResource QuickActionCard}"
-                                BackgroundColor="{StaticResource BrandMintPale}">
+                                BackgroundColor="{StaticResource BrandMintPale}" Padding="10,12">
                             <Border.GestureRecognizers>
-                                <!-- Buy Food → Browse & Order -->
                                 <TapGestureRecognizer Command="{Binding GoToBuyCommand}" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandGreen}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <!-- Icon -->
+                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandGreen}"
+                                        WidthRequest="50" HeightRequest="50" VerticalOptions="Center">
                                     <Image Source="buy_food_basket.png" Aspect="AspectFit" Margin="6" />
                                 </Border>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                    <Label Text="Buy Food" FontAttributes="Bold" FontSize="15" TextColor="{StaticResource BrandTextDark}" />
-                                    <Label Text="Browse local vendors" Style="{StaticResource SubtleLabel}" FontSize="11" />
-                                </VerticalStackLayout>
-                                <Border Grid.Column="2" Style="{StaticResource ArrowCircle}"
-                                        BackgroundColor="{StaticResource BrandMint}">
-                                    <Label Style="{StaticResource ArrowGlyph}" TextColor="{StaticResource BrandGreen}" />
-                                </Border>
+                                <!-- Title on top; subtitle + arrow underneath -->
+                                <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto"
+                                    ColumnSpacing="4" RowSpacing="1" VerticalOptions="Center">
+                                    <Label Grid.ColumnSpan="2" Text="Buy Food" FontSize="16" FontAttributes="Bold"
+                                            TextColor="{StaticResource BrandTextDark}"
+                                            MaxLines="1" LineBreakMode="TailTruncation" />
+                                    <Label Grid.Row="1" Text="Browse local vendors" FontSize="11"
+                                            TextColor="{StaticResource BrandTextMuted}"
+                                            MaxLines="2" LineBreakMode="WordWrap" VerticalOptions="Center" />
+                                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ArrowCircle}"
+                                             BackgroundColor="{StaticResource BrandMint}"
+                                            WidthRequest="24" HeightRequest="24" StrokeShape="RoundRectangle 12"
+                                            VerticalOptions="End">
+                                        <Label Style="{StaticResource ArrowGlyph}" FontSize="16"
+                                            TextColor="{StaticResource BrandGreen}" />
+                                    </Border>
+                                </Grid>
                             </Grid>
                         </Border>
 
+                        <!-- Sell Food -->
                         <Border Grid.Column="1" Style="{StaticResource QuickActionCard}"
-                                BackgroundColor="{StaticResource BrandPeach}">
+                                BackgroundColor="{StaticResource BrandPeach}" Padding="10,12">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding GoToSellCommand}" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandOrangeLight}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Border Style="{StaticResource IconCircle}" BackgroundColor="{StaticResource BrandOrangeLight}"
+                                        WidthRequest="50" HeightRequest="50" VerticalOptions="Center">
                                     <Image Source="sell_food_shop.png" Aspect="AspectFit" Margin="6" />
                                 </Border>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                    <Label Text="Sell Food" FontAttributes="Bold" FontSize="15" TextColor="{StaticResource BrandTextDark}" />
-                                    <Label Text="Start earning today" Style="{StaticResource SubtleLabel}" FontSize="11" />
-                                </VerticalStackLayout>
-                                <Border Grid.Column="2" Style="{StaticResource ArrowCircle}"
-                                        BackgroundColor="White">
-                                    <Label Style="{StaticResource ArrowGlyph}" TextColor="{StaticResource BrandOrange}" />
-                                </Border>
+                                <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="4" RowSpacing="1" VerticalOptions="Center">
+                                    <Label Grid.ColumnSpan="2" Text="Sell Food" FontSize="16" FontAttributes="Bold"
+                                            TextColor="{StaticResource BrandTextDark}"
+                                            MaxLines="1" LineBreakMode="TailTruncation" />
+                                    <Label Grid.Row="1" Text="Start earning today" FontSize="11"
+                                            TextColor="{StaticResource BrandTextMuted}"
+                                            MaxLines="2" LineBreakMode="WordWrap" VerticalOptions="Center" />
+                                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ArrowCircle}"
+                                            BackgroundColor="White"
+                                            WidthRequest="24" HeightRequest="24" StrokeShape="RoundRectangle 12"
+                                            VerticalOptions="End">
+                                        <Label Style="{StaticResource ArrowGlyph}" FontSize="16"
+                                                TextColor="{StaticResource BrandOrange}" />
+                                    </Border>
+                                </Grid>
                             </Grid>
                         </Border>
                     </Grid>

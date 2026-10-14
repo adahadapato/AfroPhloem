@@ -20,4 +20,10 @@ public class User
     // against it. A real app must never store or transmit passwords like this -
     // they belong hashed (e.g. bcrypt/Argon2) behind a real auth backend.
     public string Password { get; set; } = string.Empty;
+    public string? PhotoPath { get; set; }
+    public bool NotifyOrderUpdates { get; set; } = true;
+    public bool NotifyShipmentUpdates { get; set; } = true;
+    public bool NotifyOffers { get; set; } = false;
+    public bool NotifyNewDishes { get; set; } = true;
+    public bool NotifyShopOrders { get; set; } = true;
 }

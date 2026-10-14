@@ -132,4 +132,7 @@ public partial class HomeViewModel : ObservableObject
     private async Task ViewShop(Vendor vendor) =>
         await Shell.Current.GoToAsync(
             $"//listing?vendorId={Uri.EscapeDataString(vendor.Id)}&vendorName={Uri.EscapeDataString(vendor.Name)}");
+
+    [RelayCommand]
+    private async Task GoToSendToUk() => await Shell.Current.GoToAsync("//home/international");
 }

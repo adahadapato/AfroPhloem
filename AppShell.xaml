@@ -68,7 +68,7 @@
     </Shell.ItemTemplate>
 
     <!-- ============ Side menu: style for the other pages (same look) ============ -->
-    <Shell.MenuItemTemplate>
+    <!--<Shell.MenuItemTemplate>
         <DataTemplate>
             <Grid Padding="12,3">
                 <Border StrokeThickness="0" StrokeShape="RoundRectangle 12"
@@ -78,10 +78,38 @@
                 </Border>
             </Grid>
         </DataTemplate>
+    </Shell.MenuItemTemplate>-->
+
+    <!-- ============ Side menu: style for the other pages (same look) ============ -->
+    <Shell.MenuItemTemplate>
+        <DataTemplate>
+            <VerticalStackLayout Spacing="0">
+                <Grid Padding="12,3">
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                        Padding="14,12" BackgroundColor="Transparent">
+                        <Label Text="{Binding Text}" FontSize="15"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    </Border>
+                </Grid>
+
+                <!-- Divider line: only shown under "About" -->
+                <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}"
+                     Margin="26,6,26,6" IsVisible="False">
+                    <BoxView.Triggers>
+                        <DataTrigger TargetType="BoxView" Binding="{Binding Text}" Value="About">
+                            <Setter Property="IsVisible" Value="True" />
+                        </DataTrigger>
+                    </BoxView.Triggers>
+                </BoxView>
+            </VerticalStackLayout>
+        </DataTemplate>
     </Shell.MenuItemTemplate>
 
     <!-- ============ Bottom bar: 4 tabs ============ -->
-    <FlyoutItem Title="Phloem" Route="main" FlyoutDisplayOptions="AsMultipleItems">
+    <!--<FlyoutItem Title="Phloem" Route="main" FlyoutDisplayOptions="AsMultipleItems">-->
+    <!-- Hidden from the ☰ side menu: Home, Explore, Orders and Account are already on the bottom bar. -->
+    <FlyoutItem Title="Phloem" Route="main" FlyoutDisplayOptions="AsSingleItem"
+            Shell.FlyoutItemIsVisible="False">
         <Tab Title="Home" Icon="tab_home.png">
             <ShellContent Title="Home" ContentTemplate="{DataTemplate views:HomePage}" Route="home" />
         </Tab>
@@ -97,12 +125,12 @@
     </FlyoutItem>
 
     <!-- ============ Side menu: other pages (open on top of a tab, bottom bar stays) ============ -->
-    <MenuItem Text="Send Food to UK"  CommandParameter="//home/international" Clicked="OnMenuItemClicked" />
     <MenuItem Text="About"            CommandParameter="//account/about"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Admin Dashboard"  CommandParameter="//account/admin"      Clicked="OnMenuItemClicked" />
+    <MenuItem Text="Send Food to UK"  CommandParameter="//home/international" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Sellers &amp; Vendors" CommandParameter="//home/vendors" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Become a Seller"  CommandParameter="//home/sellersetup" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Seller Dashboard" CommandParameter="//home/dashboard"   Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Admin Dashboard"  CommandParameter="//account/admin"      Clicked="OnMenuItemClicked" />
     <MenuItem Text="Sign Up"          CommandParameter="//account/register"   Clicked="OnMenuItemClicked" />
 
 </Shell>

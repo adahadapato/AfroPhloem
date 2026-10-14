@@ -6,6 +6,7 @@
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
              x:Class="Phloem.Views.AboutPage"
              Shell.NavBarIsVisible="False"
              Title="About Phloem">
@@ -13,32 +14,34 @@
     <Grid RowDefinitions="Auto,*">
 
         <!-- ============ GREEN HEADER ============ -->
-        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="78">
-
-            <!-- Faint decorative curve, like the design -->
-            <Ellipse Stroke="#1FFFFFFF" StrokeThickness="10"
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
                      WidthRequest="320" HeightRequest="320"
                      HorizontalOptions="Start" VerticalOptions="Start"
-                     Margin="-40,-10,0,0" />
+                     Margin="-60,-30,0,0" InputTransparent="True" />
 
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="18,0,16,0">
-                <!-- Menu -->
-                <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
-                      Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
-                      WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
-                    <Path.GestureRecognizers>
+                <!-- Menu icon (opens the side menu) -->
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnMenuTapped" />
-                    </Path.GestureRecognizers>
-                </Path>
+                    </Grid.GestureRecognizers>
+                </Grid>
 
-                <!-- Logo + name -->
                 <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
                     <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
                     <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
                            VerticalOptions="Center" />
                 </HorizontalStackLayout>
 
-                <!-- Country flag pill (shows the country chosen on Home) -->
+                <!-- Flag pill (shows the country chosen on Home) -->
                 <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
                         StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
                         VerticalOptions="Center">
@@ -152,5 +155,4 @@
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
-    
 </ContentPage>

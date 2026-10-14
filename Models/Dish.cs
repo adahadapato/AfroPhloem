@@ -17,4 +17,7 @@ public partial class Dish : ObservableObject
     public string Country { get; set; } = "Ghana";
     public string VendorName { get; set; } = string.Empty;
     public string VendorId { get; set; } = string.Empty;
+    public string CatalogName { get; set; } = string.Empty;  // the list name, e.g. "Jollof Rice"
+    public string Description { get; set; } = string.Empty;
+    public bool IsAvailable { get; set; } = true;
 }

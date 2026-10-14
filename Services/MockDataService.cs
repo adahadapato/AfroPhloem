@@ -69,7 +69,7 @@ public class MockDataService
     public IEnumerable<Dish> GetDishes(string? country = null, string? category = null, string? searchText = null)
     {
         var approvedVendorIds = Vendors.Where(v => v.IsApproved && !v.IsBlocked).Select(v => v.Id).ToHashSet();
-        var query = Dishes.Where(d => approvedVendorIds.Contains(d.VendorId));
+        var query = Dishes.Where(d => approvedVendorIds.Contains(d.VendorId) && d.IsAvailable);
 
         if (!string.IsNullOrWhiteSpace(country) && country != "All")
             query = query.Where(d => d.Country == country);

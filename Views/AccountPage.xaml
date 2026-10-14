@@ -6,6 +6,7 @@
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
              x:DataType="vm:AccountViewModel"
              x:Class="Phloem.Views.AccountPage"
@@ -83,6 +84,9 @@
                     </Grid.GestureRecognizers>
                 </Grid>
                 <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
                     <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
                     <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
                            VerticalOptions="Center" />
@@ -140,21 +144,36 @@
                         </Border.Background>
                         <VerticalStackLayout Spacing="14">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                                <!-- Initials avatar -->
+                                <!-- Avatar: photo, or initials when there's no photo. Tap → Edit profile -->
                                 <Border StrokeThickness="2" Stroke="White" StrokeShape="Ellipse"
                                         WidthRequest="60" HeightRequest="60" BackgroundColor="{StaticResource BrandOrange}">
-                                    <Label Text="{Binding Initials}" FontSize="22" FontAttributes="Bold" TextColor="White"
-                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Grid>
+                                        <Label Text="{Binding Initials}" FontSize="22" FontAttributes="Bold" TextColor="White"
+                                               HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding HasNoPhoto}" />
+                                        <Image Source="{Binding PhotoPath}" Aspect="AspectFill" IsVisible="{Binding HasPhoto}" />
+                                    </Grid>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
+                                    </Border.GestureRecognizers>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                                     <Label Text="{Binding FullName}" FontSize="19" FontAttributes="Bold" TextColor="White"
                                            LineBreakMode="TailTruncation" />
                                     <Label Text="{Binding MemberSince}" FontSize="12" TextColor="{StaticResource BrandGoldLight}" />
-                                    <!-- Role badge -->
-                                    <Border BackgroundColor="#26FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 8"
-                                            Padding="8,2" HorizontalOptions="Start" Margin="0,2,0,0">
-                                        <Label Text="{Binding RoleText}" FontSize="11" FontAttributes="Bold" TextColor="White" />
-                                    </Border>
+                                    <!-- Role badge + Edit profile pill -->
+                                    <HorizontalStackLayout Spacing="8" Margin="0,2,0,0">
+                                        <Border BackgroundColor="#26FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 8"
+                                                Padding="8,2" VerticalOptions="Center">
+                                            <Label Text="{Binding RoleText}" FontSize="11" FontAttributes="Bold" TextColor="White" />
+                                        </Border>
+                                        <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 8"
+                                                Padding="10,2" VerticalOptions="Center">
+                                            <Label Text="Edit profile" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource BrandDark}" />
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
+                                            </Border.GestureRecognizers>
+                                        </Border>
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </Grid>
 
@@ -295,12 +314,79 @@
                         </VerticalStackLayout>
                     </Border>
 
+                    <!-- ============ SETTINGS (NEW) ============ -->
+                    <Label Text="Settings" FontSize="16" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" Margin="4,8,0,0" />
+                    <Border Style="{StaticResource WhiteCard}" Padding="6,4">
+                        <VerticalStackLayout Spacing="0">
+
+                            <!-- Edit profile -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding EditProfileCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M12,12 A4,4 0 1 0 12,4 A4,4 0 1 0 12,12 M4,21 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,21" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Edit profile" Style="{StaticResource RowTitle}" />
+                                    <Label Text="Photo, name, phone, country" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- Change password -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ChangePasswordCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M6,11 L18,11 L18,21 L6,21 Z M8.5,11 L8.5,7.5 A3.5,3.5 0 0 1 15.5,7.5 L15.5,11 M12,15 L12,17" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Change password" Style="{StaticResource RowTitle}" />
+                                    <Label Text="Keep your account safe" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+
+                            <!-- Notifications -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NotificationsCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M6,16 L6,11 A6,6 0 0 1 18,11 L18,16 L20,18 L4,18 Z M10,21 L14,21" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="Notifications" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{Binding NotificationsSummary}" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
                     <!-- Log out -->
                     <Button Text="Log out" Command="{Binding LogoutCommand}"
                             BackgroundColor="White" TextColor="{StaticResource BrandDanger}"
                             BorderColor="{StaticResource BrandDanger}" BorderWidth="1.5"
                             FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="50"
                             Margin="0,8,0,0" />
+
+                    <!-- Delete account (NEW): quiet red link, asks twice before deleting -->
+                    <Label Text="Delete my account" FontSize="13" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandDanger}" HorizontalOptions="Center"
+                           Padding="12,10" Margin="0,4,0,0">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding DeleteAccountCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </VerticalStackLayout>
 
             </VerticalStackLayout>

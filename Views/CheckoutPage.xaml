@@ -7,6 +7,7 @@
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
              xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:CheckoutViewModel"
@@ -60,6 +61,9 @@
                 </Grid>
 
                 <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
                     <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
                     <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
                            VerticalOptions="Center" />

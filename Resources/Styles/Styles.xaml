@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:controls="clr-namespace:Phloem.Views.Controls"
                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- Every existing style key is kept (restyled to the new palette), new ones are marked NEW. -->
@@ -8,6 +9,18 @@
     <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
         <Setter Property="BackgroundColor" Value="{StaticResource BrandCream}" />
     </Style>
+
+    <!--<Style TargetType="ContentPage" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{StaticResource BrandCream}" />
+        --><!-- Pinch-to-zoom on every page --><!--
+        <Setter Property="ControlTemplate">
+            <ControlTemplate>
+                <controls:PinchZoomView>
+                    <ContentPresenter />
+                </controls:PinchZoomView>
+            </ControlTemplate>
+        </Setter>
+    </Style>-->
 
     <!-- NEW: bottom tab bar colours for every Shell page -->
     <Style TargetType="Shell" ApplyToDerivedTypes="True">

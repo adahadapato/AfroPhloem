@@ -9,6 +9,11 @@ namespace Phloem.ViewModels;
 public partial class AdminViewModel : ObservableObject
 {
     private readonly MockDataService _data;
+    private readonly DishCatalogService _catalog;
+
+    /// <summary>NEW: dish names sellers have suggested, waiting for approval.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<CatalogDish> DishSuggestions => _catalog.Suggestions;
+    public bool HasDishSuggestions => _catalog.Suggestions.Count > 0;
 
     public ObservableCollection<Vendor> PendingVendors { get; } = new();
     public ObservableCollection<Vendor> ActiveVendors { get; } = new();
@@ -40,9 +45,11 @@ public partial class AdminViewModel : ObservableObject
     [ObservableProperty]
     public partial string ActiveTab { get; set; } = "Sellers";
 
-    public AdminViewModel(MockDataService data)
+    public AdminViewModel(MockDataService data, DishCatalogService catalog)
     {
         _data = data;
+        _catalog = catalog;
+        _catalog.Suggestions.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDishSuggestions));
         Refresh();
     }
 
@@ -57,7 +64,11 @@ public partial class AdminViewModel : ObservableObject
     private void ShowShipments() => ActiveTab = "Shipments";
 
     /// <summary>Called by the page each time it appears, so new sign-ups and shops show up.</summary>
-    public void Reload() => Refresh();
+    public void Reload()
+    {
+        Refresh();
+        OnPropertyChanged(nameof(HasDishSuggestions));
+    }
 
     private void Refresh()
     {
@@ -98,6 +109,19 @@ public partial class AdminViewModel : ObservableObject
     {
         _data.Vendors.Remove(vendor);
         Refresh();
+    }
+
+    /// <summary>NEW: approve a suggested dish name → it joins the list sellers pick from.</summary>
+    [RelayCommand]
+    private void ApproveDishName(CatalogDish suggestion) => _catalog.Approve(suggestion);
+
+    /// <summary>NEW: reject a suggested dish name.</summary>
+    [RelayCommand]
+    private async Task RejectDishName(CatalogDish suggestion)
+    {
+        var ok = await Shell.Current.DisplayAlert("Reject dish name?",
+            $"\"{suggestion.Name}\" won't be added to the dish list.", "Reject", "Cancel");
+        if (ok) _catalog.Reject(suggestion);
     }
 
     [RelayCommand]

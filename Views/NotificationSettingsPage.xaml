@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    NotificationSettingsPage (NEW): My account → Notifications (route "notifications").
+    Each switch saves straight away.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:phloem="clr-namespace:Phloem"
+             x:DataType="vm:NotificationSettingsViewModel"
+             x:Class="Phloem.Views.NotificationSettingsPage"
+             Shell.NavBarIsVisible="False"
+             Title="Notifications">
+
+    <ContentPage.Resources>
+        <Style x:Key="RowTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+        </Style>
+        <Style x:Key="RowSub" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <Style TargetType="Switch">
+            <Setter Property="OnColor" Value="{StaticResource BrandGreen}" />
+            <Setter Property="ThumbColor" Value="White" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="SectionCaption" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+            <Setter Property="Margin" Value="4,8,0,0" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10" WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start" Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round" WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="10" MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,4">
+                    <Label Text="Notifications" FontSize="26" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Choose what Phloem tells you about" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ ORDERS ============ -->
+                <Label Text="ORDERS" Style="{StaticResource SectionCaption}" />
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,4">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Order updates" Style="{StaticResource RowTitle}" />
+                                <Label Text="Confirmed, on the way, delivered" Style="{StaticResource RowSub}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding OrderUpdates}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="UK shipments" Style="{StaticResource RowTitle}" />
+                                <Label Text="Tracking for food you send to the UK" Style="{StaticResource RowSub}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding ShipmentUpdates}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ SELLERS ONLY ============ -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding IsSeller}">
+                    <Label Text="MY SHOP" Style="{StaticResource SectionCaption}" />
+                    <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,4">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="New shop orders" Style="{StaticResource RowTitle}" />
+                                <Label Text="When a customer orders from your shop" Style="{StaticResource RowSub}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding ShopOrders}" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ============ NEWS ============ -->
+                <Label Text="NEWS AND OFFERS" Style="{StaticResource SectionCaption}" />
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,4">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Offers and discounts" Style="{StaticResource RowTitle}" />
+                                <Label Text="Deals from Phloem and your favourite shops" Style="{StaticResource RowSub}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding Offers}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="New dishes near me" Style="{StaticResource RowTitle}" />
+                                <Label Text="When new food is added in your country" Style="{StaticResource RowSub}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding NewDishes}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Changes save automatically." FontSize="11" TextColor="{StaticResource BrandTextMuted}"
+                       HorizontalOptions="Center" Margin="0,8,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

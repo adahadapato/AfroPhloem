@@ -1,0 +1,424 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    DishEditorPage (NEW): sellers add or edit a dish (route "dishedit").
+    Name comes from the fixed dish list (no typos) + optional detail; photo from camera or gallery.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:services="clr-namespace:Phloem.Services"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             xmlns:phloem="clr-namespace:Phloem"
+             x:DataType="vm:DishEditorViewModel"
+             x:Class="Phloem.Views.DishEditorPage"
+             x:Name="RootPage"
+             Shell.NavBarIsVisible="False"
+             Title="Dish">
+
+    <ContentPage.Resources>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+        <Style x:Key="Chip" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HeightRequest" Value="32" />
+            <Setter Property="Padding" Value="14,0" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- ============ FORM ============ -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="{Binding PageTitle}" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="{Binding PageSubtitle}" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ PHOTO ============ -->
+                <Border StrokeShape="RoundRectangle 18" StrokeThickness="1.5" Stroke="{StaticResource BrandMint}"
+                        StrokeDashArray="5,4" BackgroundColor="{StaticResource BrandMintPale}"
+                        HeightRequest="200" Padding="0">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding HasPhoto}" Value="True">
+                            <Setter Property="StrokeThickness" Value="0" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <Grid>
+                        <!-- Empty: tap to add -->
+                        <VerticalStackLayout Spacing="8" VerticalOptions="Center" HorizontalOptions="Center"
+                                             IsVisible="{Binding HasNoPhoto}">
+                            <Border StrokeThickness="0" StrokeShape="Ellipse" WidthRequest="56" HeightRequest="56"
+                                    BackgroundColor="{StaticResource BrandMint}" HorizontalOptions="Center">
+                                <Path Data="M4,8 L8,8 L10,5 L14,5 L16,8 L20,8 L20,19 L4,19 Z M9,13 A3,3 0 1 0 15,13 A3,3 0 1 0 9,13"
+                                      Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineJoin="Round"
+                                      WidthRequest="26" HeightRequest="26"
+                                      HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Text="Add a photo of your dish" FontSize="15" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandDark}" HorizontalOptions="Center" />
+                            <Label Text="Take a photo or choose from your gallery" FontSize="12"
+                                   TextColor="{StaticResource BrandTextMuted}" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+
+                        <!-- With photo -->
+                        <Image Source="{Binding PhotoPath}" Aspect="AspectFill" IsVisible="{Binding HasPhoto}" />
+                        <HorizontalStackLayout Spacing="8" HorizontalOptions="End" VerticalOptions="End"
+                                               Margin="10" IsVisible="{Binding HasPhoto}">
+                            <Button Text="Change" Command="{Binding PhotoOptionsCommand}"
+                                    BackgroundColor="#CC000000" TextColor="White" FontSize="12" FontAttributes="Bold"
+                                    CornerRadius="14" HeightRequest="30" Padding="14,0" />
+                            <Button Text="Remove" Command="{Binding RemovePhotoCommand}"
+                                    BackgroundColor="#CC000000" TextColor="White" FontSize="12" FontAttributes="Bold"
+                                    CornerRadius="14" HeightRequest="30" Padding="14,0" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding PhotoOptionsCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Label Text="Tip: use natural light · landscape works best · show the whole plate"
+                       FontSize="11" TextColor="{StaticResource BrandTextMuted}" HorizontalOptions="Center"
+                       Margin="0,-6,0,0" />
+
+                <!-- ============ DETAILS CARD ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="16,18">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="16">
+
+                        <!-- Dish name (picker) -->
+                        <VerticalStackLayout>
+                            <Label Text="Dish name" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" HeightRequest="50">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenPickerCommand}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <Label Text="Choose a dish" FontSize="14" TextColor="{StaticResource BrandTextMuted}"
+                                           VerticalOptions="Center">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding HasBaseDish}" Value="True">
+                                                <Setter Property="Text" Value="{Binding BaseDish.Name}" />
+                                                <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+                                                <Setter Property="FontAttributes" Value="Bold" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                    <Path Grid.Column="1" Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                                          StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                                          WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                            <Label Text="{Binding CategoryText, StringFormat='Category: {0}'}" FontSize="12"
+                                   TextColor="{StaticResource BrandGreen}" Margin="4,6,0,0"
+                                   IsVisible="{Binding HasBaseDish}" />
+                        </VerticalStackLayout>
+
+                        <!-- Detail -->
+                        <VerticalStackLayout IsVisible="{Binding HasBaseDish}">
+                            <Label Text="Add a detail (optional)" Style="{StaticResource FieldLabel}" />
+                            <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding DetailChips}" Margin="0,0,0,8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Button Text="{Binding .}" Style="{StaticResource Chip}" Margin="0,0,6,6"
+                                                Command="{Binding BindingContext.ToggleDetailCommand, Source={x:Reference RootPage}}"
+                                                CommandParameter="{Binding .}" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                            <Border Style="{StaticResource FieldBox}" HeightRequest="46">
+                                <Entry Text="{Binding Detail}" Placeholder="e.g. &amp; Chicken, Spicy" MaxLength="30"
+                                       BackgroundColor="Transparent" FontSize="14"
+                                       TextColor="{StaticResource BrandTextDark}"
+                                       PlaceholderColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Price -->
+                        <VerticalStackLayout>
+                            <Label Text="Price" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" HeightRequest="48">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                    <Label Text="£" FontSize="16" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    <Entry Grid.Column="1" Text="{Binding PriceText}" Placeholder="8.50" Keyboard="Numeric"
+                                           BackgroundColor="Transparent" FontSize="15"
+                                           TextColor="{StaticResource BrandTextDark}"
+                                           PlaceholderColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Description -->
+                        <VerticalStackLayout>
+                            <Label Text="Short description (optional)" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" Padding="8,2">
+                                <Editor Text="{Binding Description}" Placeholder="e.g. Smoky party jollof with grilled chicken"
+                                        MaxLength="140" AutoSize="TextChanges" MinimumHeightRequest="64"
+                                        BackgroundColor="Transparent" FontSize="14"
+                                        TextColor="{StaticResource BrandTextDark}"
+                                        PlaceholderColor="{StaticResource BrandTextMuted}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Available today -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                                <Label Text="Available today" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="Turn off to hide it when sold out" FontSize="12"
+                                       TextColor="{StaticResource BrandTextMuted}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding IsAvailable}"
+                                    OnColor="{StaticResource BrandMint}" ThumbColor="{StaticResource BrandGreen}"
+                                    VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ LIVE PREVIEW ============ -->
+                <Label Text="How customers will see it" Style="{StaticResource SectionTitle}" FontSize="16"
+                       Margin="2,6,0,0" />
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="8">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                    </Border.Shadow>
+                    <Grid ColumnDefinitions="100,*" ColumnSpacing="14">
+                        <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="100" HeightRequest="80">
+                            <Image Source="{Binding PreviewImage}" Aspect="AspectFill" />
+                        </Border>
+                        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto"
+                              RowSpacing="2" Padding="0,4,4,0">
+                            <Label Text="{Binding PreviewName}" FontSize="16" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" />
+                            <Label Grid.Column="1" Text="New" FontSize="12" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandOrange}" />
+                            <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding PreviewVendor}" FontSize="12"
+                                   TextColor="{StaticResource BrandTextMuted}" />
+                            <Label Grid.Row="2" Text="{Binding PreviewPrice}" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandOrange}" VerticalOptions="End" />
+                            <Border Grid.Row="2" Grid.Column="1" StrokeThickness="0" StrokeShape="Ellipse"
+                                    WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource BrandDark}"
+                                    VerticalOptions="End">
+                                <Label Text="+" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
+                <!-- ============ ACTIONS ============ -->
+                <Button Text="Save dish" Command="{Binding SaveCommand}"
+                        BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                        FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" Margin="0,6,0,0" />
+                <Button Text="Delete dish" Command="{Binding DeleteCommand}" IsVisible="{Binding IsEditing}"
+                        BackgroundColor="White" TextColor="{StaticResource BrandDanger}"
+                        BorderColor="{StaticResource BrandDanger}" BorderWidth="1.5"
+                        FontAttributes="Bold" FontSize="15" CornerRadius="12" HeightRequest="50" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- =================================================================== -->
+        <!-- ============ DISH PICKER (slides over the page) ==================== -->
+        <!-- =================================================================== -->
+        <Grid Grid.RowSpan="2" IsVisible="{Binding IsPickerOpen}">
+            <!-- Dim background: tap to close -->
+            <BoxView Color="#80000000">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ClosePickerCommand}" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+
+            <Border BackgroundColor="{StaticResource BrandCream}" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 24,24,0,0" Margin="0,70,0,0" Padding="16,14,16,0">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+
+                    <!-- Title + close -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Choose a dish" FontSize="20" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="✕" FontSize="20" TextColor="{StaticResource BrandTextMuted}"
+                               Padding="8,0" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ClosePickerCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+
+                    <!-- Search -->
+                    <Border Grid.Row="1" BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 12" Padding="14,0" HeightRequest="46">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Path Data="M3,10 A7,7 0 1 0 17,10 A7,7 0 1 0 3,10 M15.5,15.5 L21,21"
+                                  Stroke="{StaticResource BrandTextMuted}" StrokeThickness="2" StrokeLineCap="Round"
+                                  WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                            <Entry Grid.Column="1" Text="{Binding PickerSearch}" Placeholder="Search dishes, e.g. jollof"
+                                   BackgroundColor="Transparent" FontSize="14"
+                                   TextColor="{StaticResource BrandTextDark}"
+                                   PlaceholderColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Grouped list -->
+                    <CollectionView Grid.Row="2" ItemsSource="{Binding PickerGroups}" IsGrouped="True"
+                                    IsVisible="{Binding IsSuggesting, Converter={StaticResource InvertedBoolConverter}}">
+                        <CollectionView.GroupHeaderTemplate>
+                            <DataTemplate x:DataType="vm:DishGroup">
+                                <Label Padding="4,14,0,6" FontSize="13" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextMuted}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Icon}" />
+                                            <Span Text="  " />
+                                            <Span Text="{Binding Name}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </DataTemplate>
+                        </CollectionView.GroupHeaderTemplate>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="services:CatalogDish">
+                                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                        Padding="14,12" Margin="0,0,0,6">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding BindingContext.PickDishCommand, Source={x:Reference RootPage}}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding Category}" FontSize="11"
+                                               TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <Label Text="No dish with that name yet." HorizontalOptions="Center" Margin="0,30"
+                                   TextColor="{StaticResource BrandTextMuted}" />
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+
+                    <!-- Suggest a new dish -->
+                    <ScrollView Grid.Row="2" IsVisible="{Binding IsSuggesting}">
+                        <VerticalStackLayout Spacing="14" Padding="0,4,0,0">
+                            <Label Text="Suggest a new dish" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="Phloem will check the name and add it to the list for everyone."
+                                   FontSize="13" TextColor="{StaticResource BrandTextMuted}" />
+                            <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 12" Padding="12,0" HeightRequest="48">
+                                <Entry Text="{Binding SuggestName}" Placeholder="Dish name" MaxLength="40"
+                                       BackgroundColor="Transparent" FontSize="14"
+                                       TextColor="{StaticResource BrandTextDark}"
+                                       PlaceholderColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                            </Border>
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Local Meals" Style="{StaticResource Chip}"
+                                        Command="{Binding ChooseSuggestCategoryCommand}" CommandParameter="Local Meals">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding SuggestCategory}" Value="Local Meals">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="Snacks" Style="{StaticResource Chip}"
+                                        Command="{Binding ChooseSuggestCategoryCommand}" CommandParameter="Snacks">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding SuggestCategory}" Value="Snacks">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <Button Text="Drinks" Style="{StaticResource Chip}"
+                                        Command="{Binding ChooseSuggestCategoryCommand}" CommandParameter="Drinks">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding SuggestCategory}" Value="Drinks">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="TextColor" Value="White" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                            </HorizontalStackLayout>
+                            <Button Text="Send for approval" Command="{Binding SendSuggestionCommand}"
+                                    BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                    FontAttributes="Bold" CornerRadius="12" HeightRequest="48" />
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Can't find your dish? -->
+                    <Border Grid.Row="3" BackgroundColor="{StaticResource BrandPeach}" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 12" Padding="14,12" Margin="0,0,0,16"
+                            IsVisible="{Binding IsSuggesting, Converter={StaticResource InvertedBoolConverter}}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding StartSuggestCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="1">
+                                <Label Text="Can't find your dish?" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="Suggest a new name for the list" FontSize="12"
+                                       TextColor="{StaticResource BrandTextMuted}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1" Text="›" FontSize="22" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandOrange}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

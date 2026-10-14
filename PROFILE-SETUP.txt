@@ -1,0 +1,30 @@
+PHLOEM - PROFILE & SHOP SETTINGS: 3 STEPS ON YOUR SIDE
+=======================================================
+
+1) Models/User.cs - add these properties inside the User class:
+
+    public string? PhotoPath { get; set; }                  // profile photo (backend will upload later)
+    public bool NotifyOrderUpdates { get; set; } = true;
+    public bool NotifyShipmentUpdates { get; set; } = true;
+    public bool NotifyOffers { get; set; } = false;
+    public bool NotifyNewDishes { get; set; } = true;
+    public bool NotifyShopOrders { get; set; } = true;
+
+   Also make sure FullName, PhoneNumber, Country and Password have { get; set; }.
+
+2) Models/Vendor.cs and Models/Dish.cs:
+   Vendor.Name, Vendor.BusinessEmail, Vendor.BusinessPhone and Dish.VendorName
+   need { get; set; } (not { get; init; }) so Shop settings can rename the shop.
+
+3) MauiProgram.cs - register the new pages:
+
+    builder.Services.AddTransient<EditProfileViewModel>();
+    builder.Services.AddTransient<EditProfilePage>();
+    builder.Services.AddTransient<ChangePasswordViewModel>();
+    builder.Services.AddTransient<ChangePasswordPage>();
+    builder.Services.AddTransient<NotificationSettingsViewModel>();
+    builder.Services.AddTransient<NotificationSettingsPage>();
+    builder.Services.AddTransient<ShopSettingsViewModel>();
+    builder.Services.AddTransient<ShopSettingsPage>();
+
+Routes are already added in AppShell.xaml.cs.

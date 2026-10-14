@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    EditProfilePage (NEW): My account → Edit profile (route "editprofile").
+    Photo, name, phone, country. Email is shown but not editable here.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             xmlns:phloem="clr-namespace:Phloem"
+             x:DataType="vm:EditProfileViewModel"
+             x:Class="Phloem.Views.EditProfilePage"
+             Shell.NavBarIsVisible="False"
+             Title="Edit profile">
+
+    <ContentPage.Resources>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HeightRequest" Value="50" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10" WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start" Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round" WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="14" MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="Edit profile" FontSize="26" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="Your personal details" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ PHOTO ============ -->
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center" Margin="0,4,0,0">
+                    <Grid WidthRequest="104" HeightRequest="104" HorizontalOptions="Center">
+                        <Border StrokeThickness="3" Stroke="White" StrokeShape="Ellipse"
+                                BackgroundColor="{StaticResource BrandOrange}">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Opacity="0.12" Radius="10" Offset="0,3" />
+                            </Border.Shadow>
+                            <Grid>
+                                <Label Text="{Binding Initials}" FontSize="36" FontAttributes="Bold" TextColor="White"
+                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding HasNoPhoto}" />
+                                <Image Source="{Binding PhotoPath}" Aspect="AspectFill" IsVisible="{Binding HasPhoto}" />
+                            </Grid>
+                        </Border>
+                        <!-- camera badge -->
+                        <Border StrokeThickness="2" Stroke="White" StrokeShape="Ellipse"
+                                WidthRequest="34" HeightRequest="34" BackgroundColor="{StaticResource BrandDark}"
+                                HorizontalOptions="End" VerticalOptions="End">
+                            <Path Data="M4,8 L8,8 L10,5 L14,5 L16,8 L20,8 L20,19 L4,19 Z M9,13 A3,3 0 1 0 15,13 A3,3 0 1 0 9,13"
+                                  Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round"
+                                  WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PhotoOptionsCommand}" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <HorizontalStackLayout Spacing="18" HorizontalOptions="Center">
+                        <Label Text="Change photo" Style="{StaticResource LinkLabel}" TextColor="{StaticResource BrandDark}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PhotoOptionsCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="Remove" Style="{StaticResource LinkLabel}" TextColor="{StaticResource BrandDanger}"
+                               IsVisible="{Binding HasPhoto}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding RemovePhotoCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- ============ DETAILS CARD ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="16,18">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="16">
+
+                        <VerticalStackLayout>
+                            <Label Text="Full name" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Text="{Binding FullName}" Placeholder="e.g. Efua Owusu" Keyboard="Text"
+                                       TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Phone number" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Entry Text="{Binding PhoneNumber}" Placeholder="+233 24 555 0192" Keyboard="Telephone"
+                                       TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Country" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <Picker ItemsSource="{Binding Countries}" SelectedItem="{Binding Country}"
+                                        Title="Choose your country" TextColor="{StaticResource BrandTextDark}"
+                                        VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Email (read-only) -->
+                        <VerticalStackLayout>
+                            <Label Text="Email" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}" BackgroundColor="{StaticResource BrandCream}">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <Label Text="{Binding Email}" TextColor="{StaticResource BrandTextMuted}" FontSize="15"
+                                           VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                                    <!-- padlock -->
+                                    <Path Grid.Column="1" Data="M6,11 L18,11 L18,21 L6,21 Z M8.5,11 L8.5,7.5 A3.5,3.5 0 0 1 15.5,7.5 L15.5,11"
+                                          Stroke="{StaticResource BrandTextMuted}" StrokeThickness="1.6" StrokeLineJoin="Round"
+                                          WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                            <Label Text="Your email is your login, so it can't be changed here yet."
+                                   FontSize="11" TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
+                <Button Text="Save changes" Command="{Binding SaveCommand}"
+                        BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                        FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

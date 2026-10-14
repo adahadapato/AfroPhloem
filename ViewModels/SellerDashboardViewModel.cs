@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
@@ -41,22 +41,53 @@ public partial class SellerDashboardViewModel : ObservableObject
         var userId = _session.CurrentUser?.Id;
         CurrentVendor = _data.Vendors.FirstOrDefault(v => userId != null && v.UserId == userId)
                         ?? _data.Vendors.FirstOrDefault();
+        LoadMyDishes();
+        LoadWeeklySales();
+    }
+
+    /// <summary>True when the shop has no dishes yet (shows the "Add your first dish" card).</summary>
+    public bool HasNoDishes => MyDishes.Count == 0;
+
+    private void LoadMyDishes()
+    {
+        MyDishes.Clear();
         if (CurrentVendor is not null)
         {
             foreach (var dish in _data.Dishes.Where(d => d.VendorId == CurrentVendor.Id))
                 MyDishes.Add(dish);
         }
-        LoadWeeklySales();
+        OnPropertyChanged(nameof(HasNoDishes));
     }
+
+    /// <summary>Called by the page each time it appears (after adding / editing / deleting a dish).</summary>
+    public void Reload()
+    {
+        LoadMyDishes();
+        OnPropertyChanged(nameof(CurrentVendor));   // shop may have been renamed in Shop settings
+        OnPropertyChanged(nameof(Greeting));
+    }
+
+    /// <summary>"+ Add dish" → Add dish page.</summary>
+    [RelayCommand]
+    private async Task AddDish() => await Shell.Current.GoToAsync("dishedit");
+
+    /// <summary>NEW: "Shop settings" → business name, email and phone.</summary>
+    [RelayCommand]
+    private async Task ShopSettings() => await Shell.Current.GoToAsync("shopsettings");
+
+    /// <summary>Tap a dish → Edit dish page.</summary>
+    [RelayCommand]
+    private async Task EditDish(Dish dish) =>
+        await Shell.Current.GoToAsync("dishedit", new Dictionary<string, object> { ["Dish"] = dish });
 
     /// <summary>
     /// Mock sales for the chart. Swap the numbers for real daily order counts when you have a backend.
     /// </summary>
     private void LoadWeeklySales()
     {
-        var days = new[] { "M", "T", "W", "T", "F", "S", "S" };
+        var days   = new[] { "M", "T", "W", "T", "F", "S", "S" };
         var orders = new[] { 9, 13, 11, 18, 14, 20, 17 };   // orders per day
-        var max = orders.Max();
+        var max    = orders.Max();
         const double tallest = 64;                          // height of the tallest bar
 
         WeeklySales.Clear();

@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<SessionService>();
         services.AddSingleton<OrderHistoryService>();
         services.AddSingleton<DeliveryAddressService>();
+        services.AddSingleton<DishCatalogService>();
 
 
         // ---- ViewModels ----
@@ -40,7 +41,11 @@ public static class DependencyInjection
         services.AddTransient<DeliveryAddressViewModel>();
         services.AddTransient<OrderDetailsViewModel>();
         services.AddTransient<AccountViewModel>();
-       
+        services.AddTransient<DishEditorViewModel>();
+        services.AddTransient<EditProfileViewModel>();
+        services.AddTransient<ChangePasswordViewModel>();
+        services.AddTransient<NotificationSettingsViewModel>();
+        services.AddTransient<ShopSettingsViewModel>();
 
 
 
@@ -61,5 +66,14 @@ public static class DependencyInjection
         services.AddTransient<DeliveryAddressPage>();
         services.AddTransient<OrderDetailsPage>();
         services.AddTransient<AccountPage>();
+        services.AddTransient<DishEditorPage>();
+        services.AddTransient<EditProfilePage>();
+        services.AddTransient<ChangePasswordPage>();
+        services.AddTransient<NotificationSettingsPage>();
+        services.AddTransient<ShopSettingsPage>();
     }
 }
+
+       
+
+       
