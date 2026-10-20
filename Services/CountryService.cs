@@ -24,6 +24,9 @@ public sealed class CountryService(ApiClient api, ILogger<CountryService> logger
     /// <summary>True when there is a list to show.</summary>
     public bool IsLoaded => Countries.Count > 0;
 
+    /// <summary>Why the last <see cref="LoadAsync"/> couldn't get the list from the API; null when it could.</summary>
+    public ApiError? LastError { get; private set; }
+
     /// <summary>
     /// Gets the list from the API (and keeps it on the phone); without internet, uses the list kept last time.
     /// </summary>
@@ -31,6 +34,7 @@ public sealed class CountryService(ApiClient api, ILogger<CountryService> logger
     public async Task<bool> LoadAsync(CancellationToken ct = default)
     {
         var result = await api.GetAsync<List<CountryDto>>("api/countries", ct);
+        LastError = result.IsSuccess ? null : result.Error;
         if (result.IsSuccess && result.Value!.Count > 0)
         {
             Use(result.Value);
