@@ -101,13 +101,13 @@ public class OrderHistoryService
     {
         if (!order.CanCancel)
         {
-            await Shell.Current.DisplayAlert("Can't cancel",
+            await Shell.Current.DisplayAlertAsync("Can't cancel",
                 "This order is already being prepared, so it can no longer be cancelled.", "OK");
             order.RefreshTiming();
             return false;
         }
 
-        var confirm = await Shell.Current.DisplayAlert("Cancel this order?",
+        var confirm = await Shell.Current.DisplayAlertAsync("Cancel this order?",
             $"{order.OrderNumber} · {order.TotalText}\nYour {order.PaymentMethod} payment will be refunded.",
             "Cancel order", "Keep order");
         if (!confirm) return false;
@@ -128,7 +128,7 @@ public class OrderHistoryService
             for (var i = 0; i < line.Quantity; i++)
                 cart.AddDish(line.Dish);
 
-        var go = await Shell.Current.DisplayAlert("Added to your basket",
+        var go = await Shell.Current.DisplayAlertAsync("Added to your basket",
             $"{order.ItemCount} item(s) from {order.OrderNumber} are back in your basket.",
             "Checkout", "Keep shopping");
         if (go)

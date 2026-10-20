@@ -78,7 +78,7 @@ public partial class ChangePasswordViewModel : ObservableObject
         // DEMO ONLY: plaintext, like the rest of the mock data. Your backend should hash it.
         user.Password = NewPassword;
 
-        await Shell.Current.DisplayAlert("Password changed", "Use your new password next time you log in.", "OK");
+        await Shell.Current.DisplayAlertAsync("Password changed", "Use your new password next time you log in.", "OK");
         await Shell.Current.GoToAsync("..");
     }
 }

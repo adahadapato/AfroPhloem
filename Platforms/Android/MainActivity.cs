@@ -34,13 +34,15 @@ public class MainActivity : MauiAppCompatActivity
         var green = Android.Graphics.Color.ParseColor("#043D1F");
 
         // Android 14 and older: colour the status bar directly
-        Window.SetStatusBarColor(green);
+        if (!OperatingSystem.IsAndroidVersionAtLeast(35))
+            Window.SetStatusBarColor(green);
 
         // Android 15+: the status bar is see-through, so paint the area behind it green
         Window.DecorView.SetBackgroundColor(green);
 
         // White clock / battery / signal icons on the dark green
-        WindowCompat.GetInsetsController(Window, Window.DecorView).AppearanceLightStatusBars = false;
+        var statusBar = WindowCompat.GetInsetsController(Window, Window.DecorView);
+        if (statusBar is not null) statusBar.AppearanceLightStatusBars = false;
     }
 
     /// <summary>Every touch passes through here first, so pinching works on every page.</summary>

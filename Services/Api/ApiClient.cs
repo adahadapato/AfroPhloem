@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -129,6 +130,13 @@ public sealed class ApiClient(IHttpClientFactory httpClientFactory, ILogger<ApiC
                 var client = httpClientFactory.CreateClient(ClientName);
                 return (await client.SendAsync(request, ct), null);
             }
+            catch (Exception ex) when (ct.IsCancellationRequested && ex is not OperationCanceledException)
+            {
+                // The CALLER cancelled (e.g. the user picked another country). On Android the request fails with
+                // a WebException "Canceled" instead of the usual OperationCanceledException, so it's turned into the
+                // usual one here: screens already expect that and simply ignore it
+                throw new OperationCanceledException("The request was cancelled.", ex, ct);
+            }
             catch (HttpRequestException ex)
             {
                 logger.LogWarning(ex, "Couldn't reach the API for {Method} {Path}.", request.Method, request.RequestUri);
@@ -137,6 +145,12 @@ public sealed class ApiClient(IHttpClientFactory httpClientFactory, ILogger<ApiC
             catch (TaskCanceledException) when (!ct.IsCancellationRequested)
             {
                 return (null, ApiError.Timeout);
+            }
+            catch (Exception ex) when (ex is WebException or IOException)
+            {
+                // Android's network layer reports a lost or refused connection this way
+                logger.LogWarning(ex, "Couldn't reach the API for {Method} {Path}.", request.Method, request.RequestUri);
+                return (null, ApiError.Unreachable);
             }
         }
     }

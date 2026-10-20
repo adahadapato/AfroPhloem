@@ -33,7 +33,7 @@ public partial class AppHeaderBar : ContentView
         if (Shell.Current is null || Countries.Count == 0) return;
 
         var options = Countries.Select(c => c.Display).ToArray();
-        var choice = await Shell.Current.DisplayActionSheet("Select Country", "Cancel", null, options);
+        var choice = await Shell.Current.DisplayActionSheetAsync("Select Country", "Cancel", null, options);
 
         if (string.IsNullOrEmpty(choice) || choice == "Cancel") return;
 

@@ -119,7 +119,7 @@ public partial class AdminViewModel : ObservableObject
     [RelayCommand]
     private async Task RejectDishName(CatalogDish suggestion)
     {
-        var ok = await Shell.Current.DisplayAlert("Reject dish name?",
+        var ok = await Shell.Current.DisplayAlertAsync("Reject dish name?",
             $"\"{suggestion.Name}\" won't be added to the dish list.", "Reject", "Cancel");
         if (ok) _catalog.Reject(suggestion);
     }

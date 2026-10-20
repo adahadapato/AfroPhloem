@@ -23,7 +23,7 @@ public partial class HomePage : ContentPage
     async void OnCountryTapped(object? sender, TappedEventArgs e)
     {
         var names = _vm.Countries.Select(c => $"{c.FlagEmoji}  {c.Name}").ToArray();
-        var choice = await DisplayActionSheet("Choose your country", "Cancel", null, names);
+        var choice = await DisplayActionSheetAsync("Choose your country", "Cancel", null, names);
 
         var picked = _vm.Countries.FirstOrDefault(c => $"{c.FlagEmoji}  {c.Name}" == choice);
         if (picked is not null)

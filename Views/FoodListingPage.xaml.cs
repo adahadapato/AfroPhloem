@@ -50,7 +50,7 @@ public partial class FoodListingPage : ContentPage, IQueryAttributable
     async void OnFlagTapped(object? sender, TappedEventArgs e)
     {
         var names = Vm.Countries.Select(c => $"{c.FlagEmoji}  {c.Name}").ToArray();
-        var choice = await DisplayActionSheet("Choose your country", "Cancel", null, names);
+        var choice = await DisplayActionSheetAsync("Choose your country", "Cancel", null, names);
         var picked = Vm.Countries.FirstOrDefault(c => $"{c.FlagEmoji}  {c.Name}" == choice);
         if (picked is not null)
             Vm.SelectedCountry = picked;
@@ -59,7 +59,7 @@ public partial class FoodListingPage : ContentPage, IQueryAttributable
     // "Filter": choose how dishes are sorted
     async void OnFilterTapped(object? sender, TappedEventArgs e)
     {
-        var choice = await DisplayActionSheet("Sort dishes by", "Cancel", null,
+        var choice = await DisplayActionSheetAsync("Sort dishes by", "Cancel", null,
             "Top rated", "Price: low to high", "Price: high to low");
 
         Vm.SortBy = choice switch

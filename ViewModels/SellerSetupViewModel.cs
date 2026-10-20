@@ -57,7 +57,8 @@ public partial class SellerSetupViewModel : ObservableObject
     {
         try
         {
-            var result = await MediaPicker.Default.PickPhotoAsync();
+            var results = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 });
+            var result = results?.FirstOrDefault();
             if (result is not null)
                 LogoFileName = result.FileName;
         }

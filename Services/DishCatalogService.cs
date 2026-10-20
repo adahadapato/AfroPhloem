@@ -93,7 +93,7 @@ public class DishCatalogService
     public void Reject(CatalogDish suggestion) => Suggestions.Remove(suggestion);
 
     /// <summary>
-    /// Finds the list name a dish was built from, e.g. "Jollof Rice & Chicken" → "Jollof Rice" + "& Chicken".
+    /// Finds the list name a dish was built from, e.g. "Jollof Rice &amp; Chicken" → "Jollof Rice" + "&amp; Chicken".
     /// </summary>
     public (CatalogDish? Base, string Detail) Split(string fullName, string? country)
     {

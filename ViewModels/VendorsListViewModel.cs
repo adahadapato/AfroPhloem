@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Services.Api;
 using Phloem.Services.Api.Contracts;
 using Phloem.Views;
 
@@ -135,6 +136,11 @@ public partial class VendorsListViewModel : ObservableObject
         catch (OperationCanceledException)
         {
             // A newer search replaced this one
+        }
+        catch (Exception)
+        {
+            // Never close the app because a list couldn't load: say so instead
+            EmptyMessage = ApiError.Unexpected(0).DisplayMessage;
         }
     }
 

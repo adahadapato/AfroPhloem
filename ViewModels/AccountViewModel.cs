@@ -134,7 +134,7 @@ public partial class AccountViewModel : ObservableObject
     [RelayCommand]
     private async Task Logout()
     {
-        var ok = await Shell.Current.DisplayAlert("Log out?",
+        var ok = await Shell.Current.DisplayAlertAsync("Log out?",
             $"You're signed in as {Email}.", "Log out", "Stay signed in");
         if (!ok) return;
 
@@ -152,7 +152,7 @@ public partial class AccountViewModel : ObservableObject
     {
         if (_session.CurrentUser is null) return;
 
-        await Shell.Current.DisplayAlert("Delete your account",
+        await Shell.Current.DisplayAlertAsync("Delete your account",
             "Deleting your account from the app is coming soon. To delete it now, email support@phloem.app " +
             "from your account's email address and we'll do it for you.", "OK");
     }

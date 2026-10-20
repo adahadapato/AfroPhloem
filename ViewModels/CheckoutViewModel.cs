@@ -245,7 +245,7 @@ public partial class CheckoutViewModel : ObservableObject
         catch (Exception ex)
         {
             // Show the real error instead of crashing
-            await Shell.Current.DisplayAlert("Couldn't place order", ex.ToString(), "OK");
+            await Shell.Current.DisplayAlertAsync("Couldn't place order", ex.ToString(), "OK");
         }
     }
 
