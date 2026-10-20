@@ -8,17 +8,21 @@ namespace Phloem.ViewModels;
 /// My Account (the Account tab). Shows the signed-in customer's details and a Log out button,
 /// or Log in / Create account when nobody is signed in.
 /// </summary>
+/// <remarks>Who is signed in comes from the Phloem API (<see cref="SessionService"/>, filled by
+/// <see cref="AuthService"/>); Log out signs out on the server too.</remarks>
 public partial class AccountViewModel : ObservableObject
 {
     private readonly SessionService _session;
+    private readonly AuthService _auth;
     private readonly MockDataService _data;
     private readonly OrderHistoryService _history;
     private readonly DeliveryAddressService _delivery;
 
-    public AccountViewModel(SessionService session, MockDataService data,
+    public AccountViewModel(SessionService session, AuthService auth, MockDataService data,
                             OrderHistoryService history, DeliveryAddressService delivery)
     {
         _session = session;
+        _auth = auth;
         _data = data;
         _history = history;
         _delivery = delivery;
@@ -56,10 +60,12 @@ public partial class AccountViewModel : ObservableObject
     public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoPath);
     public bool HasNoPhoto => !HasPhoto;
 
-    public bool IsAdmin => _session.CurrentUser?.IsAdmin == true;
+    public bool IsAdmin => _session.IsAdmin;
 
-    /// <summary>True when this user has registered a seller shop.</summary>
-    public bool IsSeller => _session.CurrentUser is { } u && _data.Vendors.Any(v => v.UserId == u.Id);
+    /// <summary>True when this user has opened a shop (from the API; the mock shops still count until the
+    /// seller screens are wired).</summary>
+    public bool IsSeller => _session.HasShop ||
+                            (_session.CurrentUser is { } u && _data.Vendors.Any(v => v.UserId == u.Id));
 
     public string RoleText => IsAdmin ? "Admin" : IsSeller ? "Seller" : "Customer";
     public string SellerLinkText => IsSeller ? "Seller dashboard" : "Become a seller";
@@ -132,53 +138,22 @@ public partial class AccountViewModel : ObservableObject
             $"You're signed in as {Email}.", "Log out", "Stay signed in");
         if (!ok) return;
 
-        _session.CurrentUser = null;
+        await _auth.LogoutAsync();          // cancels the sign-in on the server and on this device
         _delivery.SelectedAddress = null;
         Load();
     }
 
     /// <summary>
-    /// NEW: Delete account. Asks twice (the second time the user types DELETE),
-    /// then removes the user, their shop and its dishes, and logs out.
+    /// Delete account. Not available yet: the Phloem API doesn't offer it yet (it's on the backend list:
+    /// anonymise the login and close the profile and shop in one go). Until then, tell the user how to ask for it.
     /// </summary>
     [RelayCommand]
     private async Task DeleteAccount()
     {
-        var user = _session.CurrentUser;
-        if (user is null) return;
+        if (_session.CurrentUser is null) return;
 
-        if (user.IsAdmin)
-        {
-            await Shell.Current.DisplayAlert("Can't delete", "Admin accounts can't be deleted from the app.", "OK");
-            return;
-        }
-
-        var shop = _data.Vendors.FirstOrDefault(v => v.UserId == user.Id);
-        var message = shop is null
-            ? "This removes your profile and saved addresses. It can't be undone."
-            : $"This also closes your shop \"{shop.Name}\" and removes all its dishes. It can't be undone.";
-
-        if (!await Shell.Current.DisplayAlert("Delete your account?", message, "Continue", "Cancel"))
-            return;
-
-        var typed = await Shell.Current.DisplayPromptAsync("Are you sure?",
-            "Type DELETE to permanently delete your account.",
-            accept: "Delete account", cancel: "Cancel", placeholder: "DELETE", maxLength: 10);
-
-        if (!string.Equals(typed?.Trim(), "DELETE", StringComparison.OrdinalIgnoreCase))
-            return;
-
-        if (shop is not null)
-        {
-            _data.Dishes.RemoveAll(d => d.VendorId == shop.Id);
-            _data.Vendors.Remove(shop);
-        }
-        _data.Users.Remove(user);
-
-        _session.CurrentUser = null;
-        _delivery.SelectedAddress = null;
-        Load();
-
-        await Shell.Current.DisplayAlert("Account deleted", "Your Phloem account has been deleted. Sorry to see you go!", "OK");
+        await Shell.Current.DisplayAlert("Delete your account",
+            "Deleting your account from the app is coming soon. To delete it now, email support@phloem.app " +
+            "from your account's email address and we'll do it for you.", "OK");
     }
 }

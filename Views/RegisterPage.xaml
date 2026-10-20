@@ -2,7 +2,8 @@
 <!--
     RegisterPage: redesigned to match "RegisterPage.xaml / register / Proposed redesign".
     No AppHeaderBar: the green header is built into the page.
-    Same RegisterViewModel bindings as before, plus IsSeller (Buyer | Seller choice).
+    Bound to RegisterViewModel: first and last name, email, password, phone, optional home address
+    (street, town or city, region or postcode), terms, and IsSeller (Buyer | Seller choice).
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -160,13 +161,23 @@
 
                     <VerticalStackLayout Spacing="16">
 
-                        <VerticalStackLayout>
-                            <Label Text="Full name" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="Enter your name" Text="{Binding FullName}"
-                                       Style="{StaticResource FieldEntry}" />
-                            </Border>
-                        </VerticalStackLayout>
+                        <!-- First and last name side by side (the API stores them separately) -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout>
+                                <Label Text="First name" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Ama" Text="{Binding FirstName}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Last name" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Mensah" Text="{Binding LastName}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
 
                         <VerticalStackLayout>
                             <Label Text="Email address" Style="{StaticResource FieldLabel}" />
@@ -185,19 +196,33 @@
                         </VerticalStackLayout>
 
                         <VerticalStackLayout>
-                            <Label Text="Phone number" Style="{StaticResource FieldLabel}" />
+                            <Label Text="Phone number (optional)" Style="{StaticResource FieldLabel}" />
                             <Border Style="{StaticResource FieldBox}">
                                 <Entry Placeholder="+44 7xxx xxx xxx" Keyboard="Telephone" Text="{Binding PhoneNumber}"
                                        Style="{StaticResource FieldEntry}" />
                             </Border>
                         </VerticalStackLayout>
 
-                        <VerticalStackLayout>
-                            <Label Text="Delivery address" Style="{StaticResource FieldLabel}" />
+                        <!-- Home address: optional now, needed later to open a shop or send a parcel.
+                             When given it also becomes the "Home" delivery address. -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Home address (optional)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="You can add it later. It's needed to open a shop or send a parcel."
+                                   FontSize="12" TextColor="{StaticResource BrandTextMuted}" Margin="2,-4,0,2" />
                             <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="Street, city and postcode" Text="{Binding Address}"
+                                <Entry Placeholder="House number and street" Text="{Binding AddressLine1}"
                                        Style="{StaticResource FieldEntry}" />
                             </Border>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Town or city" Text="{Binding City}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Region or postcode" Text="{Binding RegionOrPostcode}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                            </Grid>
                         </VerticalStackLayout>
 
                         <!-- Terms -->

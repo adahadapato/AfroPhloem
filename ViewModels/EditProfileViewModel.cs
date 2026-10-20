@@ -77,7 +77,7 @@ public partial class EditProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task PhotoOptions()
     {
-        var choice = await Shell.Current.DisplayActionSheet("Profile photo", "Cancel", null,
+        var choice = await Shell.Current.DisplayActionSheetAsync("Profile photo", "Cancel", null,
             "📷  Take a photo", "🖼  Choose from gallery");
         try
         {
@@ -85,7 +85,7 @@ public partial class EditProfileViewModel : ObservableObject
             {
                 if (!MediaPicker.Default.IsCaptureSupported)
                 {
-                    await Shell.Current.DisplayAlert("Camera", "This device can't take photos. Choose one from your gallery instead.", "OK");
+                    await Shell.Current.DisplayAlertAsync("Camera", "This device can't take photos. Choose one from your gallery instead.", "OK");
                     return;
                 }
                 var photo = await MediaPicker.Default.CapturePhotoAsync();
@@ -93,17 +93,17 @@ public partial class EditProfileViewModel : ObservableObject
             }
             else if (choice?.Contains("gallery") == true)
             {
-                var photo = await MediaPicker.Default.PickPhotoAsync();
+                var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 }))?.FirstOrDefault();
                 if (photo is not null) PhotoPath = photo.FullPath;   // the backend will upload this later
             }
         }
         catch (PermissionException)
         {
-            await Shell.Current.DisplayAlert("Permission needed", "Please allow Phloem to use the camera and photos in your phone settings.", "OK");
+            await Shell.Current.DisplayAlertAsync("Permission needed", "Please allow Phloem to use the camera and photos in your phone settings.", "OK");
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Couldn't get photo", ex.Message, "OK");
+            await Shell.Current.DisplayAlertAsync("Couldn't get photo", ex.Message, "OK");
         }
     }
 

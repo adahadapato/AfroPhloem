@@ -21,7 +21,7 @@ public class DishGroup : List<CatalogDish>
 
 /// <summary>
 /// Add / edit a dish (Seller dashboard). The name comes from the fixed dish list, plus an
-/// optional detail ("& Chicken"); the photo comes from the camera or gallery.
+/// optional detail ("&amp; Chicken"); the photo comes from the camera or gallery.
 ///   Add:  GoToAsync("dishedit")
 ///   Edit: GoToAsync("dishedit", new Dictionary&lt;string, object&gt; { ["Dish"] = dish })
 /// </summary>
@@ -216,7 +216,7 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     {
         if (string.IsNullOrWhiteSpace(SuggestName))
         {
-            await Shell.Current.DisplayAlert("Dish name", "Please type the name of your dish.", "OK");
+            await Shell.Current.DisplayAlertAsync("Dish name", "Please type the name of your dish.", "OK");
             return;
         }
 
@@ -239,7 +239,7 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
         {
             if (!MediaPicker.Default.IsCaptureSupported)
             {
-                await Shell.Current.DisplayAlert("Camera", "This device can't take photos. Choose one from your gallery instead.", "OK");
+                await Shell.Current.DisplayAlertAsync("Camera", "This device can't take photos. Choose one from your gallery instead.", "OK");
                 return;
             }
             var photo = await MediaPicker.Default.CapturePhotoAsync();
@@ -247,11 +247,11 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
         }
         catch (PermissionException)
         {
-            await Shell.Current.DisplayAlert("Camera permission", "Please allow Phloem to use the camera in your phone settings.", "OK");
+            await Shell.Current.DisplayAlertAsync("Camera permission", "Please allow Phloem to use the camera in your phone settings.", "OK");
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Couldn't take photo", ex.Message, "OK");
+            await Shell.Current.DisplayAlertAsync("Couldn't take photo", ex.Message, "OK");
         }
     }
 
@@ -260,19 +260,19 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     {
         try
         {
-            var photo = await MediaPicker.Default.PickPhotoAsync();
+            var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 }))?.FirstOrDefault();
             if (photo is not null) PhotoPath = photo.FullPath;   // the backend will upload this later
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Couldn't open gallery", ex.Message, "OK");
+            await Shell.Current.DisplayAlertAsync("Couldn't open gallery", ex.Message, "OK");
         }
     }
 
     [RelayCommand]
     private async Task PhotoOptions()
     {
-        var choice = await Shell.Current.DisplayActionSheet("Dish photo", "Cancel", null,
+        var choice = await Shell.Current.DisplayActionSheetAsync("Dish photo", "Cancel", null,
             "📷  Take a photo", "🖼  Choose from gallery");
         if (choice?.Contains("Take") == true) await TakePhoto();
         else if (choice?.Contains("gallery") == true) await ChoosePhoto();
@@ -299,7 +299,7 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
         }
         if (!HasPhoto)
         {
-            var go = await Shell.Current.DisplayAlert("No photo yet",
+            var go = await Shell.Current.DisplayAlertAsync("No photo yet",
                 "Dishes with a photo sell much better. Save without a photo?", "Save anyway", "Add photo");
             if (!go) { await PhotoOptions(); return; }
         }
@@ -346,7 +346,7 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     private async Task Delete()
     {
         if (_editing is null) return;
-        var ok = await Shell.Current.DisplayAlert("Delete this dish?",
+        var ok = await Shell.Current.DisplayAlertAsync("Delete this dish?",
             $"{_editing.Name} will be removed from your shop.", "Delete", "Keep");
         if (!ok) return;
 

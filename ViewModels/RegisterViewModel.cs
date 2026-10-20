@@ -1,23 +1,34 @@
-using Phloem.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Phloem.Services;
+using Phloem.Services.Api.Contracts;
 
 namespace Phloem.ViewModels;
 
 /// <summary>
 /// contains the properties and commands for the RegisterPage view.
 /// </summary>
+/// <remarks>
+/// <para>Creates the account through the Phloem API (<see cref="AuthService"/>) and signs straight in.</para>
+/// <para>The home address is optional at sign-up, but is needed later to open a shop or send a parcel; when given,
+/// it also becomes the "Home" delivery address. The country is the one picked on Home (flag at the top).</para>
+/// </remarks>
 public partial class RegisterViewModel : ObservableObject
 {
-    private readonly MockDataService _data;
+    private readonly AuthService _auth;
     private readonly CartService _cart;
-    private readonly SessionService _session;
 
     /// <summary>
-    /// property for the user's full name.
+    /// property for the user's first name.
     /// </summary>
     [ObservableProperty]
-    public partial string FullName { get; set; } = string.Empty;
+    public partial string FirstName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// property for the user's last name (surname).
+    /// </summary>
+    [ObservableProperty]
+    public partial string LastName { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's email address.
@@ -26,16 +37,28 @@ public partial class RegisterViewModel : ObservableObject
     public partial string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// property for the user's phone number.
+    /// property for the user's phone number (optional).
     /// </summary>
     [ObservableProperty]
     public partial string PhoneNumber { get; set; } = string.Empty;
 
     /// <summary>
-    /// property for the user's delivery address.
+    /// home address, first line (optional; needed later to sell or send parcels).
     /// </summary>
     [ObservableProperty]
-    public partial string Address { get; set; } = string.Empty;
+    public partial string AddressLine1 { get; set; } = string.Empty;
+
+    /// <summary>
+    /// home address, town or city.
+    /// </summary>
+    [ObservableProperty]
+    public partial string City { get; set; } = string.Empty;
+
+    /// <summary>
+    /// home address, region / state (Ghana, Nigeria) or postcode (UK).
+    /// </summary>
+    [ObservableProperty]
+    public partial string RegionOrPostcode { get; set; } = string.Empty;
 
     /// <summary>
     /// property for the user's password.
@@ -69,61 +92,86 @@ public partial class RegisterViewModel : ObservableObject
     public partial bool IsError { get; set; }
 
     /// <summary>
-    /// creates a new instance of the RegisterViewModel class, initializing it with
-    /// the mock data service, cart service, and session service dependencies.
+    /// creates a new instance of the RegisterViewModel class.
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="cart"></param>
-    /// <param name="session"></param>
-    public RegisterViewModel(MockDataService data, CartService cart, SessionService session)
+    /// <param name="auth">Creates the account through the Phloem API.</param>
+    /// <param name="cart">Holds the country picked on Home.</param>
+    public RegisterViewModel(AuthService auth, CartService cart)
     {
-        _data = data;
+        _auth = auth;
         _cart = cart;
-        _session = session;
     }
 
     /// <summary>
     /// command to handle the sign-up process when the user clicks the sign-up button.
-    /// Validates the form, persists the new account, and signs the user in automatically.
-    /// Sellers then continue to seller setup; buyers go to Home.
+    /// Checks the form, creates the account through the API, and signs the user in automatically.
+    /// Sellers then continue to seller setup; buyers go to Home. The API checks everything again.
     /// </summary>
-    /// <returns></returns>
     [RelayCommand]
     private async Task SignUp()
     {
-        if (string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) ||
+            string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            IsError = true;
-            StatusMessage = "Please fill in all required fields.";
+            ShowError("Please fill in your first name, last name, email and password.");
             return;
         }
 
         if (!AgreedToTerms)
         {
-            IsError = true;
-            StatusMessage = "Please accept the Terms & Conditions.";
+            ShowError("Please accept the Terms & Conditions.");
             return;
         }
 
-        if (_data.Users.Any(u => string.Equals(u.Email, Email, StringComparison.OrdinalIgnoreCase)))
+        // The home address is all or nothing: a half address can't be used to open a shop or send a parcel
+        var anyAddress = !string.IsNullOrWhiteSpace(AddressLine1) || !string.IsNullOrWhiteSpace(City) ||
+                         !string.IsNullOrWhiteSpace(RegionOrPostcode);
+        var fullAddress = !string.IsNullOrWhiteSpace(AddressLine1) && !string.IsNullOrWhiteSpace(City) &&
+                          !string.IsNullOrWhiteSpace(RegionOrPostcode);
+        if (anyAddress && !fullAddress)
         {
-            IsError = true;
-            StatusMessage = "An account with that email already exists.";
+            ShowError("Please complete your home address (street, town or city, and region or postcode), " +
+                      "or leave it empty and add it later.");
             return;
         }
 
-        // No real backend/auth yet - this is a mock sign-up for demo purposes.
-        var user = _data.RegisterUser(FullName, Email, PhoneNumber, Address, _cart.SelectedCountry?.Name ?? "Ghana", Password);
+        var country = _cart.SelectedCountry.ApiCountry;
+        var command = new RegisterCommand(
+            FirstName.Trim(),
+            LastName.Trim(),
+            Email.Trim(),
+            string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber.Trim(),
+            country,
+            DateOfBirth: null,
+            fullAddress ? new HomeAddressInput(AddressLine1.Trim(), null, City.Trim(), RegionOrPostcode.Trim(), country)
+                        : null,
+            Password,
+            AgreedToTerms);
 
-        // Sign the person straight in, same as most modern sign-up flows.
-        _session.CurrentUser = user;
+        IsError = false;
+        StatusMessage = "Creating your account…";
+
+        var registered = await _auth.RegisterAsync(command);
+        if (registered.IsFailure)
+        {
+            ShowError(registered.Error!.DisplayMessage);
+            return;
+        }
 
         IsError = false;
         StatusMessage = IsSeller
-            ? $"Welcome, {FullName}! Now let's set up your shop."
-            : $"Welcome, {FullName}! Your account is ready.";
+            ? $"Welcome, {FirstName.Trim()}! Now let's set up your shop."
+            : $"Welcome, {FirstName.Trim()}! Your account is ready.";
+        Password = string.Empty;
 
-        // Sellers continue to shop setup (business name, logo, contact details).
+        // Close Sign up (it sits on top of My Account), then sellers continue to shop setup; buyers go Home
+        await Shell.Current.Navigation.PopToRootAsync(false);
         await Shell.Current.GoToAsync(IsSeller ? "//home/sellersetup" : "//home");
+    }
+
+    private void ShowError(string message)
+    {
+        IsError = true;
+        StatusMessage = message;
     }
 }

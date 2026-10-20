@@ -26,8 +26,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("notifications", typeof(NotificationSettingsPage));  // My account → Notifications
         Routing.RegisterRoute("shopsettings", typeof(ShopSettingsPage));          // Seller dashboard → Shop settings
 
-
-
         // Checkout (was already reached with GoToAsync(nameof(CheckoutPage))).
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));
     }

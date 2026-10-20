@@ -1,0 +1,51 @@
+namespace Phloem.Settings;
+
+/// <summary>
+/// Every configuration key the app reads (Settings/appsettings.json and, in Debug builds,
+/// Settings/appsettings.Development.json), in one place so no code repeats "magic strings".
+/// </summary>
+/// <remarks>
+/// <para><b>Rule:</b> when a setting is added to appsettings.json, add its key here in the same change.</para>
+/// <para>Same rules as the API's <c>Phloem.Domain.Constants.AppSettings</c>: class nesting mirrors JSON nesting,
+/// constant name = last key segment, every level has <c>Section</c>.</para>
+/// <para>The app holds NO secrets: anything in these files ships inside the app and can be read by anyone.</para>
+/// </remarks>
+public static class AppSettings
+{
+    /// <summary>File names of the settings files (embedded in the app, see Phloem.csproj).</summary>
+    public static class Files
+    {
+        /// <summary>Always loaded: release values.</summary>
+        public const string Default = "appsettings.json";
+
+        /// <summary>Loaded on top in Debug builds only: your local API.</summary>
+        public const string Development = "appsettings.Development.json";
+    }
+
+    // ==================== API ====================
+
+    /// <summary>Where the Phloem API is. Bound to <see cref="ApiSettings"/>.</summary>
+    public static class Api
+    {
+        /// <summary>The whole section.</summary>
+        public const string Section = "Api";
+
+        /// <summary>The API's address, without a trailing slash (e.g. "https://api.phloem.app").</summary>
+        public const string BaseUrl = "Api:BaseUrl";
+
+        /// <summary>
+        /// Address used on the ANDROID EMULATOR only (e.g. "https://10.0.2.2:7103": the emulator reaches your PC's
+        /// localhost through 10.0.2.2). Empty = use <see cref="BaseUrl"/>.
+        /// </summary>
+        public const string AndroidEmulatorBaseUrl = "Api:AndroidEmulatorBaseUrl";
+
+        /// <summary>How long one request may take, in seconds.</summary>
+        public const string TimeoutSeconds = "Api:TimeoutSeconds";
+
+        /// <summary>
+        /// Debug only: accept the local ASP.NET development certificate (which the emulator doesn't trust).
+        /// Ignored in Release builds.
+        /// </summary>
+        public const string TrustDevelopmentCertificate = "Api:TrustDevelopmentCertificate";
+    }
+}

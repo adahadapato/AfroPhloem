@@ -1,4 +1,6 @@
-﻿using Phloem.Services;
+﻿using Microsoft.Extensions.Configuration;
+using Phloem.Services;
+using Phloem.Services.Api;
 using Phloem.ViewModels;
 using Phloem.Views;
 
@@ -14,9 +16,18 @@ public static class DependencyInjection
     /// configures the dependency injection container 
     /// by registering services, view models, and pages.
     /// </summary>
-    /// <param name="services"></param>
-    public static void RegisterServices(IServiceCollection services)
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The app's settings (Settings/appsettings*.json).</param>
+    public static void RegisterServices(IServiceCollection services, IConfiguration configuration)
     {
+        // ---- API: settings, tokens, HttpClients, ApiClient ----
+        services.AddPhloemApi(configuration);
+
+        // ---- API feature services (one per API area) ----
+        services.AddSingleton<AuthService>();       // /api/auth
+        services.AddSingleton<AccountService>();    // /api/me
+        services.AddSingleton<CountryService>();    // /api/countries (fills CountryOption.All)
+
         // ---- Services (singletons so mock "database" is shared across pages) ----
         services.AddSingleton<MockDataService>();
         services.AddSingleton<CartService>();
@@ -51,6 +62,7 @@ public static class DependencyInjection
 
 
         // ---- Pages ----
+        services.AddTransient<StartupPage>();       // first page: loads countries + sign-in, then opens AppShell
         services.AddTransient<AboutPage>();
         services.AddTransient<HomePage>();
         services.AddTransient<RegisterPage>();
@@ -73,7 +85,3 @@ public static class DependencyInjection
         services.AddTransient<ShopSettingsPage>();
     }
 }
-
-       
-
-       
