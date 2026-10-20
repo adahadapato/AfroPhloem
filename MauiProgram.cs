@@ -15,7 +15,7 @@ public static class MauiProgram
     /// creates and configures the MauiApp instance for the application.
     /// </summary>
     /// <returns>The configured app.</returns>
-    public static MauiApp CreateMauiApp
+    public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
         builder
