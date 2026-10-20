@@ -3,13 +3,19 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Services.Api.Contracts;
 
 namespace Phloem.ViewModels;
 
+/// <summary>
+/// Browse &amp; Order (Explore tab): dishes from the Phloem API (<see cref="DishService"/>) by country, category,
+/// search text and sort order, or one shop's menu when opened from "View Shop".
+/// </summary>
 public partial class FoodListingViewModel : ObservableObject
 {
-    private readonly MockDataService _data;
+    private readonly DishService _dishes;
     private readonly CartService _cart;
+    private CancellationTokenSource? _load;
 
     public ObservableCollection<CountryOption> Countries { get; } = new(CountryOption.All);
     public ObservableCollection<string> DeliveryTimes { get; } = new() { "ASAP (30-45 min)", "Today, Evening", "Tomorrow" };
@@ -47,12 +53,26 @@ public partial class FoodListingViewModel : ObservableObject
 
     public bool IsFilteredByVendor => !string.IsNullOrEmpty(FilterVendorId);
 
-    /// <summary>NEW: true when nothing matches the search / chip.</summary>
-    public bool IsEmpty => Dishes.Count == 0;
+    /// <summary>True when there's a message to show instead of dishes (nothing matches, or no connection).</summary>
+    public bool IsEmpty => !string.IsNullOrEmpty(EmptyMessage);
 
-    public FoodListingViewModel(MockDataService data, CartService cart)
+    /// <summary>Why no dishes are shown: nothing matches, or the API couldn't be reached.</summary>
+    [ObservableProperty]
+    public partial string EmptyMessage { get; set; } = string.Empty;
+
+    /// <summary>True while dishes are loading.</summary>
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
+
+    /// <summary>The basket total with the country's currency, e.g. "GH₵85.00".</summary>
+    public string CartTotalText => $"{_cart.SelectedCountry?.CurrencySymbol}{CartTotal:N2}";
+
+    partial void OnEmptyMessageChanged(string value) => OnPropertyChanged(nameof(IsEmpty));
+    partial void OnCartTotalChanged(decimal value) => OnPropertyChanged(nameof(CartTotalText));
+
+    public FoodListingViewModel(DishService dishes, CartService cart)
     {
-        _data = data;
+        _dishes = dishes;
         _cart = cart;
         SelectedCountry = _cart.SelectedCountry;
         SelectedDeliveryTime = DeliveryTimes[0];
@@ -97,34 +117,56 @@ public partial class FoodListingViewModel : ObservableObject
         RefreshCartSummary();
     }
 
-    private void RefreshDishes()
+    /// <summary>Reloads the dishes from the API; a newer request (another letter typed) cancels the older one.</summary>
+    private async void RefreshDishes()
     {
-        Dishes.Clear();
+        _load?.Cancel();
+        var load = _load = new CancellationTokenSource();
 
-        // GetDishes treats "Popular" as "no category filter"
-        var category = SelectedCategory == "All" ? "Popular" : SelectedCategory;
-        var results = _data.GetDishes(SelectedCountry?.Name, category, SearchText);
-
-        if (IsFilteredByVendor)
-            results = results.Where(d => d.VendorId == FilterVendorId);
-
-        results = SortBy switch
+        IsLoading = true;
+        try
         {
-            "PriceLow" => results.OrderBy(d => d.Price),
-            "PriceHigh" => results.OrderByDescending(d => d.Price),
-            _ => results.OrderByDescending(d => d.Rating)
-        };
+            // Wait a moment while the user is still typing
+            await Task.Delay(250, load.Token);
 
-        foreach (var dish in results)
-            Dishes.Add(dish);
+            var sort = SortBy switch
+            {
+                "PriceLow" => DishSort.PriceLow,
+                "PriceHigh" => DishSort.PriceHigh,
+                _ => DishSort.Rating
+            };
 
-        OnPropertyChanged(nameof(IsEmpty));
+            // A shop's menu shows all its dishes, whatever country is picked in the header
+            var country = IsFilteredByVendor ? null : SelectedCountry?.ApiCountry;
+            var result = await _dishes.SearchAsync(country, SelectedCategory, SearchText, FilterVendorId, sort,
+                                                   page: 1, load.Token);
+            if (load.IsCancellationRequested) return;
+
+            Dishes.Clear();
+            if (result.IsFailure)
+            {
+                EmptyMessage = result.Error!.DisplayMessage;
+                return;
+            }
+
+            foreach (var dish in result.Value!.Items) Dishes.Add(dish);
+            EmptyMessage = Dishes.Count == 0 ? "No dishes match your search yet." : string.Empty;
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer search replaced this one
+        }
+        finally
+        {
+            if (_load == load) IsLoading = false;
+        }
     }
 
     private void RefreshCartSummary()
     {
         CartCount = _cart.Items.Sum(i => i.Quantity);
         CartTotal = _cart.Subtotal;
+        OnPropertyChanged(nameof(CartTotalText));
     }
 
     [RelayCommand]

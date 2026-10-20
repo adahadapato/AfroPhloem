@@ -27,6 +27,8 @@ public static class DependencyInjection
         services.AddSingleton<AuthService>();       // /api/auth
         services.AddSingleton<AccountService>();    // /api/me
         services.AddSingleton<CountryService>();    // /api/countries (fills CountryOption.All)
+        services.AddSingleton<DishService>();       // /api/dishes
+        services.AddSingleton<ShopService>();       // /api/shops
 
         // ---- Services (singletons so mock "database" is shared across pages) ----
         services.AddSingleton<MockDataService>();

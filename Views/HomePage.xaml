@@ -309,7 +309,7 @@
                                                 <Label Grid.Row="1" Text="{Binding VendorName, StringFormat='🌿 {0}'}"
                                                        Style="{StaticResource SubtleLabel}" FontSize="10"
                                                        MaxLines="1" LineBreakMode="TailTruncation" />
-                                                <Label Grid.Row="2" Text="{Binding Price, StringFormat='£{0:0.00}'}"
+                                                <Label Grid.Row="2" Text="{Binding PriceText}"
                                                        Style="{StaticResource PriceLabel}" Margin="0,4,0,0" />
                                                 <Button Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
                                                         Text="+" Style="{StaticResource CircleIconButton}" VerticalOptions="End"
@@ -322,6 +322,13 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
+
+                    <!-- No dishes, or the API couldn't be reached -->
+                    <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                       Color="{StaticResource BrandGreen}" HeightRequest="28" />
+                    <Label Text="{Binding DishesMessage}" Style="{StaticResource SubtleLabel}"
+                           HorizontalTextAlignment="Center"
+                           IsVisible="{Binding DishesMessage, Converter={StaticResource StringNotEmptyConverter}}" />
 
                     <!-- ============ TOP SELLERS ============ -->
                     <Label Text="Top Sellers" Style="{StaticResource SectionTitle}" />
@@ -344,6 +351,8 @@
                                                     </LinearGradientBrush>
                                                 </BoxView.Background>
                                             </BoxView>
+                                            <!-- The shop's cover photo (from the API) over the green -->
+                                            <Image Source="{Binding CoverPhotoUrl}" Aspect="AspectFill" />
 
                                             <Border Style="{StaticResource RatingBadge}" HorizontalOptions="Start"
                                                     VerticalOptions="Start" Margin="8" IsVisible="{Binding IsVerified}">
@@ -365,7 +374,7 @@
                                             <Border StrokeShape="RoundRectangle 28" Stroke="White" StrokeThickness="3"
                                                     WidthRequest="56" HeightRequest="56" VerticalOptions="End"
                                                     Margin="0,0,0,-28" BackgroundColor="{StaticResource BrandCream}">
-                                                <Image Source="header_logo.png" Aspect="AspectFit" Margin="6" />
+                                                <Image Source="{Binding LogoUrl}" Aspect="AspectFit" Margin="6" />
                                             </Border>
                                         </Grid>
 

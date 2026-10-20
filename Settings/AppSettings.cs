@@ -39,6 +39,12 @@ public static class AppSettings
         /// </summary>
         public const string AndroidEmulatorBaseUrl = "Api:AndroidEmulatorBaseUrl";
 
+        /// <summary>
+        /// Android emulator only: where pictures are loaded from (e.g. "http://10.0.2.2:5175"), because the local API's
+        /// photo links say "localhost". Empty = use the links as they are.
+        /// </summary>
+        public const string AndroidEmulatorFilesBaseUrl = "Api:AndroidEmulatorFilesBaseUrl";
+
         /// <summary>How long one request may take, in seconds.</summary>
         public const string TimeoutSeconds = "Api:TimeoutSeconds";
 

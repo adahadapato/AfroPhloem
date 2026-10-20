@@ -22,21 +22,44 @@ public sealed class ApiSettings
     /// <summary>Address used on the Android emulator only; empty = <see cref="BaseUrl"/>.</summary>
     public string AndroidEmulatorBaseUrl { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Android emulator only: where to load pictures from (e.g. "http://10.0.2.2:5175"). The local API builds photo
+    /// links with "localhost", which the emulator can't reach, and the picture loader doesn't accept the development
+    /// certificate. Empty = use the links as they are.
+    /// </summary>
+    public string AndroidEmulatorFilesBaseUrl { get; set; } = string.Empty;
+
     /// <summary>How long one request may take, in seconds.</summary>
     public int TimeoutSeconds { get; set; } = 30;
 
     /// <summary>Debug only: accept the local development certificate.</summary>
     public bool TrustDevelopmentCertificate { get; set; }
 
+    /// <summary>
+    /// The link to use for a picture or file the API returned. On the Android emulator, links to "localhost" are
+    /// sent to <see cref="AndroidEmulatorFilesBaseUrl"/> instead; everywhere else the link is used as it is.
+    /// </summary>
+    /// <param name="url">The API's link (may be null: no picture).</param>
+    /// <returns>The link to load, or null.</returns>
+    public string? ResolveFileUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(AndroidEmulatorFilesBaseUrl) ||
+            !OnAndroidEmulator || !Uri.TryCreate(url, UriKind.Absolute, out var link) || !link.IsLoopback)
+            return url;
+
+        return AndroidEmulatorFilesBaseUrl.TrimEnd('/') + link.PathAndQuery;
+    }
+
+    /// <summary>True on the Android emulator (not a real phone).</summary>
+    private static bool OnAndroidEmulator =>
+        DeviceInfo.Platform == DevicePlatform.Android && DeviceInfo.DeviceType == DeviceType.Virtual;
+
     /// <summary>The address to use on THIS device, ending with "/" so relative paths ("api/auth/login") append.</summary>
     /// <returns>The API's base address.</returns>
     /// <exception cref="InvalidOperationException">No address is set.</exception>
     public Uri ResolveBaseAddress()
     {
-        var onAndroidEmulator = DeviceInfo.Platform == DevicePlatform.Android &&
-                                DeviceInfo.DeviceType == DeviceType.Virtual;
-
-        var url = onAndroidEmulator && !string.IsNullOrWhiteSpace(AndroidEmulatorBaseUrl)
+        var url = OnAndroidEmulator && !string.IsNullOrWhiteSpace(AndroidEmulatorBaseUrl)
             ? AndroidEmulatorBaseUrl
             : BaseUrl;
 

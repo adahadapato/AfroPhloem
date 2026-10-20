@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android blocks plain http by default. The ONLY exception: 10.0.2.2, which exists only inside the Android
+  emulator (it's your PC). In Debug builds the app loads pictures from your local API over http there
+  (see Api:AndroidEmulatorFilesBaseUrl in Settings/appsettings.Development.json). Real phones and the live
+  API always use https.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

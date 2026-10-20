@@ -20,4 +20,23 @@ public partial class Dish : ObservableObject
     public string CatalogName { get; set; } = string.Empty;  // the list name, e.g. "Jollof Rice"
     public string Description { get; set; } = string.Empty;
     public bool IsAvailable { get; set; } = true;
+
+    private string? _currencySymbol;
+
+    /// <summary>
+    /// The price's currency symbol, e.g. "GH₵", "₦", "£" (from the API). When not set, it's taken from the dish's
+    /// country.
+    /// </summary>
+    public string CurrencySymbol
+    {
+        get => _currencySymbol
+               ?? CountryOption.All.FirstOrDefault(c => c.Name == Country)?.CurrencySymbol
+               ?? string.Empty;
+        set => _currencySymbol = value;
+    }
+
+    /// <summary>The price as shown on cards, e.g. "₦4,500.00".</summary>
+    public string PriceText => $"{CurrencySymbol}{Price:N2}";
+
+    partial void OnPriceChanged(decimal value) => OnPropertyChanged(nameof(PriceText));
 }
