@@ -20,6 +20,8 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Afro-Phloem needs access to your photos so sellers can upload a shop logo.</string>
+	<string>Phloem uses your photos so you can add your profile photo, shop logo and dish photos.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Phloem uses the camera so you can take your profile photo, shop logo and dish photos.</string>
 </dict>
 </plist>
