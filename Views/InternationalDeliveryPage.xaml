@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-    InternationalDeliveryPage: redesigned to match
-    "InternationalDeliveryPage.xaml / international / Proposed redesign".
-    No AppHeaderBar: the green header is built into the page.
-    Same InternationalDeliveryViewModel bindings, plus SelectSpeedCommand for the pills.
+    InternationalDeliveryPage (route "international"): Send Food to UK, booked on the API.
+    Its own booking (not part of the basket):
+      1. route (only routes an admin switched on) and speed
+      2. sender phone, recipient, items, estimated weight → live price estimate
+      3. Book → tracking number + where to drop the parcel off (it's weighed there; pay from My shipments)
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
-             xmlns:models="clr-namespace:Phloem.Models"
              xmlns:controls="clr-namespace:Phloem.Views.Controls"
              x:DataType="vm:InternationalDeliveryViewModel"
              x:Class="Phloem.Views.InternationalDeliveryPage"
              Shell.NavBarIsVisible="False"
-             Title="Deliver to UK">
+             Title="Send Food to UK">
 
     <ContentPage.Resources>
         <Style x:Key="FieldLabel" TargetType="Label">
@@ -38,16 +38,16 @@
             <Setter Property="PlaceholderColor" Value="{StaticResource BrandTextMuted}" />
             <Setter Property="VerticalOptions" Value="Center" />
         </Style>
-        <!-- Standard / Express / Bulk pills (unselected look) -->
-        <Style x:Key="SpeedPill" TargetType="Button">
+        <Style x:Key="FormCard" TargetType="Border">
             <Setter Property="BackgroundColor" Value="White" />
-            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
-            <Setter Property="BorderColor" Value="{StaticResource BrandBorder}" />
-            <Setter Property="BorderWidth" Value="1" />
-            <Setter Property="CornerRadius" Value="18" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="HeightRequest" Value="36" />
-            <Setter Property="Padding" Value="22,0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+            <Setter Property="Padding" Value="16,18" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
         </Style>
     </ContentPage.Resources>
 
@@ -80,15 +80,15 @@
                            VerticalOptions="Center" />
                 </HorizontalStackLayout>
 
+                <!-- My shipments -->
                 <Border Grid.Column="2" BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 16" Padding="10,3" HeightRequest="32"
-                        VerticalOptions="Center">
-                    <HorizontalStackLayout Spacing="5">
-                        <Label x:Name="FlagLabel" Text="🌍" FontSize="18" VerticalOptions="Center" />
-                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
-                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
-                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
+                        StrokeShape="RoundRectangle 16" Padding="12,4" HeightRequest="32"
+                        VerticalOptions="Center" IsVisible="{Binding IsLoggedIn}">
+                    <Label Text="📦 My shipments" FontSize="12" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandDark}" VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToMyShipmentsCommand}" />
+                    </Border.GestureRecognizers>
                 </Border>
             </Grid>
         </Grid>
@@ -101,11 +101,11 @@
                 <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
                     <Label Text="Send food to the UK" FontSize="26" FontAttributes="Bold"
                            TextColor="{StaticResource BrandTextDark}" />
-                    <Label Text="African flavours, delivered globally"
+                    <Label Text="Book a parcel, drop it at our hub, we deliver it"
                            Style="{StaticResource SubtleLabel}" FontSize="13" />
                 </VerticalStackLayout>
 
-                <!-- ============ ORANGE BANNER ============ -->
+                <!-- ============ ORANGE BANNER: how it works ============ -->
                 <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="16,14">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
@@ -115,121 +115,266 @@
                     </Border.Background>
                     <VerticalStackLayout Spacing="4">
                         <HorizontalStackLayout Spacing="10">
-                            <!-- Plane icon -->
                             <Path Data="M21,16 L21,14 L13,9 L13,3.5 A1.5,1.5 0 0 0 10,3.5 L10,9 L2,14 L2,16 L10,13.5 L10,19 L8,20.5 L8,22 L11.5,21 L15,22 L15,20.5 L13,19 L13,13.5 Z"
                                   Fill="White" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"
                                   Rotation="90" />
-                            <Label Text="Ship from Ghana or Nigeria" FontSize="17" FontAttributes="Bold"
+                            <Label Text="How it works" FontSize="17" FontAttributes="Bold"
                                    TextColor="White" VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                        <Label Text="Reliable delivery to loved ones in the UK" FontSize="12" TextColor="White" />
+                        <Label Text="1. Book here  ·  2. Drop the parcel at the hub  ·  3. We weigh it and you pay the final price  ·  4. We deliver it"
+                               FontSize="12" TextColor="White" LineBreakMode="WordWrap" />
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- ============ FORM CARD ============ -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 18" Padding="16,18">
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
-                    </Border.Shadow>
-
-                    <VerticalStackLayout Spacing="16">
-                        <VerticalStackLayout>
-                            <Label Text="Sender name" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="Full name" Text="{Binding SenderName}"
-                                       Style="{StaticResource FieldEntry}" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout>
-                            <Label Text="Recipient name" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="Full name in the UK" Text="{Binding RecipientName}"
-                                       Style="{StaticResource FieldEntry}" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout>
-                            <Label Text="UK delivery address" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="Street, city and postcode" Text="{Binding UkAddress}"
-                                       Style="{StaticResource FieldEntry}" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout>
-                            <Label Text="Description of goods" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Placeholder="e.g. Packaged dry foods" Text="{Binding ItemDescription}"
-                                       Style="{StaticResource FieldEntry}" />
-                            </Border>
-                        </VerticalStackLayout>
+                <!-- ============ NOT SIGNED IN ============ -->
+                <Border Style="{StaticResource FormCard}" IsVisible="{Binding IsGuest}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Log in to book a parcel" FontSize="16" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" />
+                        <Label Text="You can look at routes and prices now; booking needs an account."
+                               Style="{StaticResource SubtleLabel}" FontSize="13" />
+                        <Button Text="Log in" Command="{Binding GoToLoginCommand}" Style="{StaticResource CtaButton}" />
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- ============ DELIVERY OPTION ============ -->
-                <Label Text="Delivery option" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,8,0,0" />
-
-                <HorizontalStackLayout Spacing="8">
-                    <Button Text="Standard" Style="{StaticResource SpeedPill}"
-                            Command="{Binding SelectSpeedCommand}"
-                            CommandParameter="{x:Static models:DeliverySpeed.Standard}">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
-                                         Value="{x:Static models:DeliverySpeed.Standard}">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="TextColor" Value="White" />
-                                <Setter Property="FontAttributes" Value="Bold" />
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                    <Button Text="Express" Style="{StaticResource SpeedPill}"
-                            Command="{Binding SelectSpeedCommand}"
-                            CommandParameter="{x:Static models:DeliverySpeed.Express}">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
-                                         Value="{x:Static models:DeliverySpeed.Express}">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="TextColor" Value="White" />
-                                <Setter Property="FontAttributes" Value="Bold" />
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                    <Button Text="Bulk" Style="{StaticResource SpeedPill}"
-                            Command="{Binding SelectSpeedCommand}"
-                            CommandParameter="{x:Static models:DeliverySpeed.Bulk}">
-                        <Button.Triggers>
-                            <DataTrigger TargetType="Button" Binding="{Binding SelectedSpeed}"
-                                         Value="{x:Static models:DeliverySpeed.Bulk}">
-                                <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="BorderColor" Value="{StaticResource BrandDark}" />
-                                <Setter Property="TextColor" Value="White" />
-                                <Setter Property="FontAttributes" Value="Bold" />
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                </HorizontalStackLayout>
-
-                <!-- Estimated fee -->
-                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="14,12">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="Estimated shipping fee" FontSize="13"
-                               TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding EstimatedFee, StringFormat='£{0:0.00}'}"
-                               FontSize="16" FontAttributes="Bold" TextColor="{StaticResource BrandDark}"
-                               VerticalOptions="Center" />
-                    </Grid>
+                <!-- ============ BOOKED ============ -->
+                <Border Style="{StaticResource FormCard}" IsVisible="{Binding IsBooked}"
+                        BackgroundColor="{StaticResource BrandMintPale}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="✓ Parcel booked" FontSize="20" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandDark}" />
+                        <Label FontSize="14" TextColor="{StaticResource BrandTextDark}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="Tracking number: " />
+                                    <Span Text="{Binding Booked.TrackingNumber}" FontAttributes="Bold" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Label Text="{Binding BookedPriceText}" FontSize="14" TextColor="{StaticResource BrandTextDark}" />
+                        <BoxView HeightRequest="1" Color="{StaticResource BrandMint}" />
+                        <Label Text="Drop it off at" FontSize="13" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" />
+                        <Label Text="{Binding Booked.DropOffAddress}" FontSize="14" TextColor="{StaticResource BrandTextDark}"
+                               LineBreakMode="WordWrap" />
+                        <Label Text="{Binding Booked.DropOffHours}" FontSize="13" TextColor="{StaticResource BrandTextMuted}" />
+                        <Label Text="Write the tracking number on the parcel. We'll weigh it at the hub; then pay the final price from My shipments."
+                               FontSize="12" TextColor="{StaticResource BrandTextMuted}" LineBreakMode="WordWrap" />
+                        <Button Text="View my shipments" Command="{Binding GoToMyShipmentsCommand}"
+                                Style="{StaticResource CtaButton}" />
+                        <Button Text="Send another parcel" Command="{Binding SendAnotherCommand}"
+                                Style="{StaticResource OutlineButton}" />
+                    </VerticalStackLayout>
                 </Border>
 
-                <!-- ============ SUBMIT ============ -->
-                <Button Text="Schedule delivery" Command="{Binding ScheduleDeliveryCommand}"
-                        Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,4,0,0" />
+                <!-- ============ THE FORM ============ -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding IsFormVisible}">
 
-                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+                    <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                       Color="{StaticResource BrandDark}" HeightRequest="28" />
+
+                    <!-- No route switched on yet -->
+                    <Border Style="{StaticResource FormCard}" IsVisible="{Binding HasNoRoutes}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Parcels aren't available yet" FontSize="16" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="No shipping route is switched on at the moment. Please check again soon."
+                                   Style="{StaticResource SubtleLabel}" FontSize="13" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding HasRoutes}">
+
+                        <!-- ===== 1. Route and speed ===== -->
+                        <Border Style="{StaticResource FormCard}">
+                            <VerticalStackLayout Spacing="14">
+                                <VerticalStackLayout>
+                                    <Label Text="From → To" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Picker ItemsSource="{Binding Routes}" SelectedItem="{Binding SelectedRoute}"
+                                                ItemDisplayBinding="{Binding Display}" Title="Choose the route"
+                                                TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                    <Label Text="{Binding DropOffText, StringFormat='Drop-off: {0}'}" FontSize="12"
+                                           TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0"
+                                           LineBreakMode="WordWrap" />
+                                </VerticalStackLayout>
+
+                                <Label Text="Delivery speed" Style="{StaticResource FieldLabel}" Margin="2,4,0,0" />
+                                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Speeds}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SpeedChoice">
+                                            <Border StrokeThickness="1" Stroke="{StaticResource BrandBorder}"
+                                                    StrokeShape="RoundRectangle 12" Padding="14,10" BackgroundColor="White">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Stroke" Value="{StaticResource BrandDark}" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding SelectSpeedCommand, Source={RelativeSource AncestorType={x:Type vm:InternationalDeliveryViewModel}}}"
+                                                        CommandParameter="{Binding .}" />
+                                                </Border.GestureRecognizers>
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <VerticalStackLayout Spacing="2">
+                                                        <Label Text="{Binding Title}" FontSize="15" FontAttributes="Bold"
+                                                               TextColor="{StaticResource BrandTextDark}" />
+                                                        <Label Text="{Binding PriceText}" FontSize="12"
+                                                               TextColor="{StaticResource BrandTextMuted}" />
+                                                    </VerticalStackLayout>
+                                                    <Label Grid.Column="1" Text="{Binding DaysText}" FontSize="13"
+                                                           FontAttributes="Bold" TextColor="{StaticResource BrandDark}"
+                                                           VerticalOptions="Center" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- ===== 2. People ===== -->
+                        <Border Style="{StaticResource FormCard}">
+                            <VerticalStackLayout Spacing="14">
+                                <VerticalStackLayout>
+                                    <Label Text="Your phone number" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Placeholder="+233 24 555 0192" Text="{Binding SenderPhone}" Keyboard="Telephone"
+                                               Style="{StaticResource FieldEntry}" />
+                                    </Border>
+                                </VerticalStackLayout>
+
+                                <Label Text="Recipient" FontSize="16" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" Margin="2,4,0,0" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Full name" Text="{Binding RecipientName}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="Phone number" Text="{Binding RecipientPhone}" Keyboard="Telephone"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Placeholder="House number and street" Text="{Binding RecipientAddressLine}"
+                                           Style="{StaticResource FieldEntry}" />
+                                </Border>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Placeholder="City or town" Text="{Binding RecipientCity}"
+                                               Style="{StaticResource FieldEntry}" />
+                                    </Border>
+                                    <Border Grid.Column="1" Style="{StaticResource FieldBox}">
+                                        <Entry Placeholder="Postcode" Text="{Binding RecipientRegionOrPostcode}"
+                                               Style="{StaticResource FieldEntry}" />
+                                    </Border>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- ===== 3. What's in the parcel ===== -->
+                        <Border Style="{StaticResource FormCard}">
+                            <VerticalStackLayout Spacing="14">
+                                <Label Text="What's in the parcel" FontSize="16" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+
+                                <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Items}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ParcelItem">
+                                            <Border StrokeThickness="1" Stroke="{StaticResource BrandBorder}"
+                                                    StrokeShape="RoundRectangle 12" Padding="12">
+                                                <VerticalStackLayout Spacing="8">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <Border Style="{StaticResource FieldBox}">
+                                                            <Picker ItemsSource="{Binding Categories, Source={RelativeSource AncestorType={x:Type vm:InternationalDeliveryViewModel}}}"
+                                                                    SelectedItem="{Binding Category}"
+                                                                    ItemDisplayBinding="{Binding Name}" Title="Type"
+                                                                    TextColor="{StaticResource BrandTextDark}"
+                                                                    VerticalOptions="Center" />
+                                                        </Border>
+                                                        <Label Grid.Column="1" Text="Remove" Style="{StaticResource LinkLabel}"
+                                                               TextColor="{StaticResource BrandDanger}" VerticalOptions="Center">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer
+                                                                    Command="{Binding RemoveItemCommand, Source={RelativeSource AncestorType={x:Type vm:InternationalDeliveryViewModel}}}"
+                                                                    CommandParameter="{Binding .}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </Grid>
+                                                    <Border Style="{StaticResource FieldBox}">
+                                                        <Entry Placeholder="What is it? e.g. Gari, shito, dried fish"
+                                                               Text="{Binding Description}" Style="{StaticResource FieldEntry}" />
+                                                    </Border>
+                                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                        <Border Style="{StaticResource FieldBox}">
+                                                            <Entry Placeholder="How many" Text="{Binding Quantity}" Keyboard="Numeric"
+                                                                   Style="{StaticResource FieldEntry}" />
+                                                        </Border>
+                                                        <Border Grid.Column="1" Style="{StaticResource FieldBox}">
+                                                            <Entry Placeholder="Value of one" Text="{Binding UnitValue}"
+                                                                   Keyboard="Numeric" Style="{StaticResource FieldEntry}" />
+                                                        </Border>
+                                                    </Grid>
+                                                </VerticalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                                <Label Text="+ Add another item" Style="{StaticResource LinkLabel}"
+                                       TextColor="{StaticResource BrandDark}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding AddItemCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+
+                                <VerticalStackLayout>
+                                    <Label Text="Estimated weight (kg)" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Placeholder="e.g. 4.5" Text="{Binding EstimatedWeight}" Keyboard="Numeric"
+                                               Style="{StaticResource FieldEntry}" />
+                                    </Border>
+                                    <Label Text="The final price is set when we weigh it at the hub."
+                                           FontSize="11" TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0" />
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Estimate -->
+                        <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12" Padding="14,12">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Text="Estimated price" FontSize="13"
+                                       TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding QuoteText}" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandDark}" HorizontalTextAlignment="End"
+                                       VerticalOptions="Center" LineBreakMode="WordWrap" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Confirmations -->
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                            <CheckBox IsChecked="{Binding ConfirmedNoProhibitedItems}" Color="{StaticResource BrandDark}" />
+                            <Label Grid.Column="1" Text="My parcel contains no prohibited items (no fresh meat, liquids over 1 litre, weapons, drugs or cash)."
+                                   FontSize="13" TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center"
+                                   LineBreakMode="WordWrap" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                            <CheckBox IsChecked="{Binding AcceptedTerms}" Color="{StaticResource BrandDark}" />
+                            <Label Grid.Column="1" Text="I accept the shipping terms."
+                                   FontSize="13" TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                        </Grid>
+
+                        <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+
+                        <ActivityIndicator IsRunning="{Binding IsBooking}" IsVisible="{Binding IsBooking}"
+                                           Color="{StaticResource BrandDark}" HeightRequest="28" />
+
+                        <Button Text="Book parcel" Command="{Binding BookCommand}" IsEnabled="{Binding IsNotBusy}"
+                                Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,4,0,0" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
 
             </VerticalStackLayout>
         </ScrollView>

@@ -23,13 +23,11 @@ public record OrderLine(Dish Dish, int Quantity)
 }
 
 /// <summary>A placed order, shown under "Recent orders" on the Orders page and on Order details.</summary>
-/// <remarks>
-/// Orders come from the API (<see cref="OrderHistoryService.LoadAsync"/>). "Send to UK" orders are still made on the
-/// phone (<see cref="IsInternational"/>) until the International batch connects them to the API.
-/// </remarks>
+/// <remarks>Orders come from the API (<see cref="OrderHistoryService.LoadAsync"/>). Parcels ("Send Food to UK") are
+/// separate bookings: see <c>ShipmentService</c>.</remarks>
 public partial class PlacedOrder : ObservableObject
 {
-    /// <summary>How long after paying the customer can still cancel (the API's rule; used for Send-to-UK orders).</summary>
+    /// <summary>How long after paying the customer can still cancel (the API's rule).</summary>
     public static readonly TimeSpan CancelWindow = TimeSpan.FromMinutes(30);
 
     public required string OrderNumber { get; init; }
@@ -48,17 +46,13 @@ public partial class PlacedOrder : ObservableObject
     public decimal DeliveryFee { get; init; }
     public decimal Total { get; init; }
 
-    /// <summary>"Home · 31 Camden High St, London" (or the UK recipient for Send-to-UK orders).</summary>
+    /// <summary>"Home · 31 Camden High St, London".</summary>
     public string DeliveryAddress { get; init; } = string.Empty;
     public string CurrencySymbol { get; init; } = "£";
     public string PaymentMethod { get; init; } = string.Empty;
 
     /// <summary>The dishes and quantities (filled on Order details; empty in the list).</summary>
     public IReadOnlyList<OrderLine> Lines { get; init; } = Array.Empty<OrderLine>();
-
-    /// <summary>The "Send to UK" shipment that came with this order, if any.</summary>
-    public DeliveryOrder? Shipment { get; init; }
-    public bool IsInternational => Shipment is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCancelled), nameof(CanCancel), nameof(StatusText), nameof(IsPreparing))]
@@ -80,9 +74,9 @@ public partial class PlacedOrder : ObservableObject
     public string StatusText => Status switch
     {
         OrderStatus.AwaitingPayment => "Awaiting payment",
-        OrderStatus.Paid => IsInternational ? "Shipping to UK" : "Order placed",
+        OrderStatus.Paid => "Order placed",
         OrderStatus.Preparing => "Being prepared",
-        OrderStatus.OutForDelivery => IsInternational ? "Shipping to UK" : "On its way",
+        OrderStatus.OutForDelivery => "On its way",
         OrderStatus.Delivered => "Delivered",
         OrderStatus.Cancelled => "Cancelled",
         _ => Status.ToString()
@@ -100,7 +94,7 @@ public partial class PlacedOrder : ObservableObject
     /// <summary>Step 2 done once the shop has started.</summary>
     public bool IsPreparing => Status is OrderStatus.Preparing or OrderStatus.OutForDelivery or OrderStatus.Delivered;
     public string PlacedAtText => PlacedAt.ToString("d MMM yyyy, HH:mm");
-    public string ThirdStepTitle => IsInternational ? "Shipping to the UK" : "On its way";
+    public string ThirdStepTitle => "On its way";
 
     /// <summary>Re-check the time-based cancel window (called when the Orders page refreshes).</summary>
     public void RefreshTiming()
@@ -144,9 +138,6 @@ public class OrderHistoryService
         });
     }
 
-    /// <summary>Adds an order made on the phone ("Send to UK", until it's connected to the API).</summary>
-    public void Add(PlacedOrder order) => Orders.Insert(0, order);
-
     // ───────────────────────────── 1. Loading ─────────────────────────────
 
     /// <summary>Reloads "My orders" from the API (several calls at once share one load).</summary>
@@ -175,11 +166,8 @@ public class OrderHistoryService
             return;
         }
 
-        // Keep "Send to UK" orders made on the phone; the rest come from the API
-        var local = Orders.Where(o => o.IsInternational).ToList();
         Orders.Clear();
-        foreach (var order in local.Concat(result.Value!.Items.Select(ToPlacedOrder))
-                                   .OrderByDescending(o => o.PlacedAt))
+        foreach (var order in result.Value!.Items.Select(ToPlacedOrder))
             Orders.Add(order);
     }
 
@@ -192,11 +180,8 @@ public class OrderHistoryService
 
     // ───────────────────────────── 2. Cancel ─────────────────────────────
 
-    /// <summary>
-    /// Cancel order (shared by the Orders list and Order details): asks first, then cancels on the API.
-    /// "Send to UK" orders are still cancelled on the phone (and their shipment withdrawn).
-    /// </summary>
-    public async Task<bool> CancelAsync(PlacedOrder order, MockDataService data)
+    /// <summary>Cancel order (shared by the Orders list and Order details): asks first, then cancels on the API.</summary>
+    public async Task<bool> CancelAsync(PlacedOrder order)
     {
         if (!order.CanCancel)
         {
@@ -213,19 +198,12 @@ public class OrderHistoryService
             $"{order.OrderNumber} · {order.TotalText}\n{refund}", "Cancel order", "Keep order");
         if (!confirm) return false;
 
-        if (!order.IsInternational)
+        var result = await _orders.CancelAsync(order.OrderNumber);
+        if (result.IsFailure)
         {
-            var result = await _orders.CancelAsync(order.OrderNumber);
-            if (result.IsFailure)
-            {
-                await Shell.Current.DisplayAlertAsync("Can't cancel", result.Error!.DisplayMessage, "OK");
-                await LoadAsync();   // show what the order's status really is now
-                return false;
-            }
-        }
-        else if (order.Shipment is not null)
-        {
-            data.Shipments.Remove(order.Shipment);
+            await Shell.Current.DisplayAlertAsync("Can't cancel", result.Error!.DisplayMessage, "OK");
+            await LoadAsync();   // show what the order's status really is now
+            return false;
         }
 
         order.Status = OrderStatus.Cancelled;
@@ -239,10 +217,7 @@ public class OrderHistoryService
     /// <summary>Buy again: put the same dishes and quantities back in the basket, then offer Checkout.</summary>
     public async Task BuyAgainAsync(PlacedOrder order, CartService cart)
     {
-        IReadOnlyList<OrderLine>? lines = order.Lines;
-        IReadOnlyList<string> unavailable = [];
-        if (!order.IsInternational)
-            (lines, unavailable) = await LinesToBuyAgainAsync(order.OrderNumber);
+        var (lines, unavailable) = await LinesToBuyAgainAsync(order.OrderNumber);
 
         if (lines is null) return;   // the error was already shown
 

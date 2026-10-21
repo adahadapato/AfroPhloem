@@ -4,9 +4,15 @@
     Same x:Names (StatusBorder, MessageLabel) and the same "Success" / "Error" states,
     so StatusBanner.xaml.cs does not change.
 -->
+<!--
+    x:DataType="controls:StatusBanner": both bindings read this control's own Message (Source = Root),
+    so they're compiled against StatusBanner (faster, and checked when building).
+-->
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
              x:Class="Phloem.Views.Controls.StatusBanner"
+             x:DataType="controls:StatusBanner"
              x:Name="Root">
 
     <Border x:Name="StatusBorder" StrokeShape="RoundRectangle 12" StrokeThickness="1"

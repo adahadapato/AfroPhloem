@@ -12,16 +12,14 @@ public partial class OrderDetailsViewModel : ObservableObject, IQueryAttributabl
 {
     private readonly OrderHistoryService _history;
     private readonly CartService _cart;
-    private readonly MockDataService _data;
 
     [ObservableProperty]
     public partial PlacedOrder? Order { get; set; }
 
-    public OrderDetailsViewModel(OrderHistoryService history, CartService cart, MockDataService data)
+    public OrderDetailsViewModel(OrderHistoryService history, CartService cart)
     {
         _history = history;
         _cart = cart;
-        _data = data;
     }
 
     /// <summary>Shown while the order's dishes are loading, or why they couldn't be.</summary>
@@ -38,11 +36,9 @@ public partial class OrderDetailsViewModel : ObservableObject, IQueryAttributabl
         }
     }
 
-    /// <summary>Replaces the list row with the full order from the API ("Send to UK" orders are already complete).</summary>
+    /// <summary>Replaces the list row with the full order from the API.</summary>
     private async void LoadDetails(PlacedOrder row)
     {
-        if (row.IsInternational) return;
-
         Message = "Loading the order…";
         try
         {
@@ -70,7 +66,7 @@ public partial class OrderDetailsViewModel : ObservableObject, IQueryAttributabl
     [RelayCommand]
     private async Task CancelOrder()
     {
-        if (Order is not null && await _history.CancelAsync(Order, _data))
+        if (Order is not null && await _history.CancelAsync(Order))
             LoadDetails(Order);   // the server's view after cancelling (refund, times)
     }
 

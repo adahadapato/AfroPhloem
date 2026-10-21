@@ -165,18 +165,6 @@
                             <VerticalStackLayout Grid.Column="1" Spacing="4">
                                 <Label Text="{Binding DeliveryAddressText}" FontSize="15" FontAttributes="Bold"
                                        TextColor="{StaticResource BrandTextDark}" />
-                                <!-- Only for "Send to UK" orders -->
-                                <Label IsVisible="{Binding HasInternationalDelivery}" FontSize="12"
-                                       TextColor="{StaticResource BrandTextMuted}">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="✈  International · " />
-                                            <Span Text="{Binding InternationalDelivery.Speed}" FontAttributes="Bold" />
-                                            <Span Text="  ·  " />
-                                            <Span Text="{Binding InternationalDelivery.FromCountry, StringFormat='{0} → UK'}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
                                 <HorizontalStackLayout Spacing="6">
                                     <Label Text="Change delivery details" FontSize="13"
                                            TextColor="{StaticResource BrandDark}" VerticalOptions="Center" />

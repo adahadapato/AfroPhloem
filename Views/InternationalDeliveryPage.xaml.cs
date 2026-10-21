@@ -4,18 +4,20 @@ namespace Phloem.Views;
 
 public partial class InternationalDeliveryPage : ContentPage
 {
+    readonly InternationalDeliveryViewModel _vm;
+
     public InternationalDeliveryPage(InternationalDeliveryViewModel vm)
     {
         InitializeComponent();
-        BindingContext = vm;
+        BindingContext = _vm = vm;
     }
 
-    // Flag of the country picked on Home
-    protected override void OnAppearing()
+    // The routes from the server, and the sender's phone from their profile
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        var cart = IPlatformApplication.Current?.Services.GetService<Phloem.Services.CartService>();
-        FlagLabel.Text = cart?.SelectedCountry?.FlagEmoji ?? "🌍";
+        try { await _vm.LoadAsync(); }
+        catch (Exception) { /* the page says it couldn't load; the user can come back to it */ }
     }
 
     // ☰ opens the side menu

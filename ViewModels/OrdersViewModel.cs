@@ -15,7 +15,6 @@ public partial class OrdersViewModel : ObservableObject
     private readonly OrderHistoryService _history;
     private readonly SessionService _session;
     private readonly DeliveryAddressService _delivery;
-    private readonly MockDataService _data;
 
     public ObservableCollection<CartItem> Items => _cart.Items;
     public ObservableCollection<PlacedOrder> PastOrders => _history.Orders;
@@ -34,14 +33,12 @@ public partial class OrdersViewModel : ObservableObject
     public string DeliveryAddressText => _delivery.Describe(_session.IsLoggedIn ? _session.CurrentUser : null);
 
     public OrdersViewModel(CartService cart, OrderHistoryService history,
-                           SessionService session, DeliveryAddressService delivery,
-                           MockDataService data)
+                           SessionService session, DeliveryAddressService delivery)
     {
         _cart = cart;
         _history = history;
         _session = session;
         _delivery = delivery;
-        _data = data;
         _cart.Items.CollectionChanged += (_, _) => Refresh();
         _history.Orders.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasPastOrders));
     }
@@ -110,9 +107,9 @@ public partial class OrdersViewModel : ObservableObject
         await AppNav.GoToCheckoutAsync();
     }
 
-    /// <summary>Cancel order: asks first, then marks the order Cancelled (and withdraws any UK shipment).</summary>
+    /// <summary>Cancel order: asks first, then cancels it on the server.</summary>
     [RelayCommand]
-    private async Task CancelOrder(PlacedOrder order) => await _history.CancelAsync(order, _data);
+    private async Task CancelOrder(PlacedOrder order) => await _history.CancelAsync(order);
 
     /// <summary>Buy again: put the same dishes and quantities back in the basket.</summary>
     [RelayCommand]

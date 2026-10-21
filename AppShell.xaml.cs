@@ -26,6 +26,10 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("changepassword", typeof(ChangePasswordPage));        // My account → Change password
         Routing.RegisterRoute("notifications", typeof(NotificationSettingsPage));  // My account → Notifications
         Routing.RegisterRoute("shopsettings", typeof(ShopSettingsPage));          // Seller dashboard → Shop settings
+        Routing.RegisterRoute("myshipments", typeof(MyShipmentsPage));           // my parcels (Send Food to UK)
+        Routing.RegisterRoute("shipmentdetails", typeof(ShipmentDetailsPage));   // one parcel: status + timeline
+        Routing.RegisterRoute("adminroutes", typeof(AdminShipmentRoutesPage));   // Admin → Shipping routes
+        Routing.RegisterRoute("adminshipments", typeof(AdminShipmentsPage));     // Admin → All shipments
 
         // Checkout (was already reached with GoToAsync(nameof(CheckoutPage))).
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));
@@ -39,6 +43,7 @@ public partial class AppShell : Shell
     // ------------------------------------------------------------------
     // Side menu by who is signed in:
     //   Sign Up           only when signed out
+    //   My Shipments      only when signed in
     //   Admin Dashboard   only for admins
     //   Become a Seller   hidden once the user has a shop
     //   Seller Dashboard  only when the user has a shop
@@ -53,6 +58,7 @@ public partial class AppShell : Shell
         var hasShop = _session?.HasShop ?? false;
 
         SetFlyoutItemIsVisible(SignUpMenuItem, !signedIn);
+        SetFlyoutItemIsVisible(MyShipmentsMenuItem, signedIn);
         SetFlyoutItemIsVisible(AdminMenuItem, _session?.IsAdmin ?? false);
         SetFlyoutItemIsVisible(BecomeSellerMenuItem, !hasShop);
         SetFlyoutItemIsVisible(SellerDashMenuItem, hasShop);

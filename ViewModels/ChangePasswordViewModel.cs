@@ -1,17 +1,26 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Services;
+using Phloem.Services.Api.Contracts.Commands;
 
 namespace Phloem.ViewModels;
 
-/// <summary>Change password (route "changepassword").</summary>
+/// <summary>
+/// Change password (route "changepassword"), saved to the API (<c>PUT /api/me/password</c>).
+/// The API then signs the user out on EVERY device, so this screen signs out here too and opens Log in.
+/// </summary>
 public partial class ChangePasswordViewModel : ObservableObject
 {
     private readonly SessionService _session;
+    private readonly AccountService _account;
+    private readonly AuthService _auth;
+    private bool _saving;
 
-    public ChangePasswordViewModel(SessionService session)
+    public ChangePasswordViewModel(SessionService session, AccountService account, AuthService auth)
     {
         _session = session;
+        _account = account;
+        _auth = auth;
     }
 
     [ObservableProperty]
@@ -57,12 +66,11 @@ public partial class ChangePasswordViewModel : ObservableObject
     [RelayCommand]
     private async Task Save()
     {
-        var user = _session.CurrentUser;
-        if (user is null) return;
+        if (_saving || !_session.IsLoggedIn) return;
 
+        // Quick checks on the phone; the API checks the current password and its own rules
         string? problem =
             string.IsNullOrEmpty(CurrentPassword)        ? "Enter your current password." :
-            CurrentPassword != user.Password             ? "Your current password isn't right." :
             !HasMinLength || !HasNumber || !HasLetter    ? "Your new password needs at least 8 characters, with letters and a number." :
             NewPassword == CurrentPassword               ? "Your new password must be different from the current one." :
             NewPassword != ConfirmPassword               ? "The two new passwords don't match." :
@@ -75,10 +83,30 @@ public partial class ChangePasswordViewModel : ObservableObject
             return;
         }
 
-        // DEMO ONLY: plaintext, like the rest of the mock data. Your backend should hash it.
-        user.Password = NewPassword;
+        _saving = true;
+        try
+        {
+            var result = await _account.ChangePasswordAsync(
+                new ChangePasswordCommand(CurrentPassword, NewPassword, ConfirmPassword));
+            if (result.IsFailure)
+            {
+                IsError = true;
+                StatusMessage = result.Error!.DisplayMessage;   // e.g. "Your current password isn't right."
+                return;
+            }
 
-        await Shell.Current.DisplayAlertAsync("Password changed", "Use your new password next time you log in.", "OK");
-        await Shell.Current.GoToAsync("..");
+            // The API has signed this account out everywhere: sign out here too, then Log in
+            Reset();
+            await Shell.Current.DisplayAlertAsync("Password changed",
+                "For your security you've been signed out on all your devices. Please log in with your new password.",
+                "Log in");
+            await _auth.LogoutAsync();
+            await Shell.Current.Navigation.PopToRootAsync(false);
+            await Shell.Current.GoToAsync("//account/login");
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
 }

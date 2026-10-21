@@ -10,6 +10,7 @@ public partial class AdminViewModel : ObservableObject
 {
     private readonly MockDataService _data;
     private readonly DishCatalogService _catalog;
+    private readonly ShipmentService _shipments;
 
     /// <summary>NEW: dish names sellers have suggested, waiting for approval.</summary>
     public System.Collections.ObjectModel.ObservableCollection<CatalogDish> DishSuggestions => _catalog.Suggestions;
@@ -17,7 +18,6 @@ public partial class AdminViewModel : ObservableObject
 
     public ObservableCollection<Vendor> PendingVendors { get; } = new();
     public ObservableCollection<Vendor> ActiveVendors { get; } = new();
-    public ObservableCollection<DeliveryOrder> Shipments { get; } = new();
 
     /// <summary>NEW: everyone who has signed up (for the Users tab).</summary>
     public ObservableCollection<User> Users { get; } = new();
@@ -39,16 +39,18 @@ public partial class AdminViewModel : ObservableObject
     [ObservableProperty]
     public partial int BlockedCount { get; set; }
 
+    /// <summary>Every parcel on the server (Shipments tile); 0 until loaded.</summary>
     [ObservableProperty]
     public partial int TotalShipments { get; set; }
 
     [ObservableProperty]
     public partial string ActiveTab { get; set; } = "Sellers";
 
-    public AdminViewModel(MockDataService data, DishCatalogService catalog)
+    public AdminViewModel(MockDataService data, DishCatalogService catalog, ShipmentService shipments)
     {
         _data = data;
         _catalog = catalog;
+        _shipments = shipments;
         _catalog.Suggestions.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDishSuggestions));
         Refresh();
     }
@@ -68,13 +70,35 @@ public partial class AdminViewModel : ObservableObject
     {
         Refresh();
         OnPropertyChanged(nameof(HasDishSuggestions));
+        LoadShipmentCount();
     }
+
+    /// <summary>The Shipments tile: how many parcels the server has.</summary>
+    private async void LoadShipmentCount()
+    {
+        try
+        {
+            var result = await _shipments.GetAllAsync(status: null);
+            if (result.IsSuccess) TotalShipments = result.Value!.TotalCount;
+        }
+        catch (Exception)
+        {
+            // The tile keeps its last number
+        }
+    }
+
+    /// <summary>Shipments tab → Shipping routes (create Ghana → UK, rates, switch on).</summary>
+    [RelayCommand]
+    private async Task OpenShippingRoutes() => await Shell.Current.GoToAsync("adminroutes");
+
+    /// <summary>Shipments tab → All shipments (receive at hub, next step).</summary>
+    [RelayCommand]
+    private async Task OpenAllShipments() => await Shell.Current.GoToAsync("adminshipments");
 
     private void Refresh()
     {
         PendingVendors.Clear();
         ActiveVendors.Clear();
-        Shipments.Clear();
         Users.Clear();
 
         foreach (var vendor in _data.Vendors.Where(v => !v.IsApproved).OrderByDescending(v => v.JoinedAt))
@@ -82,9 +106,6 @@ public partial class AdminViewModel : ObservableObject
 
         foreach (var vendor in _data.Vendors.Where(v => v.IsApproved).OrderByDescending(v => v.Rating))
             ActiveVendors.Add(vendor);
-
-        foreach (var shipment in _data.Shipments.OrderByDescending(s => s.CreatedAt))
-            Shipments.Add(shipment);
 
         // Admin accounts are not listed as customers
         foreach (var user in _data.Users.Where(u => !u.IsAdmin).OrderByDescending(u => u.JoinedAt))
@@ -94,7 +115,6 @@ public partial class AdminViewModel : ObservableObject
         TotalUsers = Users.Count;
         PendingApprovalCount = PendingVendors.Count;
         BlockedCount = _data.Vendors.Count(v => v.IsBlocked);
-        TotalShipments = Shipments.Count;
     }
 
     [RelayCommand]

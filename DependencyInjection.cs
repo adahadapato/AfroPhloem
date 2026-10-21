@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddSingleton<DishService>();       // /api/dishes
         services.AddSingleton<ShopService>();       // /api/shops
         services.AddSingleton<OrderService>();      // /api/orders
+        services.AddSingleton<ShipmentService>();   // /api/shipments, /api/staff/shipments
+        services.AddSingleton<ShipmentRouteService>(); // /api/admin/shipment-routes
 
         // ---- Services (singletons so mock "database" is shared across pages) ----
         services.AddSingleton<MockDataService>();
@@ -60,6 +62,10 @@ public static class DependencyInjection
         services.AddTransient<ChangePasswordViewModel>();
         services.AddTransient<NotificationSettingsViewModel>();
         services.AddTransient<ShopSettingsViewModel>();
+        services.AddTransient<MyShipmentsViewModel>();
+        services.AddTransient<ShipmentDetailsViewModel>();
+        services.AddTransient<AdminShipmentsViewModel>();
+        services.AddTransient<AdminShipmentRoutesViewModel>();
 
 
 
@@ -86,5 +92,9 @@ public static class DependencyInjection
         services.AddTransient<ChangePasswordPage>();
         services.AddTransient<NotificationSettingsPage>();
         services.AddTransient<ShopSettingsPage>();
+        services.AddTransient<MyShipmentsPage>();
+        services.AddTransient<ShipmentDetailsPage>();
+        services.AddTransient<AdminShipmentsPage>();
+        services.AddTransient<AdminShipmentRoutesPage>();
     }
 }

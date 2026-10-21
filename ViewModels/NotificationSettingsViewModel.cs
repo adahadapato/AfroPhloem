@@ -1,22 +1,27 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Phloem.Services;
+using Phloem.Services.Api.Contracts.Commands;
 
 namespace Phloem.ViewModels;
 
 /// <summary>
-/// Notifications (route "notifications"). Each switch saves straight away; there's no Save button.
-/// The backend will use these when it sends push notifications / emails.
+/// Notifications (route "notifications"). Each switch saves straight away to the API
+/// (<c>PUT /api/me/notifications</c>, all switches at once); there's no Save button.
+/// If saving fails, the switches go back to what the server has and a message says why.
 /// </summary>
 public partial class NotificationSettingsViewModel : ObservableObject
 {
     private readonly SessionService _session;
-    private readonly MockDataService _data;
+    private readonly AccountService _account;
+
+    /// <summary>One save at a time, so quick taps reach the server in order.</summary>
+    private readonly SemaphoreSlim _saving = new(1, 1);
     private bool _loading;
 
-    public NotificationSettingsViewModel(SessionService session, MockDataService data)
+    public NotificationSettingsViewModel(SessionService session, AccountService account)
     {
         _session = session;
-        _data = data;
+        _account = account;
     }
 
     [ObservableProperty] public partial bool OrderUpdates { get; set; }
@@ -25,8 +30,8 @@ public partial class NotificationSettingsViewModel : ObservableObject
     [ObservableProperty] public partial bool NewDishes { get; set; }
     [ObservableProperty] public partial bool ShopOrders { get; set; }
 
-    /// <summary>"New orders for my shop" is only shown to sellers.</summary>
-    public bool IsSeller => _session.CurrentUser is { } u && _data.Vendors.Any(v => v.UserId == u.Id);
+    /// <summary>"New orders for my shop" is only shown to people with a shop.</summary>
+    public bool IsSeller => _session.HasShop;
 
     public void Load()
     {
@@ -43,10 +48,47 @@ public partial class NotificationSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSeller));
     }
 
-    // Save each switch as soon as it's flipped
-    partial void OnOrderUpdatesChanged(bool value)    { if (!_loading && _session.CurrentUser is { } u) u.NotifyOrderUpdates = value; }
-    partial void OnShipmentUpdatesChanged(bool value) { if (!_loading && _session.CurrentUser is { } u) u.NotifyShipmentUpdates = value; }
-    partial void OnOffersChanged(bool value)          { if (!_loading && _session.CurrentUser is { } u) u.NotifyOffers = value; }
-    partial void OnNewDishesChanged(bool value)       { if (!_loading && _session.CurrentUser is { } u) u.NotifyNewDishes = value; }
-    partial void OnShopOrdersChanged(bool value)      { if (!_loading && _session.CurrentUser is { } u) u.NotifyShopOrders = value; }
+    // Save as soon as a switch is flipped
+    partial void OnOrderUpdatesChanged(bool value)    => SaveSoon();
+    partial void OnShipmentUpdatesChanged(bool value) => SaveSoon();
+    partial void OnOffersChanged(bool value)          => SaveSoon();
+    partial void OnNewDishesChanged(bool value)       => SaveSoon();
+    partial void OnShopOrdersChanged(bool value)      => SaveSoon();
+
+    private async void SaveSoon()
+    {
+        if (_loading || _session.CurrentUser is null) return;
+
+        await _saving.WaitAsync();
+        try
+        {
+            var user = _session.CurrentUser;
+            if (user is null) return;
+
+            var result = await _account.UpdateNotificationsAsync(
+                new UpdateNotificationsCommand(OrderUpdates, ShipmentUpdates, Offers, NewDishes, ShopOrders));
+
+            if (result.IsSuccess)
+            {
+                // Keep the signed-in copy in step, so the screen opens with these values next time
+                user.NotifyOrderUpdates    = OrderUpdates;
+                user.NotifyShipmentUpdates = ShipmentUpdates;
+                user.NotifyOffers          = Offers;
+                user.NotifyNewDishes       = NewDishes;
+                user.NotifyShopOrders      = ShopOrders;
+                return;
+            }
+
+            Load();   // back to what the server has
+            await Shell.Current.DisplayAlertAsync("Couldn't save", result.Error!.DisplayMessage, "OK");
+        }
+        catch (Exception)
+        {
+            Load();
+        }
+        finally
+        {
+            _saving.Release();
+        }
+    }
 }

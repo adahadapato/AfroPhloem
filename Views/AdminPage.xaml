@@ -430,52 +430,50 @@
                     </VerticalStackLayout.Triggers>
 
                     <Label Text="Cross-border shipments" Style="{StaticResource SectionTitle}" Margin="2,4,0,0" />
+                    <Label Text="Parcels customers send between countries (Send Food to UK)."
+                           Style="{StaticResource SubtleLabel}" />
 
-                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Shipments}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:DeliveryOrder">
-                                <Border Style="{StaticResource WhiteCard}">
-                                    <VerticalStackLayout Spacing="6">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <Label Text="{Binding ItemDescription}" FontSize="15" FontAttributes="Bold"
-                                                   TextColor="{StaticResource BrandTextDark}" />
-                                            <!-- Status chip -->
-                                            <Border Grid.Column="1" BackgroundColor="{StaticResource BrandMintPale}"
-                                                    StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="8,3"
-                                                    VerticalOptions="Start">
-                                                <Label Text="{Binding Status}" FontSize="11" FontAttributes="Bold"
-                                                       TextColor="{StaticResource BrandDark}" />
-                                            </Border>
-                                        </Grid>
-                                        <Label Style="{StaticResource SmallSubtle}">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{Binding SenderName}" />
-                                                    <Span Text="  →  " TextColor="{StaticResource BrandOrange}" FontAttributes="Bold" />
-                                                    <Span Text="{Binding RecipientName}" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                        <Label Text="{Binding UkAddress}" Style="{StaticResource SmallSubtle}" />
-                                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="0,4" />
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <Label Text="{Binding FromCountry, StringFormat='{0} → UK'}" FontSize="12"
-                                                   FontAttributes="Bold" TextColor="{StaticResource BrandDark}" />
-                                            <Label Grid.Column="1" FontSize="12" TextColor="{StaticResource BrandTextMuted}">
-                                                <Label.FormattedText>
-                                                    <FormattedString>
-                                                        <Span Text="{Binding Speed}" FontAttributes="Bold" />
-                                                        <Span Text="  ·  " />
-                                                        <Span Text="{Binding CreatedAt, StringFormat='{0:d MMM, HH:mm}'}" />
-                                                    </FormattedString>
-                                                </Label.FormattedText>
-                                            </Label>
-                                        </Grid>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
+                    <!-- Shipping routes -->
+                    <Border Style="{StaticResource WhiteCard}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenShippingRoutesCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                    BackgroundColor="{StaticResource BrandMintPale}" VerticalOptions="Center">
+                                <Label Text="🗺" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="Shipping routes" FontSize="16" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="Set up Ghana → UK and others: drop-off hub, prices, switch on or off"
+                                       Style="{StaticResource SmallSubtle}" LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="›" FontSize="26" TextColor="{StaticResource BrandTextMuted}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- All shipments -->
+                    <Border Style="{StaticResource WhiteCard}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenAllShipmentsCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                    BackgroundColor="{StaticResource BrandMintPale}" VerticalOptions="Center">
+                                <Label Text="📦" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="{Binding TotalShipments, StringFormat='All shipments ({0})'}" FontSize="16"
+                                       FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="See every parcel, receive and weigh it at the hub, move it along its journey"
+                                       Style="{StaticResource SmallSubtle}" LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="›" FontSize="26" TextColor="{StaticResource BrandTextMuted}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
                 </VerticalStackLayout>
 
             </VerticalStackLayout>

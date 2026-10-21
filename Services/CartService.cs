@@ -10,8 +10,6 @@ public class CartService
 
     public CountryOption SelectedCountry { get; set; }
 
-    public DeliveryOrder? PendingInternationalDelivery { get; set; }
-
     public CartService()
     {
         SelectedCountry = DetectDefaultCountry();
@@ -57,13 +55,13 @@ public class CartService
 
     public decimal Subtotal => Items.Sum(i => i.LineTotal);
 
-    public decimal DeliveryFee => PendingInternationalDelivery?.Fee ?? (Items.Count > 0 ? 3.50m : 0m);
+    /// <summary>A placeholder until the server's basket check answers (Checkout shows the server's fees).</summary>
+    public decimal DeliveryFee => Items.Count > 0 ? 3.50m : 0m;
 
     public decimal Total => Subtotal + DeliveryFee;
 
     public void Clear()
     {
         Items.Clear();
-        PendingInternationalDelivery = null;
     }
 }

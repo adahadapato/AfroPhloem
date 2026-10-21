@@ -1,0 +1,302 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AdminShipmentRoutesPage (route "adminroutes"): Admin → Shipping routes, on the API.
+    New route (e.g. Ghana → UK) with its drop-off hub → a rate per speed → Switch on.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             x:DataType="vm:AdminShipmentRoutesViewModel"
+             x:Class="Phloem.Views.AdminShipmentRoutesPage"
+             Shell.NavBarIsVisible="False"
+             Title="Shipping routes">
+
+    <ContentPage.Resources>
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SmallMuted" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <Style x:Key="CardTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HeightRequest" Value="46" />
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+            <Setter Property="Margin" Value="2,0,0,6" />
+        </Style>
+        <Style x:Key="SmallButton" TargetType="Button">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HeightRequest" Value="32" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+            <Setter Property="TextColor" Value="{StaticResource BrandDark}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10" WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start" Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round" WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsLoading}">
+            <ScrollView>
+                <VerticalStackLayout Padding="16,18,16,28" Spacing="14" MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                    <Grid ColumnDefinitions="*,Auto" Margin="2,0,0,0">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Shipping routes" FontSize="26" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="Where customers can send parcels, and the prices"
+                                   Style="{StaticResource SubtleLabel}" FontSize="13" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="+ New route" Command="{Binding NewRouteCommand}"
+                                Style="{StaticResource CtaButton}" HeightRequest="40" Padding="14,0"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <controls:StatusBanner Message="{Binding Message}" IsError="{Binding IsError}" />
+
+                    <!-- ============ ROUTE FORM (new route / drop-off) ============ -->
+                    <Border Style="{StaticResource WhiteCard}" IsVisible="{Binding IsEditingRoute}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{Binding RouteFormTitle}" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding IsNewRoute}">
+                                <VerticalStackLayout>
+                                    <Label Text="From" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Picker ItemsSource="{Binding Countries}" SelectedItem="{Binding FromCountry}"
+                                                ItemDisplayBinding="{Binding Name}" Title="From"
+                                                TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="To" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Picker ItemsSource="{Binding Countries}" SelectedItem="{Binding ToCountry}"
+                                                ItemDisplayBinding="{Binding Name}" Title="To"
+                                                TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <VerticalStackLayout>
+                                <Label Text="Drop-off hub address" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding DropOffAddress}" Placeholder="e.g. Phloem Hub, 12 Ring Road, Accra" Keyboard="Text"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout>
+                                <Label Text="Opening hours" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding DropOffHours}" Placeholder="e.g. Mon–Sat, 9am–5pm" Keyboard="Text"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Text="Cancel" Command="{Binding CancelRouteCommand}" Style="{StaticResource OutlineButton}" />
+                                <Button Grid.Column="1" Text="Save" Command="{Binding SaveRouteCommand}"
+                                        Style="{StaticResource CtaButton}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ============ RATE FORM ============ -->
+                    <Border Style="{StaticResource WhiteCard}" IsVisible="{Binding IsEditingRate}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{Binding RateFormTitle}" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" LineBreakMode="WordWrap" />
+
+                            <VerticalStackLayout>
+                                <Label Text="Speed" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Picker ItemsSource="{Binding Speeds}" SelectedItem="{Binding RateSpeed}"
+                                            ItemDisplayBinding="{Binding Name}" Title="Speed"
+                                            TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <VerticalStackLayout>
+                                    <Label Text="Base charge" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding BaseCharge}" Placeholder="e.g. 50" Keyboard="Numeric"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Price per kg" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding PricePerKg}" Placeholder="e.g. 30" Keyboard="Numeric"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <VerticalStackLayout>
+                                    <Label Text="Fewest days" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding MinDays}" Placeholder="e.g. 5" Keyboard="Numeric"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Most days" Style="{StaticResource FieldLabel}" />
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding MaxDays}" Placeholder="e.g. 7" Keyboard="Numeric"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Label Text="Price = base charge + price per kg × weight. A new price applies to parcels weighed from now on."
+                                   Style="{StaticResource SmallMuted}" LineBreakMode="WordWrap" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Text="Cancel" Command="{Binding CancelRateCommand}" Style="{StaticResource OutlineButton}" />
+                                <Button Grid.Column="1" Text="Save rate" Command="{Binding SaveRateCommand}"
+                                        Style="{StaticResource CtaButton}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ============ ROUTES ============ -->
+                    <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Routes}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RouteRow">
+                                <Border Style="{StaticResource WhiteCard}">
+                                    <VerticalStackLayout Spacing="10">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold"
+                                                       TextColor="{StaticResource BrandTextDark}" />
+                                                <Label Text="{Binding StatusText}" FontSize="12" FontAttributes="Bold"
+                                                       TextColor="{StaticResource BrandTextMuted}">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="TextColor" Value="{StaticResource BrandGreen}" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </VerticalStackLayout>
+                                            <Button Grid.Column="1" Text="{Binding ToggleText}" Style="{StaticResource SmallButton}"
+                                                    VerticalOptions="Start"
+                                                    Command="{Binding ToggleActiveCommand, Source={RelativeSource AncestorType={x:Type vm:AdminShipmentRoutesViewModel}}}"
+                                                    CommandParameter="{Binding .}" />
+                                        </Grid>
+
+                                        <!-- Drop-off -->
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Label Text="Drop-off" Style="{StaticResource CardTitle}" />
+                                                <Label Text="{Binding DropOffText}" FontSize="13"
+                                                       TextColor="{StaticResource BrandTextDark}" LineBreakMode="WordWrap" />
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="1" Text="Edit" Style="{StaticResource LinkLabel}"
+                                                   TextColor="{StaticResource BrandDark}" VerticalOptions="Start">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding EditDropOffCommand, Source={RelativeSource AncestorType={x:Type vm:AdminShipmentRoutesViewModel}}}"
+                                                        CommandParameter="{Binding .}" />
+                                                </Label.GestureRecognizers>
+                                            </Label>
+                                        </Grid>
+
+                                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" />
+
+                                        <!-- Rates -->
+                                        <Label Text="Prices" Style="{StaticResource CardTitle}" />
+                                        <Label Text="No prices yet: add at least one speed before switching it on."
+                                               Style="{StaticResource SmallMuted}" IsVisible="{Binding HasNoRates}" />
+                                        <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Rates}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:RateRow">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                        <VerticalStackLayout Spacing="1">
+                                                            <VerticalStackLayout.GestureRecognizers>
+                                                                <TapGestureRecognizer
+                                                                    Command="{Binding EditRateCommand, Source={RelativeSource AncestorType={x:Type vm:AdminShipmentRoutesViewModel}}}"
+                                                                    CommandParameter="{Binding .}" />
+                                                            </VerticalStackLayout.GestureRecognizers>
+                                                            <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold"
+                                                                   TextColor="{StaticResource BrandTextDark}" />
+                                                            <Label Text="{Binding Details}" Style="{StaticResource SmallMuted}" />
+                                                        </VerticalStackLayout>
+                                                        <Label Grid.Column="1" Text="✕" FontSize="16" TextColor="{StaticResource BrandDanger}"
+                                                               VerticalOptions="Center" Padding="8,0">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer
+                                                                    Command="{Binding RemoveRateCommand, Source={RelativeSource AncestorType={x:Type vm:AdminShipmentRoutesViewModel}}}"
+                                                                    CommandParameter="{Binding .}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="+ Add or change a speed's price" Style="{StaticResource LinkLabel}"
+                                               TextColor="{StaticResource BrandDark}">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding AddRateCommand, Source={RelativeSource AncestorType={x:Type vm:AdminShipmentRoutesViewModel}}}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

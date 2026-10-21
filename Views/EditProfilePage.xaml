@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <!--
     EditProfilePage (NEW): My account → Edit profile (route "editprofile").
-    Photo, name, phone, country. Email is shown but not editable here.
+    Photo, first + last name, phone, country, and personal details (date of birth + home address).
+    Email is shown but not editable here. Everything is saved to the API.
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -111,13 +112,22 @@
                     </Border.Shadow>
                     <VerticalStackLayout Spacing="16">
 
-                        <VerticalStackLayout>
-                            <Label Text="Full name" Style="{StaticResource FieldLabel}" />
-                            <Border Style="{StaticResource FieldBox}">
-                                <Entry Text="{Binding FullName}" Placeholder="e.g. Efua Owusu" Keyboard="Text"
-                                       TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
-                            </Border>
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout>
+                                <Label Text="First name" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding FirstName}" Placeholder="e.g. Efua" Keyboard="Text"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Last name" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding LastName}" Placeholder="e.g. Owusu" Keyboard="Text"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
 
                         <VerticalStackLayout>
                             <Label Text="Phone number" Style="{StaticResource FieldLabel}" />
@@ -131,6 +141,7 @@
                             <Label Text="Country" Style="{StaticResource FieldLabel}" />
                             <Border Style="{StaticResource FieldBox}">
                                 <Picker ItemsSource="{Binding Countries}" SelectedItem="{Binding Country}"
+                                        ItemDisplayBinding="{Binding Name}"
                                         Title="Choose your country" TextColor="{StaticResource BrandTextDark}"
                                         VerticalOptions="Center" />
                             </Border>
@@ -155,9 +166,63 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- ============ PERSONAL DETAILS CARD (optional here) ============ -->
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="16,18">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="16">
+
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Personal details" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="{Binding PersonalDetailsNote}" FontSize="12"
+                                   TextColor="{StaticResource BrandTextMuted}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Date of birth" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource FieldBox}">
+                                <DatePicker Date="{Binding DateOfBirth}" MaximumDate="{Binding Today}"
+                                            Format="d MMMM yyyy" TextColor="{StaticResource BrandTextDark}"
+                                            VerticalOptions="Center" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout>
+                            <Label Text="Home address" Style="{StaticResource FieldLabel}" />
+                            <VerticalStackLayout Spacing="10">
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding AddressLine1}" Placeholder="House number and street"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding AddressLine2}" Placeholder="Area or landmark (optional)"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <Border Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding City}" Placeholder="City or town"
+                                               TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                    <Border Grid.Column="1" Style="{StaticResource FieldBox}">
+                                        <Entry Text="{Binding RegionOrPostcode}" Placeholder="Region or postcode"
+                                               TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    </Border>
+                                </Grid>
+                            </VerticalStackLayout>
+                            <Label Text="In the country chosen above."
+                                   FontSize="11" TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
 
-                <Button Text="Save changes" Command="{Binding SaveCommand}"
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                   Color="{StaticResource BrandDark}" HeightRequest="28" />
+
+                <Button Text="Save changes" Command="{Binding SaveCommand}" IsEnabled="{Binding IsNotBusy}"
                         BackgroundColor="{StaticResource BrandDark}" TextColor="White"
                         FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" />
             </VerticalStackLayout>

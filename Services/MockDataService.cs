@@ -41,12 +41,8 @@ public class MockDataService
 
     public List<Dish> Dishes { get; }
 
-    public ObservableCollection<DeliveryOrder> Shipments { get; } = new()
-    {
-        new DeliveryOrder { SenderName = "Kwame Boateng", RecipientName = "Adjoa Boateng", FromCountry = "Ghana", UkAddress = "14 Elm Road, Manchester", ItemDescription = "Dried fish, gari, spices", Speed = DeliverySpeed.Express, Status = ShipmentStatus.Delivered, CreatedAt = DateTime.Now.AddDays(-9) },
-        new DeliveryOrder { SenderName = "Chidinma Okafor", RecipientName = "Ifeoma Eze", FromCountry = "Nigeria", UkAddress = "8 Baker Street, London", ItemDescription = "Egusi, palm oil, suya spice", Speed = DeliverySpeed.Standard, Status = ShipmentStatus.InTransit, CreatedAt = DateTime.Now.AddDays(-3) },
-        new DeliveryOrder { SenderName = "Kojo Mensah", RecipientName = "Abena Mensah", FromCountry = "Ghana", UkAddress = "22 Queens Ave, Birmingham", ItemDescription = "Waakye beans, shito", Speed = DeliverySpeed.Bulk, Status = ShipmentStatus.Processing, CreatedAt = DateTime.Now.AddHours(-14) },
-    };
+    // Parcels ("Send Food to UK") come from the API now: see ShipmentService
+
 
     public MockDataService()
     {
@@ -145,6 +141,4 @@ public class MockDataService
     public User? Authenticate(string email, string password) =>
         Users.FirstOrDefault(u =>
             string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase) && u.Password == password);
-
-    public void AddShipment(DeliveryOrder order) => Shipments.Insert(0, order);
 }
