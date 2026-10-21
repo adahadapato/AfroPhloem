@@ -8,6 +8,12 @@ name: Phloem iOS build check
 #     git commit -m "Shipment details tweaks [ios]"
 # (Other development pushes skip it. The "Run workflow" button would need this file on the default branch.)
 #
+# XCODE PAIRING: every .NET for iOS release needs exactly ONE Xcode version, and GitHub's Macs only have the Xcodes
+# listed in their image. So both are pinned together below (XCODE_VERSION + IOS_WORKLOAD_SET). To move up (e.g. when
+# GitHub adds Xcode 27.1 → workload set 10.0.402.1), change both lines together.
+# Pairs: https://whichversionofxcodeformaui.com  ·  Xcodes on the runner:
+# https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md
+#
 # When the Apple Developer membership is in place, a separate ios-release.yml will build a SIGNED app and send it
 # to TestFlight.
 
@@ -25,10 +31,15 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  XCODE_VERSION: '26.6'          # the newest Xcode on GitHub's macos-26 Mac
+  IOS_WORKLOAD_SET: '10.0.401'   # the .NET 10 iOS workload set that needs Xcode 26.6
+  DOTNET_SDK: '10.0.401'         # the SDK the workload set belongs to
+
 jobs:
   build-ios:
     name: Build iOS (simulator, unsigned)
-    runs-on: macos-latest
+    runs-on: macos-26
 
     # Only when the commit message asks for it (or when started by hand)
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios]')
@@ -37,23 +48,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use the newest stable Xcode on the runner
+      - name: Use the Xcode the iOS workload needs
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: ${{ env.DOTNET_SDK }}
 
       - name: Display .NET and Xcode information
         run: |
           dotnet --info
           xcodebuild -version
 
-      - name: Install .NET MAUI iOS workload
-        run: dotnet workload install maui-ios
+      # Pinned: without --version it installs the newest, which may need an Xcode GitHub doesn't have yet
+      - name: Install .NET MAUI iOS workload (pinned to the Xcode above)
+        run: dotnet workload install maui-ios --version ${{ env.IOS_WORKLOAD_SET }}
 
       - name: Restore iOS dependencies
         run: dotnet restore Phloem.csproj -p:TargetFramework=net10.0-ios

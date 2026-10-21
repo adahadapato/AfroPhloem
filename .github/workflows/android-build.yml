@@ -1,5 +1,4 @@
-
-name: Phloem CI
+name: Phloem Android build check
 
 on:
   push:
