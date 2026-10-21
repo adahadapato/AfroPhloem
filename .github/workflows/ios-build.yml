@@ -1,80 +1,137 @@
-name: Phloem iOS build check
+<Project Sdk="Microsoft.NET.Sdk">
 
-# Builds the iOS app on a GitHub Mac WITHOUT signing it (for the iPhone simulator), so iPhone-only build errors
-# show up now, long before there's an Apple Developer membership. Nothing is installed or published.
-#
-# Mac minutes use the free Actions allowance faster than Windows ones, so it runs ONLY when you ask for it:
-# push to development with [ios] anywhere in the commit message, e.g.
-#     git commit -m "Shipment details tweaks [ios]"
-# (Other development pushes skip it. The "Run workflow" button would need this file on the default branch.)
-#
-# XCODE PAIRING: every .NET for iOS release needs exactly ONE Xcode version, and GitHub's Macs only have the Xcodes
-# listed in their image. So both are pinned together below (XCODE_VERSION + IOS_WORKLOAD_SET). To move up (e.g. when
-# GitHub adds Xcode 27.1 → workload set 10.0.402.1), change both lines together.
-# Pairs: https://whichversionofxcodeformaui.com  ·  Xcodes on the runner:
-# https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md
-#
-# When the Apple Developer membership is in place, a separate ios-release.yml will build a SIGNED app and send it
-# to TestFlight.
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Uncomment to also build for Tizen
+    <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks>
+    -->
 
-on:
-  push:
-    branches:
-      - development
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Phloem</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
-  workflow_dispatch:
+    <!-- Display name -->
+    <ApplicationTitle>Phloem</ApplicationTitle>
 
-concurrency:
-  group: phloem-ios-${{ github.ref }}
-  cancel-in-progress: true
+    <!-- App Identifier -->
+    <ApplicationId>com.zayun.phloem</ApplicationId>
 
-permissions:
-  contents: read
+    <!-- Versions -->
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
 
-env:
-  XCODE_VERSION: '26.6'          # the newest Xcode on GitHub's macos-26 Mac
-  IOS_WORKLOAD_SET: '10.0.401'   # the .NET 10 iOS workload set that needs Xcode 26.6
-  DOTNET_SDK: '10.0.401'         # the SDK the workload set belongs to
+    <!-- Min / Target OS versions -->
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <!-- Compile bindings that use Source={x:Reference …} too (faster, checked at build time) -->
+    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+  </PropertyGroup>
 
-jobs:
-  build-ios:
-    name: Build iOS (simulator, unsigned)
-    runs-on: macos-26
+  <ItemGroup>
+    <!-- App Icon -->
+    <MauiIcon Include="Resources\Images\appicon.png" ForegroundFile="Resources\Images\appiconfg.png" Color="#2B3A25" />
 
-    # Only when the commit message asks for it (or when started by hand)
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios]')
+    <!-- Splash Screen -->
+    <MauiSplashScreen Include="Resources\Images\splash.png" Color="#2B3A25" BaseSize="200,200" />
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    <!-- Images -->
+    <MauiImage Include="Resources\Images\*" Exclude="Resources\Images\appicon.png;Resources\Images\appiconfg.png;Resources\Images\splash.png" />
+    <MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
 
-      - name: Use the Xcode the iOS workload needs
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ env.XCODE_VERSION }}
+    <!-- Custom Fonts -->
+    <MauiFont Include="Resources\Fonts\*" />
 
-      - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK }}
+    <!-- Raw Assets -->
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 
-      - name: Display .NET and Xcode information
-        run: |
-          dotnet --info
-          xcodebuild -version
+    <!-- Custom Fonts -->
+    <MauiFont Include="Resources\Fonts\*" />
 
-      # Pinned: without --version it installs the newest, which may need an Xcode GitHub doesn't have yet
-      - name: Install .NET MAUI iOS workload (pinned to the Xcode above)
-        run: dotnet workload install maui-ios --version ${{ env.IOS_WORKLOAD_SET }}
+  </ItemGroup>
 
-      - name: Restore iOS dependencies
-        run: dotnet restore Phloem.csproj -p:TargetFramework=net10.0-ios
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.110" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
+    <!-- API client: settings files, typed settings, HttpClient factory -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- App settings (API address), read at start-up by MauiProgram. NO secrets: they ship inside the app. -->
+    <EmbeddedResource Include="Settings\appsettings.json" LogicalName="appsettings.json" />
+    <!-- Debug builds only: your local API. The file is git-ignored (it's only on your PC), so it's embedded only when
+         it exists: GitHub's build machines don't have it, and the app treats it as optional (MauiProgram). -->
+    <EmbeddedResource Include="Settings\appsettings.Development.json" LogicalName="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug' And Exists('Settings\appsettings.Development.json')" />
+  </ItemGroup>
 
-      # The simulator build needs no certificate or provisioning profile
-      - name: Build iOS app (simulator)
-        run: >
-          dotnet build Phloem.csproj
-          -f net10.0-ios
-          -c Debug
-          -p:RuntimeIdentifier=iossimulator-arm64
-          --no-restore
+  <ItemGroup>
+    <MauiXaml Update="Views\AboutPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\AccountPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\AdminPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\AdminShipmentRoutesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\AdminShipmentsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\ChangePasswordPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\Controls\AppHeaderBar.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\Controls\StatusBanner.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\DeliveryAddressPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\DishEditorPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\EditProfilePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\LoginPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\MyShipmentsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\NotificationSettingsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\OrderDetailsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\OrdersPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\ShipmentDetailsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\ShopSettingsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\VendorsListPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+  </ItemGroup>
+
+</Project>
