@@ -15,7 +15,7 @@ public partial class OrdersPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _vm.Refresh();   // basket may have changed on another page
+        _vm.RefreshWithOrders();   // basket may have changed on another page; orders come from the server
     }
 
     // ☰ opens the side menu

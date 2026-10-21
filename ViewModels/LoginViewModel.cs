@@ -105,7 +105,8 @@ public partial class LoginViewModel : ObservableObject
 
         Password = string.Empty;
         ShowInfo("Welcome back!");
-        // Close the Log in page (it sits on top of My Account), then go Home
+        // Back to Checkout if that's where they were heading; otherwise close Log in and go Home
+        if (await AppNav.ResumeAfterLoginAsync()) return;
         await Shell.Current.Navigation.PopToRootAsync(false);
         await Shell.Current.GoToAsync("//home");
     }

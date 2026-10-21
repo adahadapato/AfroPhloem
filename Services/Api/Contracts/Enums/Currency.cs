@@ -1,4 +1,4 @@
-namespace Phloem.Services.Api.Contracts;
+namespace Phloem.Services.Api.Contracts.Enums;
 
 /// <summary>Each country's currency. Same names and numbers as the API.</summary>
 public enum Currency

@@ -1,4 +1,6 @@
-namespace Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Enums;
+
+namespace Phloem.Services.Api.Contracts.Commands;
 
 /// <summary>
 /// Body of <c>POST /api/auth/register</c>. Same shape as the API's <c>RegisterCommand</c>.

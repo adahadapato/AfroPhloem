@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Services.Api.Contracts;
 
 namespace Phloem.ViewModels;
 
@@ -29,6 +30,8 @@ public partial class DeliveryAddressViewModel : ObservableObject
     private readonly SessionService _session;
     private readonly CartService _cart;
     private readonly DeliveryAddressService _delivery;
+    private readonly AccountService _account;
+    private readonly AuthService _auth;
 
     public ObservableCollection<AddressOption> Addresses { get; } = new();
     public ObservableCollection<CountryOption> Countries { get; } = new(CountryOption.All);
@@ -62,11 +65,17 @@ public partial class DeliveryAddressViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsError { get; set; }
 
-    public DeliveryAddressViewModel(SessionService session, CartService cart, DeliveryAddressService delivery)
+    [ObservableProperty]
+    public partial bool IsSaving { get; set; }
+
+    public DeliveryAddressViewModel(SessionService session, CartService cart, DeliveryAddressService delivery,
+                                    AccountService account, AuthService auth)
     {
         _session = session;
         _cart = cart;
         _delivery = delivery;
+        _account = account;
+        _auth = auth;
     }
 
     /// <summary>Called each time the page appears.</summary>
@@ -126,9 +135,14 @@ public partial class DeliveryAddressViewModel : ObservableObject
         StatusMessage = string.Empty;
     }
 
+    /// <summary>
+    /// Saves the new address: to the account on the API when signed in (orders need a saved address),
+    /// or just for this order for a guest.
+    /// </summary>
     [RelayCommand]
-    private void SaveNewAddress()
+    private async Task SaveNewAddress()
     {
+        if (IsSaving) return;
         if (string.IsNullOrWhiteSpace(NewAddress))
         {
             IsError = true;
@@ -136,30 +150,57 @@ public partial class DeliveryAddressViewModel : ObservableObject
             return;
         }
 
-        var address = new DeliveryAddress
+        if (!IsLoggedIn)
         {
-            Label = NewLabel,
-            FullAddress = NewAddress.Trim(),
-            Country = NewCountry?.Name ?? _cart.SelectedCountry?.Name ?? string.Empty,
-            IsDefault = false
-        };
-
-        if (IsLoggedIn)
-        {
-            var user = _session.CurrentUser!;
-            if (SaveAsDefault || user.Addresses.Count == 0)
+            // A guest's one-off address (they sign in before the order is placed)
+            _delivery.SelectedAddress = new DeliveryAddress
             {
-                foreach (var a in user.Addresses) a.IsDefault = false;
-                address.IsDefault = true;
-            }
-            user.Addresses.Add(address);   // saved to the account
+                Label = NewLabel,
+                FullAddress = NewAddress.Trim(),
+                Country = NewCountry?.Name ?? _cart.SelectedCountry?.Name ?? string.Empty,
+                IsDefault = false
+            };
+            NewAddress = string.Empty;
+            IsError = false;
+            Load();
+            StatusMessage = "Address added for this order.";
+            return;
         }
 
-        _delivery.SelectedAddress = address;
-        NewAddress = string.Empty;
-        IsError = false;
-        Load();   // rebuild the list with the new address selected
-        StatusMessage = IsLoggedIn ? "Address saved." : "Address added for this order.";
+        var country = NewCountry ?? _cart.SelectedCountry;
+        if (country is null)
+        {
+            IsError = true;
+            StatusMessage = "Choose the country.";
+            return;
+        }
+
+        IsSaving = true;
+        try
+        {
+            var makeDefault = SaveAsDefault || _session.CurrentUser!.Addresses.Count == 0;
+            var saved = await _account.AddAddressAsync(
+                new AddAddressCommand(NewLabel, NewAddress.Trim(), country.ApiCountry, makeDefault));
+            if (saved.IsFailure)
+            {
+                IsError = true;
+                StatusMessage = saved.Error!.DisplayMessage;
+                return;
+            }
+
+            // Reload the profile so the new address (with its Id from the API) is in the list, then pick it
+            await _auth.RefreshProfileAsync();
+            _delivery.SelectedAddress = _session.CurrentUser?.Addresses.FirstOrDefault(a => a.Id == saved.Value.ToString());
+
+            NewAddress = string.Empty;
+            IsError = false;
+            Load();   // rebuild the list with the new address selected
+            StatusMessage = "Address saved.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
     }
 
     /// <summary>"Deliver to this address": remember the choice and go back.</summary>

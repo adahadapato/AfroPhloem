@@ -24,12 +24,43 @@ public partial class OrderDetailsViewModel : ObservableObject, IQueryAttributabl
         _data = data;
     }
 
+    /// <summary>Shown while the order's dishes are loading, or why they couldn't be.</summary>
+    [ObservableProperty]
+    public partial string Message { get; set; } = string.Empty;
+
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("Order", out var value) && value is PlacedOrder order)
         {
             order.RefreshTiming();
+            Order = order;               // the row from the list, straight away
+            LoadDetails(order);          // then the full order (dishes, fees, address) from the server
+        }
+    }
+
+    /// <summary>Replaces the list row with the full order from the API ("Send to UK" orders are already complete).</summary>
+    private async void LoadDetails(PlacedOrder row)
+    {
+        if (row.IsInternational) return;
+
+        Message = "Loading the order…";
+        try
+        {
+            var (order, error) = await _history.LoadDetailsAsync(row.OrderNumber);
+            if (Order != row) return;   // another order was opened meanwhile
+
+            if (order is null)
+            {
+                Message = error ?? string.Empty;
+                return;
+            }
+
             Order = order;
+            Message = string.Empty;
+        }
+        catch (Exception)
+        {
+            Message = "We couldn't load this order. Please try again.";
         }
     }
 
@@ -39,8 +70,8 @@ public partial class OrderDetailsViewModel : ObservableObject, IQueryAttributabl
     [RelayCommand]
     private async Task CancelOrder()
     {
-        if (Order is not null)
-            await _history.CancelAsync(Order, _data);
+        if (Order is not null && await _history.CancelAsync(Order, _data))
+            LoadDetails(Order);   // the server's view after cancelling (refund, times)
     }
 
     [RelayCommand]

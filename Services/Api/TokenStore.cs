@@ -1,4 +1,4 @@
-using Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Dtos;
 
 namespace Phloem.Services.Api;
 

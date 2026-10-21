@@ -70,6 +70,6 @@ public partial class InternationalDeliveryViewModel : ObservableObject
 
         IsError = false;
         StatusMessage = "Shipment details saved — continue to checkout.";
-        await Shell.Current.GoToAsync(nameof(Views.CheckoutPage));
+        await AppNav.GoToCheckoutAsync();
     }
 }

@@ -70,8 +70,7 @@
     <!-- App settings (API address), read at start-up by MauiProgram. NO secrets: they ship inside the app. -->
     <EmbeddedResource Include="Settings\appsettings.json" LogicalName="appsettings.json" />
     <!-- Debug builds only: your local API -->
-    <EmbeddedResource Include="Settings\appsettings.Development.json" LogicalName="appsettings.Development.json"
-                      Condition="'$(Configuration)' == 'Debug'" />
+    <EmbeddedResource Include="Settings\appsettings.Development.json" LogicalName="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
 using Phloem.Services.Api;
-using Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Enums;
 using Phloem.Views;
 
 namespace Phloem.ViewModels;
@@ -172,7 +172,7 @@ public partial class HomeViewModel : ObservableObject
     private async Task GoToCheckout()
     {
         if (_cart.Items.Count == 0) return;
-        await Shell.Current.GoToAsync(nameof(CheckoutPage));
+        await AppNav.GoToCheckoutAsync();
     }
 
     /// <summary>Buy Food → Browse &amp; Order (Explore tab).</summary>

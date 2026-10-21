@@ -17,8 +17,14 @@ public class DeliveryAddressService
     /// </summary>
     public DeliveryAddress? Resolve(User? user)
     {
-        if (SelectedAddress is not null && (user is null || user.Addresses.Contains(SelectedAddress)))
-            return SelectedAddress;
+        if (SelectedAddress is not null)
+        {
+            if (user is null) return SelectedAddress;
+
+            // Matched by Id: the user's addresses are rebuilt each time the profile reloads
+            var picked = user.Addresses.FirstOrDefault(a => a.Id == SelectedAddress.Id);
+            if (picked is not null) return picked;
+        }
 
         return user?.Addresses.FirstOrDefault(a => a.IsDefault) ?? user?.Addresses.FirstOrDefault();
     }

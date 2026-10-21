@@ -1,4 +1,5 @@
-﻿using Phloem.Views;
+﻿using Phloem.Services;
+using Phloem.Views;
 
 namespace Phloem;
 
@@ -28,6 +29,40 @@ public partial class AppShell : Shell
 
         // Checkout (was already reached with GoToAsync(nameof(CheckoutPage))).
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));
+
+        // Side menu follows who is signed in (and changes as soon as they sign in or out)
+        _session = IPlatformApplication.Current?.Services.GetService<SessionService>();
+        if (_session is not null) _session.Changed += OnSessionChanged;
+        UpdateMenu();
+    }
+
+    // ------------------------------------------------------------------
+    // Side menu by who is signed in:
+    //   Sign Up           only when signed out
+    //   Admin Dashboard   only for admins
+    //   Become a Seller   hidden once the user has a shop
+    //   Seller Dashboard  only when the user has a shop
+    // ------------------------------------------------------------------
+    private readonly SessionService? _session;
+
+    private void OnSessionChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(UpdateMenu);
+
+    private void UpdateMenu()
+    {
+        var signedIn = _session?.IsLoggedIn ?? false;
+        var hasShop = _session?.HasShop ?? false;
+
+        SetFlyoutItemIsVisible(SignUpMenuItem, !signedIn);
+        SetFlyoutItemIsVisible(AdminMenuItem, _session?.IsAdmin ?? false);
+        SetFlyoutItemIsVisible(BecomeSellerMenuItem, !hasShop);
+        SetFlyoutItemIsVisible(SellerDashMenuItem, hasShop);
+    }
+
+    /// <summary>Stops listening to the session when this shell is closed.</summary>
+    protected override void OnHandlerChanging(HandlerChangingEventArgs args)
+    {
+        base.OnHandlerChanging(args);
+        if (args.NewHandler is null && _session is not null) _session.Changed -= OnSessionChanged;
     }
 
     // ------------------------------------------------------------------
@@ -57,6 +92,9 @@ public partial class AppShell : Shell
             });
         }
     }
+
+    // The ✕ in the side menu's header: closes the menu
+    void OnCloseMenuTapped(object? sender, TappedEventArgs e) => FlyoutIsPresented = false;
 
     // Side-menu entries for the pages above: close the menu, then open the page
     // on its tab, e.g. "//account/about" = Account tab, then About on top of it.

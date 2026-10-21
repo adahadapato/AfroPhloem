@@ -222,6 +222,10 @@
                     <!-- ============ UK PROMO BANNER (image background) ============ -->
                     <Border StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0"
                             HeightRequest="120">
+                        <!-- Tapping anywhere on the banner opens Send Food to UK -->
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToSendToUkCommand}" />
+                        </Border.GestureRecognizers>
                         <Grid>
                             <!-- Background: the full banner image -->
                             <Image Source="global_shipping.png" Aspect="AspectFill" />

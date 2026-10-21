@@ -1,4 +1,4 @@
-namespace Phloem.Services.Api.Contracts;
+namespace Phloem.Services.Api.Contracts.Enums;
 
 /// <summary>Dish categories, same names and numbers as the API (sent as words, e.g. "LocalMeals").</summary>
 public enum DishCategory

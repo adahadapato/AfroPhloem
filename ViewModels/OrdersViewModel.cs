@@ -63,6 +63,22 @@ public partial class OrdersViewModel : ObservableObject
         foreach (var order in _history.Orders) order.RefreshTiming();
     }
 
+    /// <summary>Called by the page each time it appears: the basket, then "Recent orders" fresh from the server.</summary>
+    public async void RefreshWithOrders()
+    {
+        Refresh();
+        try
+        {
+            await _history.LoadAsync();
+        }
+        catch (Exception)
+        {
+            // Couldn't reach the server: the orders shown last time stay
+        }
+
+        OnPropertyChanged(nameof(HasPastOrders));
+    }
+
     [RelayCommand]
     private void IncreaseQuantity(CartItem item)
     {
@@ -91,7 +107,7 @@ public partial class OrdersViewModel : ObservableObject
     private async Task GoToCheckout()
     {
         if (!HasItems) return;
-        await Shell.Current.GoToAsync(nameof(Views.CheckoutPage));
+        await AppNav.GoToCheckoutAsync();
     }
 
     /// <summary>Cancel order: asks first, then marks the order Cancelled (and withdraws any UK shipment).</summary>

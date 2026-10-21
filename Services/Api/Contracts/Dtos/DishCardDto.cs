@@ -1,4 +1,6 @@
-namespace Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Enums;
+
+namespace Phloem.Services.Api.Contracts.Dtos;
 
 /// <summary>One dish card (Home, Browse &amp; Order). Same shape as the API's <c>DishCardDto</c>.</summary>
 /// <remarks>ImageUrl is the 400×300 thumbnail; null when the dish has no photo yet.</remarks>

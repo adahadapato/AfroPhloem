@@ -1,4 +1,6 @@
-namespace Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Commands;
+
+namespace Phloem.Services.Api.Contracts.Dtos;
 
 /// <summary>
 /// Answer of login, register, two-factor and refresh. Same shape as the API's <c>AuthTokensDto</c>.

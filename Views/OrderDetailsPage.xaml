@@ -183,6 +183,16 @@
                            VerticalOptions="Center" />
                 </Grid>
 
+                <!-- "Loading the order…" while the dishes come from the server, or why they couldn't -->
+                <Label Text="{Binding Message}" FontSize="13" TextColor="{StaticResource BrandTextMuted}"
+                       HorizontalTextAlignment="Center">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding Message}" Value="">
+                            <Setter Property="IsVisible" Value="False" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+
                 <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Order.Lines}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="services:OrderLine">

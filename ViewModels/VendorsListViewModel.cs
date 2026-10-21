@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
 using Phloem.Services.Api;
-using Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Enums;
 using Phloem.Views;
 
 namespace Phloem.ViewModels;

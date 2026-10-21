@@ -1,4 +1,6 @@
 ﻿using System.Windows.Input;
+using Phloem.Services;
+using Phloem.Views;
 
 namespace Phloem;
 
@@ -21,5 +23,43 @@ public static class AppNav
         // If pages were opened on top of Home (Vendors, Seller setup…), go back to Home itself
         if (Shell.Current.Navigation.NavigationStack.Count > 1)
             await Shell.Current.Navigation.PopToRootAsync(false);
+    }
+
+    /// <summary>True while someone who tapped Checkout signed out is on their way to Log in.</summary>
+    private static bool _checkoutAfterLogin;
+
+    /// <summary>
+    /// Every "Checkout" button comes here: Checkout needs a signed-in user. Signed out → Log in first, and straight
+    /// back to Checkout afterwards (see <see cref="ResumeAfterLoginAsync"/>). The basket stays as it is.
+    /// </summary>
+    public static async Task GoToCheckoutAsync()
+    {
+        if (Shell.Current is null) return;
+
+        var session = IPlatformApplication.Current?.Services.GetService<SessionService>();
+        if (session?.IsLoggedIn == true)
+        {
+            await Shell.Current.GoToAsync(nameof(CheckoutPage));
+            return;
+        }
+
+        await Shell.Current.DisplayAlertAsync("Log in to check out",
+            "Please log in (or sign up) to check out. Your basket will still be here.", "Log in");
+        _checkoutAfterLogin = true;
+        await Shell.Current.GoToAsync("//account/login");
+    }
+
+    /// <summary>
+    /// Called by Log in after a successful sign-in: goes to Checkout if that's where the user was heading.
+    /// </summary>
+    /// <returns>True when it went to Checkout; false when Log in should go where it normally goes.</returns>
+    public static async Task<bool> ResumeAfterLoginAsync()
+    {
+        if (!_checkoutAfterLogin || Shell.Current is null) return false;
+        _checkoutAfterLogin = false;
+
+        await Shell.Current.Navigation.PopToRootAsync(false);   // close Log in
+        await Shell.Current.GoToAsync($"//orders/{nameof(CheckoutPage)}");
+        return true;
     }
 }

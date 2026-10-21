@@ -1,4 +1,4 @@
-namespace Phloem.Services.Api.Contracts;
+namespace Phloem.Services.Api.Contracts.Commands;
 
 /// <summary>Body of <c>POST /api/auth/login/two-factor</c>: the challenge from login + the code.</summary>
 public sealed record CompleteTwoFactorLoginCommand(string ChallengeToken, string Code, bool IsRecoveryCode);

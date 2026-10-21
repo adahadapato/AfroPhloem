@@ -1,4 +1,4 @@
-namespace Phloem.Services.Api.Contracts;
+namespace Phloem.Services.Api.Contracts.Enums;
 
 /// <summary>How a dish search is sorted. Same names and numbers as the API.</summary>
 public enum DishSort

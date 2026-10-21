@@ -35,6 +35,18 @@
                            TextColor="{StaticResource BrandGoldLight}" />
                 </VerticalStackLayout>
             </HorizontalStackLayout>
+
+            <!-- Close button (top right): closes the menu, same as tapping outside it -->
+            <Border HorizontalOptions="End" VerticalOptions="Start" Margin="0,14,-6,0"
+                    WidthRequest="40" HeightRequest="40" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20" BackgroundColor="#26FFFFFF"
+                    SemanticProperties.Description="Close menu">
+                <Label Text="✕" FontSize="18" TextColor="White"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseMenuTapped" />
+                </Border.GestureRecognizers>
+            </Border>
         </Grid>
     </Shell.FlyoutHeader>
 
@@ -125,12 +137,13 @@
     </FlyoutItem>
 
     <!-- ============ Side menu: other pages (open on top of a tab, bottom bar stays) ============ -->
+    <!-- Items with x:Name are shown or hidden by who is signed in (see AppShell.xaml.cs, UpdateMenu) -->
     <MenuItem Text="About"            CommandParameter="//account/about"      Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Admin Dashboard"  CommandParameter="//account/admin"      Clicked="OnMenuItemClicked" />
+    <MenuItem x:Name="AdminMenuItem"         Text="Admin Dashboard"  CommandParameter="//account/admin"      Clicked="OnMenuItemClicked" />
     <MenuItem Text="Send Food to UK"  CommandParameter="//home/international" Clicked="OnMenuItemClicked" />
     <MenuItem Text="Sellers &amp; Vendors" CommandParameter="//home/vendors" Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Become a Seller"  CommandParameter="//home/sellersetup" Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Seller Dashboard" CommandParameter="//home/dashboard"   Clicked="OnMenuItemClicked" />
-    <MenuItem Text="Sign Up"          CommandParameter="//account/register"   Clicked="OnMenuItemClicked" />
+    <MenuItem x:Name="BecomeSellerMenuItem"  Text="Become a Seller"  CommandParameter="//home/sellersetup" Clicked="OnMenuItemClicked" />
+    <MenuItem x:Name="SellerDashMenuItem"    Text="Seller Dashboard" CommandParameter="//home/dashboard"   Clicked="OnMenuItemClicked" />
+    <MenuItem x:Name="SignUpMenuItem"        Text="Sign Up"          CommandParameter="//account/register"   Clicked="OnMenuItemClicked" />
 
 </Shell>

@@ -1,4 +1,6 @@
-namespace Phloem.Services.Api.Contracts;
+using Phloem.Services.Api.Contracts.Enums;
+
+namespace Phloem.Services.Api.Contracts.Dtos;
 
 /// <summary>Answer of <c>GET /api/me</c>: the signed-in user. Same shape as the API's <c>ProfileDto</c>.</summary>
 public sealed record ProfileDto(

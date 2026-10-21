@@ -1,3 +1,5 @@
+using Phloem.Services.Api.Contracts.Enums;
+
 namespace Phloem.Services.Api.Contracts;
 
 /// <summary>A home address as the app sends it (sign-up and personal details). Same as the API's.</summary>
