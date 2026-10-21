@@ -3,8 +3,10 @@ name: Phloem iOS build check
 # Builds the iOS app on a GitHub Mac WITHOUT signing it (for the iPhone simulator), so iPhone-only build errors
 # show up now, long before there's an Apple Developer membership. Nothing is installed or published.
 #
-# Mac minutes use the free Actions allowance faster than Windows ones, so this runs only when code reaches main,
-# or when started by hand (Actions → Phloem iOS build check → Run workflow).
+# Mac minutes use the free Actions allowance faster than Windows ones, so it runs ONLY when you ask for it:
+# push to development with [ios] anywhere in the commit message, e.g.
+#     git commit -m "Shipment details tweaks [ios]"
+# (Other development pushes skip it. The "Run workflow" button would need this file on the default branch.)
 #
 # When the Apple Developer membership is in place, a separate ios-release.yml will build a SIGNED app and send it
 # to TestFlight.
@@ -12,7 +14,7 @@ name: Phloem iOS build check
 on:
   push:
     branches:
-      - main
+      - development
 
   workflow_dispatch:
 
@@ -27,6 +29,9 @@ jobs:
   build-ios:
     name: Build iOS (simulator, unsigned)
     runs-on: macos-latest
+
+    # Only when the commit message asks for it (or when started by hand)
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ios]')
 
     steps:
       - name: Checkout repository
