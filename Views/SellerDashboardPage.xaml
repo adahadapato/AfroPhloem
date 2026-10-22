@@ -265,7 +265,7 @@
 
                 <!-- ============ MY DISHES ============ -->
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12" Margin="2,10,0,0">
-                    <Label Text="My dishes" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
+                    <Label x:Name="MyDishesTitle" Text="My dishes" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
                     <Label Grid.Column="1" Text="View all  →" Style="{StaticResource LinkLabel}"
                            TextColor="{StaticResource BrandDark}">
                         <Label.GestureRecognizers>
@@ -277,6 +277,12 @@
                             FontAttributes="Bold" FontSize="13" CornerRadius="16"
                             HeightRequest="34" Padding="14,0" VerticalOptions="Center" />
                 </Grid>
+
+                <!-- Dishes whose allowed price range changed -->
+                <Border BackgroundColor="{StaticResource BrandPeach}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="14,10" IsVisible="{Binding HasPriceUpdates}">
+                    <Label Text="{Binding PriceUpdateText}" FontSize="13" TextColor="{StaticResource BrandTextDark}" />
+                </Border>
 
                 <!-- No dishes yet -->
                 <Border BackgroundColor="{StaticResource BrandMintPale}" Stroke="{StaticResource BrandMint}"
@@ -326,7 +332,7 @@
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
-                                    <Label Grid.Column="2" Text="{Binding Price, StringFormat='£{0:0.00}'}"
+                                    <Label Grid.Column="2" Text="{Binding PriceText}"
                                            Style="{StaticResource PriceLabel}" VerticalOptions="Center" />
                                     <HorizontalStackLayout Grid.Column="3" Spacing="0" VerticalOptions="Center">
                                         <Button Text="−" Style="{StaticResource TinyStepButton}"
@@ -341,6 +347,9 @@
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
+
+                <!-- ◀ Page x of y ▶ · Show n -->
+                <controls:PagerView Paging="{Binding DishesPager}" ScrollTarget="{x:Reference MyDishesTitle}" />
 
             </VerticalStackLayout>
         </ScrollView>

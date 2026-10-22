@@ -209,8 +209,9 @@
                     <Border Style="{StaticResource WhiteCard}" Padding="6,4">
                         <VerticalStackLayout Spacing="0">
 
-                            <!-- My orders -->
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                            <!-- My orders (only once there's an order; the Orders tab is always there) -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12"
+                                  IsVisible="{Binding HasOrders}">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding MyOrdersCommand}" />
                                 </Grid.GestureRecognizers>
@@ -224,7 +225,27 @@
                                 </VerticalStackLayout>
                                 <Path Grid.Column="2" Style="{StaticResource Chevron}" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0" />
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0"
+                                     IsVisible="{Binding HasOrders}" />
+
+                            <!-- My shipments (only once a parcel has been sent; the menu always has it) -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12"
+                                  IsVisible="{Binding HasShipments}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding MyShipmentsCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource RowIcon}">
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="M3,7 L12,3 L21,7 L21,17 L12,21 L3,17 Z M3,7 L12,11 L21,7 M12,11 L12,21" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="My shipments" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{Binding ShipmentsSummary}" Style="{StaticResource RowSub}" />
+                                </VerticalStackLayout>
+                                <Path Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" Margin="64,0,10,0"
+                                     IsVisible="{Binding HasShipments}" />
 
                             <!-- Delivery addresses -->
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">

@@ -49,6 +49,11 @@ public sealed class AdminUserCard
 {
     public required AdminUserDto User { get; init; }
 
+    /// <summary>Their profile photo, ready to show (null = the person icon).</summary>
+    public string? PhotoUrl { get; init; }
+    public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoUrl);
+    public bool HasNoPhoto => !HasPhoto;
+
     public string FullName => User.FullName;
     public string Email => User.Email;
     public string PhoneText => User.PhoneNumber ?? string.Empty;

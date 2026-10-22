@@ -12,10 +12,12 @@ public partial class ShopSettingsPage : ContentPage
         BindingContext = _vm = vm;
     }
 
-    protected override void OnAppearing()
+    // The shop as it is now (approval, documents reviewed)
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _vm.Load();
+        try { await _vm.LoadAsync(); }
+        catch (Exception) { /* the page says what went wrong; pull down to try again */ }
     }
 
     async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");

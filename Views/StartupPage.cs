@@ -5,8 +5,9 @@ using Phloem.Settings;
 namespace Phloem.Views;
 
 /// <summary>
-/// Shown for a moment when the app opens: loads what every screen needs from the API (the countries), restores the
-/// user's sign-in, then opens the app (<see cref="AppShell"/>).
+/// Shown when the app opens, over the Phloem poster ("Discover African food, one bite closer."): loads what every
+/// screen needs from the API (the countries), restores the user's sign-in, then opens the app (<see cref="AppShell"/>).
+/// The poster stays at least <see cref="MinimumShowTime"/> so it never just flashes by.
 /// </summary>
 /// <remarks>
 /// On a FIRST start without internet there are no countries yet, so it says so and offers "Try again".
@@ -17,7 +18,19 @@ public sealed class StartupPage : ContentPage
     private readonly CountryService _countries;
     private readonly AuthService _auth;
     private readonly ApiSettings _api;
-    private readonly ActivityIndicator _spinner = new() { IsRunning = true, Color = Colors.White };
+    /// <summary>The poster stays on screen at least this long, even when loading is quicker.</summary>
+    private static readonly TimeSpan MinimumShowTime = TimeSpan.FromSeconds(2);
+
+    /// <summary>The app's green (BrandDark), the same as the phone's splash, behind the poster while it loads.</summary>
+    private static readonly Color PosterGreen =
+        Application.Current?.Resources.TryGetValue("BrandDark", out var brand) == true && brand is Color color
+            ? color
+            : Color.FromArgb("#043D1F");
+
+    private readonly ActivityIndicator _spinner = new()
+    {
+        IsRunning = true, Color = Color.FromArgb("#F4A51A"), WidthRequest = 30, HeightRequest = 30
+    };
     private readonly Label _message = new()
     {
         Text = "Loading Phloem…", TextColor = Colors.White, FontSize = 15,
@@ -28,40 +41,55 @@ public sealed class StartupPage : ContentPage
         TextColor = Colors.White, Opacity = 0.6, FontSize = 12, HorizontalTextAlignment = TextAlignment.Center,
         IsVisible = false
     };
-    private readonly Button _retry = new() { Text = "Try again", IsVisible = false };
+    private readonly Button _retry = new()
+    {
+        Text = "Try again", IsVisible = false, BackgroundColor = Color.FromArgb("#F4A51A"),
+        TextColor = Color.FromArgb("#043D1F"), FontAttributes = FontAttributes.Bold, CornerRadius = 22,
+        HeightRequest = 44, Padding = new Thickness(28, 0), HorizontalOptions = LayoutOptions.Center
+    };
     private bool _started;
 
-    /// <summary>Builds the page (no XAML: a logo, a spinner, a message and a retry button).</summary>
+    /// <summary>Builds the page (no XAML): the poster, and at the bottom a spinner, a message and a retry button.</summary>
     public StartupPage(CountryService countries, AuthService auth, IOptions<ApiSettings> api)
     {
         _countries = countries;
         _auth = auth;
         _api = api.Value;
 
-        BackgroundColor = Application.Current?.Resources.TryGetValue("BrandDark", out var brand) == true &&
-                          brand is Color color ? color : Color.FromArgb("#2B3A25");
+        BackgroundColor = PosterGreen;
         Shell.SetNavBarIsVisible(this, false);
 
         _retry.Clicked += async (_, _) => await StartAsync();
 
-        Content = new VerticalStackLayout
+        // Status at the bottom, on a soft dark fade so it reads over the food
+        var status = new Grid
         {
-            Spacing = 18,
-            Padding = 32,
-            VerticalOptions = LayoutOptions.Center,
-            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.End,
+            Padding = new Thickness(32, 60, 32, 48),
+            Background = new LinearGradientBrush(
+                new GradientStopCollection
+                {
+                    new GradientStop(Color.FromArgb("#00012411"), 0f),
+                    new GradientStop(Color.FromArgb("#E6012411"), 0.55f)
+                },
+                new Point(0, 0), new Point(0, 1)),
             Children =
             {
-                new Image { Source = "header_logo.png", WidthRequest = 72, HeightRequest = 72 },
-                new Label
+                new VerticalStackLayout
                 {
-                    Text = "Phloem", TextColor = Colors.White, FontSize = 28, FontAttributes = FontAttributes.Bold,
-                    HorizontalTextAlignment = TextAlignment.Center
-                },
-                _spinner,
-                _message,
-                _details,
-                _retry
+                    Spacing = 12,
+                    HorizontalOptions = LayoutOptions.Center,
+                    Children = { _spinner, _message, _details, _retry }
+                }
+            }
+        };
+
+        Content = new Grid
+        {
+            Children =
+            {
+                new Image { Source = "splash_poster.jpg", Aspect = Aspect.AspectFill },
+                status
             }
         };
     }
@@ -82,6 +110,7 @@ public sealed class StartupPage : ContentPage
         _details.IsVisible = false;
         _spinner.IsRunning = true;
         _message.Text = "Loading Phloem…";
+        var shown = System.Diagnostics.Stopwatch.StartNew();
 
         if (!await _countries.LoadAsync())
         {
@@ -107,6 +136,10 @@ public sealed class StartupPage : ContentPage
         {
             // Never block the app because of the sign-in: the user can sign in by hand
         }
+
+        // Let the poster be seen, even on a fast connection
+        var left = MinimumShowTime - shown.Elapsed;
+        if (left > TimeSpan.Zero) await Task.Delay(left);
 
         if (Window is not null) Window.Page = new AppShell();
     }

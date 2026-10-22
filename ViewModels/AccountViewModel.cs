@@ -14,17 +14,17 @@ public partial class AccountViewModel : ObservableObject
 {
     private readonly SessionService _session;
     private readonly AuthService _auth;
-    private readonly MockDataService _data;
-    private readonly OrderHistoryService _history;
+    private readonly OrderService _orders;
+    private readonly ShipmentService _shipments;
     private readonly DeliveryAddressService _delivery;
 
-    public AccountViewModel(SessionService session, AuthService auth, MockDataService data,
-                            OrderHistoryService history, DeliveryAddressService delivery)
+    public AccountViewModel(SessionService session, AuthService auth, OrderService orders, ShipmentService shipments,
+                            DeliveryAddressService delivery)
     {
         _session = session;
         _auth = auth;
-        _data = data;
-        _history = history;
+        _orders = orders;
+        _shipments = shipments;
         _delivery = delivery;
     }
 
@@ -62,10 +62,8 @@ public partial class AccountViewModel : ObservableObject
 
     public bool IsAdmin => _session.IsAdmin;
 
-    /// <summary>True when this user has opened a shop (from the API; the mock shops still count until the
-    /// seller screens are wired).</summary>
-    public bool IsSeller => _session.HasShop ||
-                            (_session.CurrentUser is { } u && _data.Vendors.Any(v => v.UserId == u.Id));
+    /// <summary>True when this user has opened a shop.</summary>
+    public bool IsSeller => _session.HasShop;
 
     public string RoleText => IsAdmin ? "Admin" : IsSeller ? "Seller" : "Customer";
     public string SellerLinkText => IsSeller ? "Seller dashboard" : "Become a seller";
@@ -81,14 +79,24 @@ public partial class AccountViewModel : ObservableObject
         }
     }
 
-    public string OrdersSummary
-    {
-        get
-        {
-            var count = _history.Orders.Count;
-            return count == 0 ? "No orders yet" : $"{count} order(s) placed";
-        }
-    }
+    /// <summary>How many orders I've placed (from the server); 0 until counted.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOrders), nameof(OrdersSummary))]
+    public partial int OrdersCount { get; set; }
+
+    /// <summary>How many parcels I've sent (from the server); 0 until counted.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasShipments), nameof(ShipmentsSummary))]
+    public partial int ShipmentsCount { get; set; }
+
+    /// <summary>"My orders" shows only once there's an order (the Orders tab is always there).</summary>
+    public bool HasOrders => IsLoggedIn && OrdersCount > 0;
+
+    /// <summary>"My shipments" shows only once a parcel has been sent (the menu always has it).</summary>
+    public bool HasShipments => IsLoggedIn && ShipmentsCount > 0;
+
+    public string OrdersSummary => OrdersCount == 1 ? "1 order placed" : $"{OrdersCount} orders placed";
+    public string ShipmentsSummary => ShipmentsCount == 1 ? "1 parcel sent" : $"{ShipmentsCount} parcels sent";
 
     public string NotificationsSummary
     {
@@ -110,15 +118,42 @@ public partial class AccountViewModel : ObservableObject
             nameof(Country), nameof(MemberSince), nameof(Initials), nameof(IsAdmin), nameof(IsSeller),
             nameof(RoleText), nameof(SellerLinkText), nameof(SellerLinkSubtitle),
             nameof(AddressSummary), nameof(OrdersSummary),
-            nameof(PhotoPath), nameof(HasPhoto), nameof(HasNoPhoto), nameof(NotificationsSummary)
+            nameof(PhotoPath), nameof(HasPhoto), nameof(HasNoPhoto), nameof(NotificationsSummary),
+            nameof(HasOrders), nameof(HasShipments)
         })
             OnPropertyChanged(name);
+
+        _ = CountAsync();
+    }
+
+    /// <summary>How many orders and parcels I have (one item each is enough: the server returns the total).</summary>
+    private async Task CountAsync()
+    {
+        if (!IsLoggedIn)
+        {
+            OrdersCount = ShipmentsCount = 0;
+            return;
+        }
+
+        try
+        {
+            var orders = _orders.GetMyOrdersAsync(page: 1, pageSize: 1);
+            var parcels = _shipments.GetMineAsync(page: 1, pageSize: 1);
+            await Task.WhenAll(orders, parcels);
+            if (orders.Result.IsSuccess) OrdersCount = orders.Result.Value!.TotalCount;
+            if (parcels.Result.IsSuccess) ShipmentsCount = parcels.Result.Value!.TotalCount;
+        }
+        catch (Exception)
+        {
+            // Couldn't reach the server: the rows show as they were
+        }
     }
 
     // ---------- Navigation (pages open on top of the Account tab) ----------
     [RelayCommand] private async Task Login()        => await Shell.Current.GoToAsync("login");
     [RelayCommand] private async Task Register()     => await Shell.Current.GoToAsync("register");
     [RelayCommand] private async Task MyOrders()     => await Shell.Current.GoToAsync("//orders");
+    [RelayCommand] private async Task MyShipments()  => await Shell.Current.GoToAsync("myshipments");
     [RelayCommand] private async Task Addresses()    => await Shell.Current.GoToAsync("address");
     [RelayCommand] private async Task SellerArea()   => await Shell.Current.GoToAsync(IsSeller ? "dashboard" : "sellersetup");
     [RelayCommand] private async Task AdminArea()    => await Shell.Current.GoToAsync("admin");

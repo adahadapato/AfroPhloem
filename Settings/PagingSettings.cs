@@ -15,6 +15,7 @@ public static class PagedLists
     public const string AdminShops = nameof(AdminShops);
     public const string AdminUsers = nameof(AdminUsers);
     public const string AdminShipments = nameof(AdminShipments);
+    public const string AdminDishNames = nameof(AdminDishNames);
 }
 
 /// <summary>

@@ -32,6 +32,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("adminshipments", typeof(AdminShipmentsPage));     // Admin → All shipments
         Routing.RegisterRoute("adminshop", typeof(AdminShopDetailsPage));        // Admin → one shop + documents
         Routing.RegisterRoute("shoporder", typeof(ShopOrderDetailsPage));        // Seller dashboard → one order
+        Routing.RegisterRoute("admindishes", typeof(AdminDishCatalogPage));      // Admin → dish names & price ranges
 
         // Checkout (was already reached with GoToAsync(nameof(CheckoutPage))).
         Routing.RegisterRoute(nameof(CheckoutPage), typeof(CheckoutPage));

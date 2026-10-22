@@ -12,6 +12,14 @@ public partial class DishEditorPage : ContentPage
         BindingContext = _vm = vm;
     }
 
+    // My shop and the dish list with today's allowed prices
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        try { await _vm.LoadAsync(); }
+        catch (Exception) { /* the page says what went wrong */ }
+    }
+
     // ← back (closes the dish list first if it's open)
     async void OnBackTapped(object? sender, TappedEventArgs e)
     {

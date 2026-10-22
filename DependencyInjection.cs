@@ -75,6 +75,7 @@ public static class DependencyInjection
         services.AddTransient<AdminShipmentRoutesViewModel>();
         services.AddTransient<AdminShopDetailsViewModel>();
         services.AddTransient<ShopOrderDetailsViewModel>();
+        services.AddTransient<AdminDishCatalogViewModel>();
 
 
 
@@ -107,5 +108,6 @@ public static class DependencyInjection
         services.AddTransient<AdminShipmentRoutesPage>();
         services.AddTransient<AdminShopDetailsPage>();
         services.AddTransient<ShopOrderDetailsPage>();
+        services.AddTransient<AdminDishCatalogPage>();
     }
 }

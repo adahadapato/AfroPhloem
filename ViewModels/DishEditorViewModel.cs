@@ -1,9 +1,14 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Phloem.Models;
+using Microsoft.Extensions.Options;
 using Phloem.Services;
+using Phloem.Services.Api;
+using Phloem.Services.Api.Contracts.Commands;
+using Phloem.Services.Api.Contracts.Dtos;
+using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
@@ -20,40 +25,46 @@ public class DishGroup : List<CatalogDish>
 }
 
 /// <summary>
-/// Add / edit a dish (Seller dashboard). The name comes from the fixed dish list, plus an
-/// optional detail ("&amp; Chicken"); the photo comes from the camera or gallery.
+/// Add / edit a dish (Seller dashboard), on the API. The name comes from the dish list (with the allowed price range
+/// in the shop's country), plus an optional detail ("&amp; Chicken"); the photo from the camera or gallery.
 ///   Add:  GoToAsync("dishedit")
-///   Edit: GoToAsync("dishedit", new Dictionary&lt;string, object&gt; { ["Dish"] = dish })
+///   Edit: GoToAsync("dishedit", new Dictionary&lt;string, object&gt; { ["MyDish"] = myDishDto })
 /// </summary>
 public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly MockDataService _data;
-    private readonly SessionService _session;
+    private readonly SellerService _seller;
     private readonly DishCatalogService _catalog;
+    private readonly ApiSettings _api;
 
-    private Dish? _editing;          // null = adding a new dish
-    private Vendor? _vendor;
+    private MyDishDto? _editing;          // null = adding a new dish
+    private MyShopDto? _shop;
+    private FileResult? _pickedPhoto;     // a new photo to upload on Save
+    private Guid? _existingPhotoId;       // the dish's current photo (edit)
+    private bool _removeExistingPhoto;
+    private bool _saving;
 
-    public DishEditorViewModel(MockDataService data, SessionService session, DishCatalogService catalog)
+    public DishEditorViewModel(SellerService seller, DishCatalogService catalog, IOptions<ApiSettings> api)
     {
-        _data = data;
-        _session = session;
+        _seller = seller;
         _catalog = catalog;
-        _vendor = FindMyShop();
-        BuildPickerGroups();
+        _api = api.Value;
     }
 
     // ---------- Page state ----------
     public bool IsEditing => _editing is not null;
     public string PageTitle => IsEditing ? "Edit dish" : "Add a dish";
-    public string PageSubtitle => _vendor is null ? "Your shop" : $"For {_vendor.Name}";
+    public string PageSubtitle => _shop is null ? "Your shop" : $"For {_shop.Name}";
+
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
 
     /// <summary>Quick detail chips under the dish name.</summary>
-    public IReadOnlyList<string> DetailChips { get; } = new[] { "& Chicken", "& Fish", "& Beef", "& Goat", "Spicy", "Vegetarian", "Large" };
+    public IReadOnlyList<string> DetailChips { get; } = ["& Chicken", "& Fish", "& Beef", "& Goat", "Spicy", "Vegetarian", "Large"];
 
     // ---------- Name (from the list) ----------
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasBaseDish), nameof(FullName), nameof(CategoryText), nameof(PreviewName))]
+    [NotifyPropertyChangedFor(nameof(HasBaseDish), nameof(FullName), nameof(CategoryText), nameof(PreviewName),
+                              nameof(PriceRangeText))]
     public partial CatalogDish? BaseDish { get; set; }
 
     [ObservableProperty]
@@ -84,10 +95,20 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     [ObservableProperty]
     public partial bool IsAvailable { get; set; } = true;
 
+    /// <summary>The shop's currency symbol, e.g. "GH₵".</summary>
+    public string CurrencySymbol => _shop is null ? string.Empty : OrderService.SymbolOf(_shop.Currency);
+
+    /// <summary>"Allowed: GH₵40 – GH₵90" for the chosen name.</summary>
+    public string PriceRangeText => BaseDish is null
+        ? "Choose the dish name to see the allowed price."
+        : BaseDish.HasPriceRange
+            ? $"Allowed: {BaseDish.RangeText}"
+            : "Phloem hasn't set a price range for this name yet, so it can't be sold yet.";
+
     // ---------- Live preview card ----------
     public string PreviewName => HasBaseDish ? FullName : "Your dish name";
-    public string PreviewPrice => TryGetPrice(out var p) ? $"£{p:0.00}" : "£0.00";
-    public string PreviewVendor => _vendor?.Name ?? "Your shop";
+    public string PreviewPrice => $"{CurrencySymbol}{(TryGetPrice(out var p) ? p : 0m):0.00}";
+    public string PreviewVendor => _shop?.Name ?? "Your shop";
     public string PreviewImage => HasPhoto ? PhotoPath! : "hero_food_photo.png";
 
     // ---------- Status banner ----------
@@ -122,59 +143,90 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("Dish", out var value) && value is Dish dish)
-            LoadForEdit(dish);
+        _editing = query.TryGetValue("MyDish", out var value) && value is MyDishDto dish ? dish : null;
         query.Clear();
-    }
 
-    private void LoadForEdit(Dish dish)
-    {
-        _editing = dish;
-        var (baseDish, detail) = _catalog.Split(dish.Name, _vendor?.Country);
-        BaseDish = baseDish;
-        Detail = detail;
-        PriceText = dish.Price.ToString("0.00", CultureInfo.InvariantCulture);
-        Description = dish.Description ?? string.Empty;
-        IsAvailable = dish.IsAvailable;
-        PhotoPath = string.IsNullOrWhiteSpace(dish.ImageUrl) ? null : dish.ImageUrl;
-
-        if (baseDish is null)
-        {
-            IsError = true;
-            StatusMessage = "This dish's name isn't in the dish list yet. Please choose the closest name.";
-        }
+        _pickedPhoto = null;
+        _removeExistingPhoto = false;
+        _existingPhotoId = _editing?.Photos.FirstOrDefault()?.Id;
+        BaseDish = null;
+        Detail = _editing?.Detail ?? string.Empty;
+        PriceText = _editing?.Price.ToString("0.00", CultureInfo.InvariantCulture) ?? string.Empty;
+        Description = _editing?.Description ?? string.Empty;
+        IsAvailable = _editing?.IsAvailable ?? true;
+        PhotoPath = _api.ResolveFileUrl(_editing?.Photos.FirstOrDefault()?.Url);
+        StatusMessage = string.Empty;
+        IsError = false;
 
         OnPropertyChanged(nameof(IsEditing));
         OnPropertyChanged(nameof(PageTitle));
     }
 
-    private Vendor? FindMyShop()
+    /// <summary>Called when the page appears: my shop (country, currency) and the dish list with its prices.</summary>
+    public async Task LoadAsync()
     {
-        var userId = _session.CurrentUser?.Id;
-        return _data.Vendors.FirstOrDefault(v => userId != null && v.UserId == userId)
-               ?? _data.Vendors.FirstOrDefault();   // demo fallback, same as the dashboard
+        IsLoading = true;
+        try
+        {
+            var shop = await _seller.GetMyShopAsync();
+            if (shop.IsFailure)
+            {
+                ShowError(shop.Error!.Status == 404
+                    ? "Open your shop first (Become a Seller)."
+                    : shop.Error.DisplayMessage);
+                return;
+            }
+
+            _shop = shop.Value;
+            foreach (var name in new[] { nameof(PageSubtitle), nameof(CurrencySymbol), nameof(PreviewPrice),
+                                         nameof(PreviewVendor) })
+                OnPropertyChanged(name);
+
+            var problem = await _catalog.LoadAsync(_shop!.Country);
+            if (problem is not null)
+            {
+                ShowError(problem);
+                return;
+            }
+
+            BuildPickerGroups();
+            if (_editing is not null && BaseDish is null)
+                BaseDish = _catalog.Dishes.FirstOrDefault(d => d.Id == _editing.DishCatalogId);
+
+            if (_editing?.NeedsPriceUpdate == true)
+                ShowError($"Phloem changed the allowed price for {_editing.CatalogName}. Please set a new price.");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private void BuildPickerGroups()
     {
         var search = PickerSearch?.Trim() ?? string.Empty;
-        var myCountry = _vendor?.Country;
+        var myGroup = _shop is null ? (CatalogGroup?)null : DishCatalogService.GroupFor(_shop.Country);
 
         var groups = _catalog.Dishes
             .Where(d => search.Length == 0 || d.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(d => d.Group)
-            // seller's own country first, then the rest
-            .OrderByDescending(g => g.Key == myCountry)
-            .ThenBy(g => g.Key switch { "Ghana" => 0, "Nigeria" => 1, "West African" => 2, "Snacks" => 3, _ => 4 })
-            .Select(g => new DishGroup(g.Key, g.First().GroupIcon, g.OrderBy(d => d.Name)));
+            .GroupBy(d => d.ApiGroup)
+            .OrderByDescending(g => g.Key == myGroup)   // the seller's own country first
+            .ThenBy(g => g.Key)
+            .Select(g => new DishGroup(g.First().Group, g.First().GroupIcon,
+                                       g.OrderByDescending(d => d.HasPriceRange).ThenBy(d => d.Name)));
 
         PickerGroups.Clear();
         foreach (var g in groups) PickerGroups.Add(g);
     }
 
-    private bool TryGetPrice(out decimal price) =>
-        decimal.TryParse(PriceText?.Replace("£", "").Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out price)
-        || decimal.TryParse(PriceText?.Replace("£", "").Trim(), NumberStyles.Number, CultureInfo.CurrentCulture, out price);
+    /// <summary>The typed price ("8.50", "8,50", with or without the currency symbol); false when there's none.</summary>
+    private bool TryGetPrice(out decimal price)
+    {
+        var text = PriceText ?? string.Empty;
+        if (CurrencySymbol.Length > 0) text = text.Replace(CurrencySymbol, string.Empty);
+        price = InternationalDeliveryViewModel.ParseDecimal(text.Trim()) ?? 0m;
+        return price > 0;
+    }
 
     // ---------- Picker ----------
     [RelayCommand]
@@ -220,14 +272,31 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
             return;
         }
 
-        _catalog.Suggest(SuggestName, SuggestCategory, _vendor?.Country ?? "West African",
-                         _vendor?.Name ?? _session.CurrentUser?.FullName ?? "A seller");
+        var category = SuggestCategory switch
+        {
+            "Snacks" => DishCategory.Snacks,
+            "Drinks" => DishCategory.Drinks,
+            _ => DishCategory.LocalMeals
+        };
+        var group = category switch
+        {
+            DishCategory.Snacks => CatalogGroup.Snacks,
+            DishCategory.Drinks => CatalogGroup.Drinks,
+            _ => _shop is null ? CatalogGroup.WestAfrican : DishCatalogService.GroupFor(_shop.Country)
+        };
+
+        var result = await _catalog.SuggestAsync(SuggestName, category, group);
+        if (result.IsFailure)
+        {
+            await Shell.Current.DisplayAlertAsync("Couldn't send", result.Error!.DisplayMessage, "OK");
+            return;
+        }
 
         IsSuggesting = false;
         IsPickerOpen = false;
         IsError = false;
         StatusMessage = $"Thanks! \"{SuggestName.Trim()}\" was sent to Phloem for approval. " +
-                        "Once approved you'll find it in the dish list.";
+                        "Once it's approved and priced you'll find it in the dish list.";
         SuggestName = string.Empty;
     }
 
@@ -242,8 +311,7 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
                 await Shell.Current.DisplayAlertAsync("Camera", "This device can't take photos. Choose one from your gallery instead.", "OK");
                 return;
             }
-            var photo = await MediaPicker.Default.CapturePhotoAsync();
-            if (photo is not null) PhotoPath = photo.FullPath;   // the backend will upload this later
+            UsePhoto(await MediaPicker.Default.CapturePhotoAsync());
         }
         catch (PermissionException)
         {
@@ -260,13 +328,21 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     {
         try
         {
-            var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 }))?.FirstOrDefault();
-            if (photo is not null) PhotoPath = photo.FullPath;   // the backend will upload this later
+            UsePhoto((await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 }))?.FirstOrDefault());
         }
         catch (Exception ex)
         {
             await Shell.Current.DisplayAlertAsync("Couldn't open gallery", ex.Message, "OK");
         }
+    }
+
+    /// <summary>A new photo replaces the current one (uploaded on Save).</summary>
+    private void UsePhoto(FileResult? photo)
+    {
+        if (photo is null) return;
+        _pickedPhoto = photo;
+        if (_existingPhotoId is not null) _removeExistingPhoto = true;
+        PhotoPath = photo.FullPath;
     }
 
     [RelayCommand]
@@ -279,22 +355,41 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     }
 
     [RelayCommand]
-    private void RemovePhoto() => PhotoPath = null;
+    private void RemovePhoto()
+    {
+        _pickedPhoto = null;
+        if (_existingPhotoId is not null) _removeExistingPhoto = true;
+        PhotoPath = null;
+    }
 
     // ---------- Save / delete ----------
     [RelayCommand]
     private async Task Save()
     {
+        if (_saving) return;
+        if (_shop is null)
+        {
+            ShowError("Open your shop first (Become a Seller).");
+            return;
+        }
         if (BaseDish is null)
         {
-            IsError = true;
-            StatusMessage = "Please choose a dish name from the list.";
+            ShowError("Please choose a dish name from the list.");
+            return;
+        }
+        if (!BaseDish.HasPriceRange)
+        {
+            ShowError($"{BaseDish.Name} can't be sold yet: Phloem hasn't set its price range. Please choose another name.");
             return;
         }
         if (!TryGetPrice(out var price) || price <= 0)
         {
-            IsError = true;
-            StatusMessage = "Please enter a price, e.g. 8.50";
+            ShowError($"Please enter a price, e.g. {BaseDish.MinPrice:0.##}");
+            return;
+        }
+        if (price < BaseDish.MinPrice || price > BaseDish.MaxPrice)
+        {
+            ShowError($"The price for {BaseDish.Name} must be between {BaseDish.RangeText}.");
             return;
         }
         if (!HasPhoto)
@@ -304,42 +399,60 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
             if (!go) { await PhotoOptions(); return; }
         }
 
-        if (_editing is null)
+        _saving = true;
+        IsLoading = true;
+        try
         {
-            if (_vendor is null)
+            var detail = string.IsNullOrWhiteSpace(Detail) ? null : Detail.Trim();
+            var description = string.IsNullOrWhiteSpace(Description) ? null : Description.Trim();
+
+            Guid dishId;
+            if (_editing is null)
             {
-                IsError = true;
-                StatusMessage = "Set up your seller shop first.";
-                return;
+                var created = await _seller.CreateDishAsync(
+                    new CreateDishCommand(BaseDish.Id, detail, price, description, IsAvailable));
+                if (created.IsFailure)
+                {
+                    ShowError(created.Error!.DisplayMessage);
+                    return;
+                }
+                dishId = created.Value;
+            }
+            else
+            {
+                dishId = _editing.Id;
+                var updated = await _seller.UpdateDishAsync(dishId,
+                    new DishRequest(BaseDish.Id, detail, price, description, IsAvailable));
+                if (updated.IsFailure)
+                {
+                    ShowError(updated.Error!.DisplayMessage);
+                    return;
+                }
             }
 
-            _data.Dishes.Add(new Dish
-            {
-                Name = FullName,
-                CatalogName = BaseDish.Name,
-                Category = BaseDish.Category,
-                Price = price,
-                Rating = 0,
-                Country = _vendor.Country,
-                VendorName = _vendor.Name,
-                VendorId = _vendor.Id,
-                ImageUrl = PhotoPath ?? string.Empty,
-                Description = Description.Trim(),
-                IsAvailable = IsAvailable
-            });
-        }
-        else
-        {
-            _editing.Name = FullName;
-            _editing.CatalogName = BaseDish.Name;
-            _editing.Category = BaseDish.Category;
-            _editing.Price = price;
-            _editing.ImageUrl = PhotoPath ?? string.Empty;
-            _editing.Description = Description.Trim();
-            _editing.IsAvailable = IsAvailable;
-        }
+            // The photo: remove the old one if it was replaced or removed, then upload the new one
+            if (_removeExistingPhoto && _existingPhotoId is { } oldPhoto)
+                await _seller.RemoveDishPhotoAsync(dishId, oldPhoto);
 
-        await Shell.Current.GoToAsync("..");
+            if (_pickedPhoto is not null)
+            {
+                await using var stream = await _pickedPhoto.OpenReadAsync();
+                var contentType = string.IsNullOrWhiteSpace(_pickedPhoto.ContentType) ? "image/jpeg" : _pickedPhoto.ContentType;
+                var photo = await _seller.AddDishPhotoAsync(dishId, stream, _pickedPhoto.FileName, contentType);
+                if (photo.IsFailure)
+                {
+                    await Shell.Current.DisplayAlertAsync("Dish saved, photo not",
+                        $"The dish was saved, but its photo couldn't be: {photo.Error!.DisplayMessage}", "OK");
+                }
+            }
+
+            await Shell.Current.GoToAsync("..");
+        }
+        finally
+        {
+            _saving = false;
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -347,10 +460,22 @@ public partial class DishEditorViewModel : ObservableObject, IQueryAttributable
     {
         if (_editing is null) return;
         var ok = await Shell.Current.DisplayAlertAsync("Delete this dish?",
-            $"{_editing.Name} will be removed from your shop.", "Delete", "Keep");
+            $"{_editing.Name} will be removed from your shop. Past orders still show it.", "Delete", "Keep");
         if (!ok) return;
 
-        _data.Dishes.Remove(_editing);
+        var result = await _seller.DeleteDishAsync(_editing.Id);
+        if (result.IsFailure)
+        {
+            ShowError(result.Error!.DisplayMessage);
+            return;
+        }
+
         await Shell.Current.GoToAsync("..");
+    }
+
+    private void ShowError(string message)
+    {
+        IsError = true;
+        StatusMessage = message;
     }
 }

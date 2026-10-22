@@ -187,7 +187,7 @@
                             <Label Text="Price" Style="{StaticResource FieldLabel}" />
                             <Border Style="{StaticResource FieldBox}" HeightRequest="48">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                                    <Label Text="£" FontSize="16" FontAttributes="Bold"
+                                    <Label Text="{Binding CurrencySymbol}" FontSize="16" FontAttributes="Bold"
                                            TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
                                     <Entry Grid.Column="1" Text="{Binding PriceText}" Placeholder="8.50" Keyboard="Numeric"
                                            BackgroundColor="Transparent" FontSize="15"
@@ -195,6 +195,9 @@
                                            PlaceholderColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
                                 </Grid>
                             </Border>
+                            <!-- The allowed range for the chosen name, in the shop's currency -->
+                            <Label Text="{Binding PriceRangeText}" FontSize="12" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandGreen}" Margin="2,6,0,0" />
                         </VerticalStackLayout>
 
                         <!-- Description -->
@@ -335,11 +338,19 @@
                                             Command="{Binding BindingContext.PickDishCommand, Source={x:Reference RootPage}}"
                                             CommandParameter="{Binding .}" />
                                     </Border.GestureRecognizers>
-                                    <Grid ColumnDefinitions="*,Auto">
+                                    <Border.Triggers>
+                                        <!-- No price range yet: can't be sold, shown faded -->
+                                        <DataTrigger TargetType="Border" Binding="{Binding HasPriceRange}" Value="False">
+                                            <Setter Property="Opacity" Value="0.55" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8">
                                         <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
                                                TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
                                         <Label Grid.Column="1" Text="{Binding Category}" FontSize="11"
                                                TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
+                                        <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding RangeText}" FontSize="12"
+                                               TextColor="{StaticResource BrandTextMuted}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>

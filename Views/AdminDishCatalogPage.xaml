@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AdminDishCatalogPage: Admin → Dish names & price ranges (route "admindishes").
+    Every approved dish name with its allowed price per country. Tap a name to set a country's range.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:models="clr-namespace:Phloem.Models"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
+             xmlns:phloem="clr-namespace:Phloem"
+             x:DataType="vm:AdminDishCatalogViewModel"
+             x:Class="Phloem.Views.AdminDishCatalogPage"
+             Shell.NavBarIsVisible="False"
+             Title="Dish names &amp; prices">
+
+    <ContentPage.Resources>
+        <Style x:Key="FieldBox" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="{StaticResource BrandBorder}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HeightRequest" Value="46" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10" WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start" Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round" WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <controls:StatusBanner Grid.Row="1" Message="{Binding Message}" IsError="{Binding IsError}" Margin="16,10,16,0" />
+
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsLoading}" Command="{Binding RefreshCommand}"
+                     RefreshColor="{StaticResource BrandDark}">
+        <ScrollView x:Name="PageScroll">
+            <VerticalStackLayout Padding="16,14,16,28" Spacing="12" MaximumWidthRequest="620" HorizontalOptions="Fill">
+
+                <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
+                    <Label Text="Dish names &amp; prices" FontSize="26" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" />
+                    <Label Text="{Binding SummaryText}" Style="{StaticResource SubtleLabel}" FontSize="13" />
+                </VerticalStackLayout>
+
+                <!-- ============ RANGE FORM (after tapping a name) ============ -->
+                <Border BackgroundColor="White" Stroke="{StaticResource BrandGold}" StrokeThickness="1.5"
+                        StrokeShape="RoundRectangle 18" Padding="16" IsVisible="{Binding IsEditing}">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.08" Radius="12" Offset="0,3" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="{Binding FormTitle}" FontSize="17" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" />
+
+                        <!-- Country chips -->
+                        <FlexLayout BindableLayout.ItemsSource="{Binding Countries}" Wrap="Wrap">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CountryOption">
+                                    <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 16" Padding="12,6" Margin="0,0,8,8">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding ChooseCountryCommand, Source={RelativeSource AncestorType={x:Type vm:AdminDishCatalogViewModel}}}"
+                                                CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <Label Text="{Binding Display}" FontSize="13" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandDark}" />
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+
+                        <Label Text="{Binding CurrencyText}" FontSize="13" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandGreen}" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Lowest price" FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding MinPrice}" Keyboard="Numeric" Placeholder="e.g. 40"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Highest price" FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+                                <Border Style="{StaticResource FieldBox}">
+                                    <Entry Text="{Binding MaxPrice}" Keyboard="Numeric" Placeholder="e.g. 90"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Label Text="Sellers whose dish is outside a new range are emailed to change its price."
+                               FontSize="12" TextColor="{StaticResource BrandTextMuted}" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Text="Cancel" Command="{Binding CancelEditCommand}"
+                                    BackgroundColor="White" TextColor="{StaticResource BrandDark}"
+                                    BorderColor="{StaticResource BrandMint}" BorderWidth="1.5"
+                                    FontAttributes="Bold" CornerRadius="12" HeightRequest="46" />
+                            <Button Grid.Column="1" Text="Save range" Command="{Binding SaveRangeCommand}"
+                                    BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                    FontAttributes="Bold" CornerRadius="12" HeightRequest="46" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ SEARCH + FILTER ============ -->
+                <Border Style="{StaticResource FieldBox}">
+                    <Entry Text="{Binding Search}" Placeholder="Search dish names" ReturnType="Search"
+                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                </Border>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="4">
+                    <CheckBox IsChecked="{Binding NeedsPriceOnly}" Color="{StaticResource BrandDark}" />
+                    <Label Grid.Column="1" Text="Only names without a price somewhere" FontSize="13"
+                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                </Grid>
+
+                <!-- ============ NAMES ============ -->
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Names}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DishNameCard">
+                            <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 14" Padding="14,12">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding NeedsPrice}" Value="True">
+                                        <Setter Property="Stroke" Value="{StaticResource BrandOrange}" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding EditCommand, Source={RelativeSource AncestorType={x:Type vm:AdminDishCatalogViewModel}}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandTextDark}" />
+                                        <Label Grid.Column="1" Text="Set price  ›" FontSize="12" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandGreen}" VerticalOptions="Center" />
+                                    </Grid>
+                                    <Label Text="{Binding GroupText}" FontSize="11" TextColor="{StaticResource BrandTextMuted}" />
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding Ranges}" Wrap="Wrap">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:PriceRangeChip">
+                                                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 10" Padding="8,4" Margin="0,0,6,6">
+                                                    <Border.Triggers>
+                                                        <DataTrigger TargetType="Border" Binding="{Binding IsSet}" Value="False">
+                                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandPeach}" />
+                                                        </DataTrigger>
+                                                    </Border.Triggers>
+                                                    <Label Text="{Binding Text}" FontSize="12" FontAttributes="Bold"
+                                                           TextColor="{StaticResource BrandDark}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- ◀ Page x of y ▶ · Show n -->
+                <controls:PagerView Paging="{Binding Pager}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

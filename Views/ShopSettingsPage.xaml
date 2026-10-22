@@ -1,7 +1,8 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
-    ShopSettingsPage (NEW): Seller dashboard → Shop settings (route "shopsettings").
-    Business details only; personal details are on My account → Edit profile.
+    ShopSettingsPage: Seller dashboard → Shop settings (route "shopsettings"), on the API.
+    Approval status, pictures, details, delivery fee, "orders for today close at", documents.
+    Personal details are on My account → Edit profile.
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -28,9 +29,48 @@
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="HeightRequest" Value="50" />
         </Style>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+            <Setter Property="Padding" Value="16,18" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CardTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextDark}" />
+        </Style>
+        <Style x:Key="Hint" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <Style x:Key="SaveButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HeightRequest" Value="48" />
+        </Style>
+        <Style x:Key="PillButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="TextColor" Value="{StaticResource BrandDark}" />
+            <Setter Property="BorderColor" Value="{StaticResource BrandMint}" />
+            <Setter Property="BorderWidth" Value="1.5" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="HeightRequest" Value="34" />
+            <Setter Property="Padding" Value="14,0" />
+        </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- ============ GREEN HEADER (back arrow) ============ -->
         <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
@@ -55,8 +95,14 @@
             </Grid>
         </Grid>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="16,18,16,28" Spacing="14" MaximumWidthRequest="560" HorizontalOptions="Fill">
+        <!-- Saved / why it didn't work: always in view, whatever card was used -->
+        <controls:StatusBanner Grid.Row="1" Message="{Binding StatusMessage}" IsError="{Binding IsError}"
+                               Margin="16,10,16,0" />
+
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsLoading}" Command="{Binding RefreshCommand}"
+                     RefreshColor="{StaticResource BrandDark}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16,14,16,28" Spacing="14" MaximumWidthRequest="560" HorizontalOptions="Fill">
 
                 <VerticalStackLayout Spacing="2" Margin="2,0,0,0">
                     <Label Text="Shop settings" FontSize="26" FontAttributes="Bold" TextColor="{StaticResource BrandTextDark}" />
@@ -65,7 +111,7 @@
 
                 <!-- ============ APPROVAL STATUS ============ -->
                 <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="14,12"
-                        BackgroundColor="{StaticResource BrandMintPale}">
+                        BackgroundColor="{StaticResource BrandMintPale}" IsVisible="{Binding HasShop}">
                     <Border.Triggers>
                         <DataTrigger TargetType="Border" Binding="{Binding IsNotLive}" Value="True">
                             <Setter Property="BackgroundColor" Value="{StaticResource BrandPeach}" />
@@ -85,12 +131,45 @@
                     </Grid>
                 </Border>
 
+                <!-- ============ PICTURES: cover photo with the logo on it ============ -->
+                <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasShop}">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid HeightRequest="150">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 18,18,0,0">
+                                <Image Source="{Binding CoverPhotoUrl}" Aspect="AspectFill" />
+                            </Border>
+                            <Border WidthRequest="76" HeightRequest="76" StrokeShape="Ellipse" StrokeThickness="3"
+                                    Stroke="White" BackgroundColor="{StaticResource BrandMintPale}"
+                                    HorizontalOptions="Start" VerticalOptions="End" Margin="16,0,0,-30">
+                                <Image Source="{Binding LogoUrl}" Aspect="AspectFill" />
+                            </Border>
+                        </Grid>
+                        <VerticalStackLayout Padding="16,40,16,16" Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="Logo" Style="{StaticResource FieldLabel}" VerticalOptions="Center" Margin="2,0,0,0" />
+                                <Button Grid.Column="1" Text="Change" Style="{StaticResource PillButton}"
+                                        Command="{Binding ChangeLogoCommand}" />
+                                <Button Grid.Column="2" Text="Remove" Style="{StaticResource PillButton}"
+                                        TextColor="{StaticResource BrandDanger}" Command="{Binding RemoveLogoCommand}"
+                                        IsVisible="{Binding HasLogo}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label Text="Cover photo" Style="{StaticResource FieldLabel}" VerticalOptions="Center" Margin="2,0,0,0" />
+                                <Button Grid.Column="1" Text="Change" Style="{StaticResource PillButton}"
+                                        Command="{Binding ChangeCoverPhotoCommand}" />
+                                <Button Grid.Column="2" Text="Remove" Style="{StaticResource PillButton}"
+                                        TextColor="{StaticResource BrandDanger}" Command="{Binding RemoveCoverPhotoCommand}"
+                                        IsVisible="{Binding HasCoverPhoto}" />
+                            </Grid>
+                            <Label Text="Shops with a logo and cover photo get more orders." Style="{StaticResource Hint}" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- ============ BUSINESS DETAILS ============ -->
-                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="16,18">
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Opacity="0.06" Radius="12" Offset="0,3" />
-                    </Border.Shadow>
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasShop}">
                     <VerticalStackLayout Spacing="16">
+                        <Label Text="Shop details" Style="{StaticResource CardTitle}" />
 
                         <VerticalStackLayout>
                             <Label Text="Shop name" Style="{StaticResource FieldLabel}" />
@@ -98,8 +177,7 @@
                                 <Entry Text="{Binding BusinessName}" Placeholder="e.g. Mama Ama's Kitchen"
                                        TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Shown on every one of your dishes." FontSize="11"
-                                   TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0" />
+                            <Label Text="Shown on every one of your dishes." Style="{StaticResource Hint}" Margin="2,6,0,0" />
                         </VerticalStackLayout>
 
                         <VerticalStackLayout>
@@ -116,24 +194,103 @@
                                 <Entry Text="{Binding BusinessPhone}" Placeholder="+233 24 555 0192" Keyboard="Telephone"
                                        TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Leave email or phone empty to use your personal ones." FontSize="11"
-                                   TextColor="{StaticResource BrandTextMuted}" Margin="2,6,0,0" />
+                            <Label Text="Leave email or phone empty to use your personal ones." Style="{StaticResource Hint}"
+                                   Margin="2,6,0,0" />
                         </VerticalStackLayout>
 
-                        <!-- Country (read-only) -->
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Text="Shop country" Style="{StaticResource FieldLabel}" Margin="2,0,0,0" VerticalOptions="Center" />
                             <Label Grid.Column="1" Text="{Binding ShopCountry}" FontSize="14"
                                    TextColor="{StaticResource BrandTextMuted}" VerticalOptions="Center" />
                         </Grid>
+
+                        <Button Text="Save shop details" Command="{Binding SaveCommand}" Style="{StaticResource SaveButton}" />
                     </VerticalStackLayout>
                 </Border>
 
-                <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
+                <!-- ============ DELIVERY FEE ============ -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasShop}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Delivery fee" Style="{StaticResource CardTitle}" />
+                        <Label Text="{Binding FeeRangeText}" Style="{StaticResource Hint}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Border Style="{StaticResource FieldBox}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                    <Label Text="{Binding CurrencySymbol}" FontSize="16" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                    <Entry Grid.Column="1" Text="{Binding DeliveryFeeText}" Keyboard="Numeric"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                            <Button Grid.Column="1" Text="Save fee" Command="{Binding SaveDeliveryFeeCommand}"
+                                    Style="{StaticResource SaveButton}" HeightRequest="50" Padding="18,0" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
 
-                <Button Text="Save shop details" Command="{Binding SaveCommand}"
-                        BackgroundColor="{StaticResource BrandDark}" TextColor="White"
-                        FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52" />
+                <!-- ============ ORDERS FOR TODAY CLOSE AT ============ -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasShop}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Orders for today close at" Style="{StaticResource CardTitle}" />
+                        <Label Text="{Binding CutoffHint}" Style="{StaticResource Hint}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Border Style="{StaticResource FieldBox}">
+                                <TimePicker Time="{Binding OrderCutoff}" Format="h:mm tt"
+                                            TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center" />
+                            </Border>
+                            <Button Grid.Column="1" Text="Save time" Command="{Binding SaveCutoffCommand}"
+                                    Style="{StaticResource SaveButton}" HeightRequest="50" Padding="18,0" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ DOCUMENTS ============ -->
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasShop}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Documents" Style="{StaticResource CardTitle}" />
+                        <Label Text="Phloem checks these before giving your shop the ✓ badge. PDF, JPEG or PNG, up to 10 MB."
+                               Style="{StaticResource Hint}" />
+
+                        <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Documents}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ShopDocumentRow">
+                                    <Border BackgroundColor="{StaticResource BrandCard}" Stroke="{StaticResource BrandBorder}"
+                                            StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12,10">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding NeedsAttention}" Value="True">
+                                                <Setter Property="Stroke" Value="{StaticResource BrandOrange}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsAccepted}" Value="True">
+                                                <Setter Property="Stroke" Value="{StaticResource BrandMint}" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource BrandMintPale}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
+                                            <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandTextDark}" />
+                                            <Label Grid.Row="1" Text="{Binding RequiredText}" FontSize="11"
+                                                   TextColor="{StaticResource BrandTextMuted}" />
+                                            <Label Grid.Row="2" Text="{Binding StatusText}" FontSize="12" FontAttributes="Bold"
+                                                   TextColor="{StaticResource BrandDark}" Margin="0,4,0,0">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding NeedsAttention}" Value="True">
+                                                        <Setter Property="TextColor" Value="{StaticResource BrandOrange}" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label Grid.Row="3" Text="{Binding FileText}" FontSize="11" LineBreakMode="MiddleTruncation"
+                                                   TextColor="{StaticResource BrandTextMuted}" IsVisible="{Binding HasFile}" />
+                                            <Button Grid.Column="1" Grid.RowSpan="4" Text="{Binding ButtonText}"
+                                                    Style="{StaticResource PillButton}" VerticalOptions="Center"
+                                                    Command="{Binding UploadDocumentCommand, Source={RelativeSource AncestorType={x:Type vm:ShopSettingsViewModel}}}"
+                                                    CommandParameter="{Binding .}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
                 <!-- Link to personal details -->
                 <Label HorizontalOptions="Center" FontSize="13" Margin="0,6,0,0">
@@ -149,5 +306,6 @@
                 </Label>
             </VerticalStackLayout>
         </ScrollView>
+        </RefreshView>
     </Grid>
 </ContentPage>

@@ -134,6 +134,24 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- ============ PERSONAL DETAILS NEEDED (signed in, none yet) ============ -->
+                <Border BackgroundColor="{StaticResource BrandPeach}" Stroke="{StaticResource BrandGold}"
+                        StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="14,12"
+                        IsVisible="{Binding NeedsPersonalDetails}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="Add your personal details first" FontSize="15" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandTextDark}" />
+                            <Label Text="Your date of birth and home address. Sellers must be 18 or over."
+                                   Style="{StaticResource SubtleLabel}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Add" Command="{Binding AddPersonalDetailsCommand}"
+                                BackgroundColor="{StaticResource BrandDark}" TextColor="White"
+                                FontAttributes="Bold" FontSize="13" CornerRadius="10"
+                                HeightRequest="36" Padding="18,0" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
                 <!-- ============ FORM CARD ============ -->
                 <Border BackgroundColor="White" StrokeThickness="0"
                         StrokeShape="RoundRectangle 18" Padding="16,16,16,20">
@@ -199,8 +217,11 @@
                 <!-- ============ SUBMIT ============ -->
                 <Button Text="Submit seller profile" Command="{Binding CreateVendorProfileCommand}"
                         Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,6,0,0" />
-                <Label Text="Approval usually follows review" Style="{StaticResource SubtleLabel}"
-                       FontSize="12" HorizontalOptions="Center" Margin="0,-6,0,0" />
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                   Color="{StaticResource BrandDark}" HeightRequest="28" />
+                <Label Text="Phloem reviews new shops. Next, you'll upload your documents in Shop settings."
+                       Style="{StaticResource SubtleLabel}" FontSize="12" HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center" Margin="0,-6,0,0" />
 
                 <controls:StatusBanner Message="{Binding StatusMessage}" IsError="{Binding IsError}" />
 

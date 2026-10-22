@@ -250,6 +250,27 @@
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
+                    <!-- ============ DISH NAMES & PRICES ============ -->
+                    <Border Style="{StaticResource WhiteCard}" Margin="0,10,0,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenDishNamesCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                    BackgroundColor="{StaticResource BrandMintPale}" VerticalOptions="Center">
+                                <Label Text="🍲" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="Dish names &amp; prices" FontSize="16" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                                <Label Text="The allowed price for each dish name in each country"
+                                       Style="{StaticResource SmallSubtle}" LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="›" FontSize="26" TextColor="{StaticResource BrandTextMuted}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
                     <!-- ============ DISH NAME SUGGESTIONS ============ -->
                     <VerticalStackLayout Spacing="12" Margin="0,10,0,0" IsVisible="{Binding HasDishSuggestions}">
                         <Label Text="Dish name suggestions" Style="{StaticResource SectionTitle}" Margin="2,4,0,0" />
@@ -420,10 +441,17 @@
                                                     <Setter Property="BackgroundColor" Value="#FDECEA" />
                                                 </DataTrigger>
                                             </Border.Triggers>
-                                            <Path Data="M12,12 A4,4 0 1 0 12,4 A4,4 0 1 0 12,12 M4,21 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,21"
-                                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineCap="Round"
-                                                  WidthRequest="22" HeightRequest="22"
-                                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                                            <Grid>
+                                                <!-- No photo yet: the person icon -->
+                                                <Path Data="M12,12 A4,4 0 1 0 12,4 A4,4 0 1 0 12,12 M4,21 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,21"
+                                                      Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineCap="Round"
+                                                      WidthRequest="22" HeightRequest="22"
+                                                      HorizontalOptions="Center" VerticalOptions="Center"
+                                                      IsVisible="{Binding HasNoPhoto}" />
+                                                <!-- Their profile photo -->
+                                                <Image Source="{Binding PhotoUrl}" Aspect="AspectFill"
+                                                       IsVisible="{Binding HasPhoto}" />
+                                            </Grid>
                                         </Border>
                                         <VerticalStackLayout Grid.Column="1" Spacing="3">
                                             <Label Text="{Binding FullName}" FontSize="15" FontAttributes="Bold"

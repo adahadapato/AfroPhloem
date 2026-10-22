@@ -18,4 +18,5 @@ public sealed record AdminUserDto(
     bool IsSuspended,
     DateTime? SuspendedUntil,
     string? SuspensionReason,
-    bool CanBeSuspended);
+    bool CanBeSuspended,
+    string? PhotoUrl);

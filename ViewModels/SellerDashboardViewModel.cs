@@ -7,6 +7,7 @@ using Phloem.Services.Api;
 using Phloem.Services.Api.Contracts;
 using Phloem.Services.Api.Contracts.Dtos;
 using Phloem.Services.Api.Contracts.Enums;
+using Microsoft.Extensions.Options;
 using Phloem.Settings;
 
 namespace Phloem.ViewModels;
@@ -23,16 +24,29 @@ public record SalesBar(string Day, double BarHeight, bool IsWeekend);
 ///   <item><description><b>Being prepared</b> and <b>Out for delivery</b>: tap to move them along.</description></item>
 ///   <item><description><b>Sales overview:</b> orders per day this week.</description></item>
 /// </list>
-/// "My dishes" still uses the demo data until the dish editor moves to the API (Seller Part B).
+/// "My dishes" (from the API, a page at a time): tap to edit, − / + to change the price within its allowed range.
 /// </summary>
 public partial class SellerDashboardViewModel : ObservableObject
 {
-    private readonly MockDataService _data;
-    private readonly SessionService _session;
+    private readonly ApiSettings _api;
+
+    /// <summary>All my dishes from the server; <see cref="MyDishes"/> shows one page of them.</summary>
+    private IReadOnlyList<MyDishDto> _allDishes = [];
     private readonly SellerService _seller;
     private CancellationTokenSource? _load;
 
+    /// <summary>The page of my dishes being shown.</summary>
     public ObservableCollection<Dish> MyDishes { get; } = new();
+
+    /// <summary>Pages of "My dishes".</summary>
+    public Paging DishesPager { get; }
+
+    /// <summary>"2 dishes need a new price" (the admin changed their allowed range); empty when none.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPriceUpdates))]
+    public partial string PriceUpdateText { get; set; } = string.Empty;
+
+    public bool HasPriceUpdates => PriceUpdateText.Length > 0;
 
     /// <summary>Mon–Sun bars for the sales chart (weekend bars show in orange).</summary>
     public ObservableCollection<SalesBar> WeeklySales { get; } = new();
@@ -50,10 +64,6 @@ public partial class SellerDashboardViewModel : ObservableObject
     public Paging WaitingPager { get; }
     public Paging PreparingPager { get; }
     public Paging OutForDeliveryPager { get; }
-
-    /// <summary>The demo shop behind "My dishes" (until Part B).</summary>
-    [ObservableProperty]
-    public partial Vendor? CurrentVendor { get; set; }
 
     /// <summary>My shop from the API (null until loaded, or when I have none).</summary>
     [ObservableProperty]
@@ -81,7 +91,7 @@ public partial class SellerDashboardViewModel : ObservableObject
         {
             var hour = DateTime.Now.Hour;
             var part = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-            var name = Shop?.Name ?? CurrentVendor?.Name;
+            var name = Shop?.Name;
             return name is null ? $"{part}!" : $"{part}, {name}!";
         }
     }
@@ -98,43 +108,76 @@ public partial class SellerDashboardViewModel : ObservableObject
     public string OutForDeliveryTitle => $"Out for delivery ({OutForDeliveryPager.TotalCount})";
     public bool HasOutForDeliveryOrders => OutForDeliveryOrders.Count > 0;
 
-    public SellerDashboardViewModel(MockDataService data, SessionService session, SellerService seller,
+    public SellerDashboardViewModel(SellerService seller, IOptions<ApiSettings> api,
                                     PagingFactory paging)
     {
-        _data = data;
-        _session = session;
         _seller = seller;
+        _api = api.Value;
+        DishesPager = paging.Create(PagedLists.SellerDishes, () =>
+        {
+            ShowDishesPage();
+            return Task.CompletedTask;
+        });
         WaitingPager = paging.Create(PagedLists.SellerOrders,
             () => LoadOrderPageAsync(OrderStatus.Paid, WaitingOrders, WaitingPager));
         PreparingPager = paging.Create(PagedLists.SellerOrders,
             () => LoadOrderPageAsync(OrderStatus.Preparing, PreparingOrders, PreparingPager));
         OutForDeliveryPager = paging.Create(PagedLists.SellerOrders,
             () => LoadOrderPageAsync(OrderStatus.OutForDelivery, OutForDeliveryOrders, OutForDeliveryPager));
-        // Demo shop for "My dishes" (until Part B): the user's own, else the first one
-        var userId = _session.CurrentUser?.Id;
-        CurrentVendor = _data.Vendors.FirstOrDefault(v => userId != null && v.UserId == userId)
-                        ?? _data.Vendors.FirstOrDefault();
-        LoadMyDishes();
     }
 
     /// <summary>True when the shop has no dishes yet (shows the "Add your first dish" card).</summary>
-    public bool HasNoDishes => MyDishes.Count == 0;
+    public bool HasNoDishes => _allDishes.Count == 0;
 
-    private void LoadMyDishes()
+    /// <summary>My dishes from the server (those needing a new price first).</summary>
+    private async Task LoadMyDishesAsync(CancellationToken ct)
+    {
+        var result = await _seller.GetMyDishesAsync(ct);
+        if (result.IsFailure) return;
+
+        _allDishes = result.Value!.Dishes;
+        var needs = result.Value.NeedsPriceUpdateCount;
+        PriceUpdateText = needs switch
+        {
+            0 => string.Empty,
+            1 => "1 dish needs a new price: Phloem changed its allowed range. Tap it to update.",
+            _ => $"{needs} dishes need a new price: Phloem changed their allowed range. Tap one to update."
+        };
+
+        DishesPager.Update(_allDishes.Count);
+        if (DishesPager.Page > DishesPager.TotalPages) DishesPager.Reset();
+        ShowDishesPage();
+    }
+
+    /// <summary>The pager's page of my dishes (all were loaded at once; the server doesn't page them).</summary>
+    private void ShowDishesPage()
     {
         MyDishes.Clear();
-        if (CurrentVendor is not null)
-        {
-            foreach (var dish in _data.Dishes.Where(d => d.VendorId == CurrentVendor.Id))
-                MyDishes.Add(dish);
-        }
+        foreach (var dish in _allDishes.Skip((DishesPager.Page - 1) * DishesPager.PageSize).Take(DishesPager.PageSize))
+            MyDishes.Add(ToDish(dish));
         OnPropertyChanged(nameof(HasNoDishes));
     }
 
-    /// <summary>Called by the page each time it appears: dishes, then the shop and its orders from the API.</summary>
+    private Dish ToDish(MyDishDto d) => new()
+    {
+        Id = d.Id.ToString(),
+        Name = d.Name,
+        CatalogName = d.CatalogName,
+        ImageUrl = _api.ResolveFileUrl(d.Photos.FirstOrDefault()?.ThumbnailUrl ?? d.Photos.FirstOrDefault()?.Url)
+                   ?? string.Empty,
+        Price = d.Price,
+        CurrencySymbol = OrderService.SymbolOf(d.Currency),
+        Rating = (double)d.Rating,
+        Category = DishCatalogService.CategoryText(d.Category),
+        VendorName = Shop?.Name ?? string.Empty,
+        VendorId = Shop?.Id.ToString() ?? string.Empty,
+        Description = d.Description ?? string.Empty,
+        IsAvailable = d.IsAvailable
+    };
+
+    /// <summary>Called by the page each time it appears: the shop, its orders and its dishes from the API.</summary>
     public async Task ReloadAsync()
     {
-        LoadMyDishes();
         OnPropertyChanged(nameof(Greeting));
         await LoadFromApiAsync();
     }
@@ -159,6 +202,8 @@ public partial class SellerDashboardViewModel : ObservableObject
                 return;
             }
             Shop = shop.Value;
+            await LoadMyDishesAsync(load.Token);
+            if (load.IsCancellationRequested) return;
 
             var stats = _seller.GetStatsAsync(load.Token);
             var waiting = _seller.GetOrdersAsync(OrderStatus.Paid, WaitingPager.Page, WaitingPager.PageSize, load.Token);
@@ -255,30 +300,53 @@ public partial class SellerDashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task AddDish() => await Shell.Current.GoToAsync("dishedit");
 
-    /// <summary>"Shop settings" → business name, email and phone.</summary>
+    /// <summary>"Shop settings" → details, pictures, delivery fee, order cut-off and documents.</summary>
     [RelayCommand]
     private async Task ShopSettings() => await Shell.Current.GoToAsync("shopsettings");
 
     /// <summary>Tap a dish → Edit dish page.</summary>
     [RelayCommand]
-    private async Task EditDish(Dish dish) =>
-        await Shell.Current.GoToAsync("dishedit", new Dictionary<string, object> { ["Dish"] = dish });
-
-    [RelayCommand]
-    private void IncreasePrice(Dish dish) => dish.Price += 1;
-
-    [RelayCommand]
-    private void DecreasePrice(Dish dish)
+    private async Task EditDish(Dish dish)
     {
-        if (dish.Price > 1) dish.Price -= 1;
+        var mine = _allDishes.FirstOrDefault(d => d.Id.ToString() == dish.Id);
+        if (mine is null) return;
+        await Shell.Current.GoToAsync("dishedit", new Dictionary<string, object> { ["MyDish"] = mine });
     }
 
-    /// <summary>"View all →": opens Explore filtered to this vendor's dishes.</summary>
+    [RelayCommand]
+    private Task IncreasePrice(Dish dish) => NudgePriceAsync(dish, +1);
+
+    [RelayCommand]
+    private Task DecreasePrice(Dish dish) => NudgePriceAsync(dish, -1);
+
+    /// <summary>− / +: one step (1, 5 or 100 depending on the price), kept inside the dish's allowed range.</summary>
+    private async Task NudgePriceAsync(Dish dish, int direction)
+    {
+        var mine = _allDishes.FirstOrDefault(d => d.Id.ToString() == dish.Id);
+        if (mine is null) return;
+
+        var step = dish.Price >= 1000 ? 100m : dish.Price >= 100 ? 5m : 1m;
+        var price = dish.Price + direction * step;
+        if (mine.AllowedMinPrice is { } min && price < min) price = min;
+        if (mine.AllowedMaxPrice is { } max && price > max) price = max;
+        if (price <= 0 || price == dish.Price) return;
+
+        var old = dish.Price;
+        dish.Price = price;   // straight away; put back if the server says no
+        var result = await _seller.ChangeDishPriceAsync(mine.Id, price);
+        if (result.IsFailure)
+        {
+            dish.Price = old;
+            Message = result.Error!.DisplayMessage;
+        }
+    }
+
+    /// <summary>"View all →": opens Explore filtered to my shop's dishes, as buyers see them.</summary>
     [RelayCommand]
     private async Task ViewAllDishes()
     {
-        if (CurrentVendor is null) return;
+        if (Shop is null) return;
         await Shell.Current.GoToAsync(
-            $"//listing?vendorId={Uri.EscapeDataString(CurrentVendor.Id)}&vendorName={Uri.EscapeDataString(CurrentVendor.Name)}");
+            $"//listing?vendorId={Uri.EscapeDataString(Shop.Id.ToString())}&vendorName={Uri.EscapeDataString(Shop.Name)}");
     }
 }

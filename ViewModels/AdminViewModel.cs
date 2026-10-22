@@ -194,7 +194,8 @@ public partial class AdminViewModel : ObservableObject
 
         UsersPager.Update(result.Value!.TotalCount);
         Users.Clear();
-        foreach (var u in result.Value!.Items) Users.Add(new AdminUserCard { User = u });
+        foreach (var u in result.Value!.Items)
+            Users.Add(new AdminUserCard { User = u, PhotoUrl = _api.ResolveFileUrl(u.PhotoUrl) });
         if (!SuspendedOnly && string.IsNullOrWhiteSpace(UserSearch)) TotalUsers = result.Value.TotalCount;
     }
 
@@ -266,7 +267,11 @@ public partial class AdminViewModel : ObservableObject
     [RelayCommand]
     private async Task ApproveDishName(DishSuggestionCard card) =>
         await DoAsync(() => _admin.ApproveDishNameAsync(card.Suggestion.Id),
-                      $"\"{card.Name}\" approved. Set its price range so sellers can use it.");
+                      $"\"{card.Name}\" approved. Set its price range in Dish names & prices so sellers can use it.");
+
+    /// <summary>Sellers tab → Dish names &amp; prices (each name's allowed price per country).</summary>
+    [RelayCommand]
+    private async Task OpenDishNames() => await Shell.Current.GoToAsync("admindishes");
 
     [RelayCommand]
     private async Task RejectDishName(DishSuggestionCard card)

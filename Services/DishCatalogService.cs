@@ -1,10 +1,31 @@
-﻿using System.Collections.ObjectModel;
+using Phloem.Services.Api;
+using Phloem.Services.Api.Contracts.Commands;
+using Phloem.Services.Api.Contracts.Dtos;
+using Phloem.Services.Api.Contracts.Enums;
 
 namespace Phloem.Services;
 
-/// <summary>A dish name sellers can pick from (or one suggested by a seller, waiting for admin).</summary>
+/// <summary>A dish name sellers pick from, with its allowed price range in the seller's country.</summary>
 public record CatalogDish(string Name, string Category, string Group)
 {
+    /// <summary>The name's Id on the API.</summary>
+    public Guid Id { get; init; }
+
+    public DishCategory ApiCategory { get; init; }
+    public CatalogGroup ApiGroup { get; init; }
+
+    /// <summary>False = an admin hasn't set its price range yet, so it can't be sold (shown greyed out).</summary>
+    public bool HasPriceRange { get; init; }
+
+    public decimal? MinPrice { get; init; }
+    public decimal? MaxPrice { get; init; }
+    public string CurrencySymbol { get; init; } = string.Empty;
+
+    /// <summary>"GH₵40 – GH₵90", or "Price not set yet".</summary>
+    public string RangeText => HasPriceRange
+        ? $"{CurrencySymbol}{MinPrice:0.##} – {CurrencySymbol}{MaxPrice:0.##}"
+        : "Price not set yet";
+
     /// <summary>Flag / icon shown next to the group in the picker.</summary>
     public string GroupIcon => Group switch
     {
@@ -14,95 +35,66 @@ public record CatalogDish(string Name, string Category, string Group)
         "Snacks" => "🍪",
         _ => "🌍"
     };
-
-    // Set only for seller suggestions
-    public string? SuggestedBy { get; init; }
-    public DateTime SuggestedAt { get; init; } = DateTime.Now;
 }
 
 /// <summary>
-/// The fixed list of dish names (so there are no typos), plus new names suggested by sellers
-/// that an admin approves. In-memory for now; your backend can replace this later.
-/// Register as a singleton in MauiProgram.cs.
+/// The dish names sellers choose from (so there are no typos), from the API (<c>GET /api/dish-catalog</c>) with the
+/// price range in the seller's country; plus "Can't find your dish?" suggestions for an admin to approve.
 /// </summary>
-public class DishCatalogService
+public sealed class DishCatalogService(ApiClient api)
 {
-    // Category values match the app's chips: "Local Meals", "Snacks", "Drinks"
-    public List<CatalogDish> Dishes { get; } = new()
+    /// <summary>The names last loaded (empty until <see cref="LoadAsync"/>).</summary>
+    public IReadOnlyList<CatalogDish> Dishes { get; private set; } = [];
+
+    /// <summary>The names and their ranges in a country (the seller's shop country).</summary>
+    /// <returns>Null when loaded; otherwise why not.</returns>
+    public async Task<string?> LoadAsync(Country country, CancellationToken ct = default)
     {
-        // 🇬🇭 Ghana
-        new("Jollof Rice",          "Local Meals", "Ghana"),
-        new("Waakye",               "Local Meals", "Ghana"),
-        new("Banku & Tilapia",      "Local Meals", "Ghana"),
-        new("Kenkey & Fish",        "Local Meals", "Ghana"),
-        new("Fufu & Light Soup",    "Local Meals", "Ghana"),
-        new("Red Red",              "Local Meals", "Ghana"),
-        new("Ampesi",               "Local Meals", "Ghana"),
-        new("Omo Tuo",              "Local Meals", "Ghana"),
-        new("Kelewele",             "Snacks",      "Ghana"),
+        var result = await api.GetAsync<List<DishCatalogItemDto>>($"api/dish-catalog?country={country}", ct);
+        if (result.IsFailure) return result.Error!.DisplayMessage;
 
-        // 🇳🇬 Nigeria
-        new("Jollof Rice",          "Local Meals", "Nigeria"),
-        new("Egusi Soup",           "Local Meals", "Nigeria"),
-        new("Pounded Yam & Egusi",  "Local Meals", "Nigeria"),
-        new("Ofada Rice",           "Local Meals", "Nigeria"),
-        new("Pepper Soup",          "Local Meals", "Nigeria"),
-        new("Moi Moi",              "Local Meals", "Nigeria"),
-        new("Suya",                 "Snacks",      "Nigeria"),
-        new("Akara",                "Snacks",      "Nigeria"),
-        new("Puff Puff",            "Snacks",      "Nigeria"),
-        new("Chin Chin",            "Snacks",      "Nigeria"),
+        Dishes = result.Value!.Select(ToCatalogDish).ToList();
+        return null;
+    }
 
-        // 🌍 West African
-        new("Fried Rice",           "Local Meals", "West African"),
-        new("Fried Plantain",       "Local Meals", "West African"),
-        new("Groundnut Soup",       "Local Meals", "West African"),
+    /// <summary>"Can't find your dish?": a new name for an admin to approve.</summary>
+    public Task<ApiResult<Guid>> SuggestAsync(string name, DishCategory category, CatalogGroup group,
+                                              CancellationToken ct = default) =>
+        api.PostAsync<Guid>("api/dish-catalog/suggestions", new SuggestDishNameCommand(name.Trim(), category, group), ct);
 
-        // 🍪 Snacks
-        new("Meat Pie",             "Snacks",      "Snacks"),
-        new("Plantain Chips",       "Snacks",      "Snacks"),
-        new("Coconut Candy",        "Snacks",      "Snacks"),
-
-        // 🥤 Drinks
-        new("Sobolo",               "Drinks",      "Drinks"),
-        new("Zobo",                 "Drinks",      "Drinks"),
-        new("Palm Wine",            "Drinks",      "Drinks"),
-        new("Kunu",                 "Drinks",      "Drinks"),
-        new("Asaana",               "Drinks",      "Drinks"),
+    /// <summary>A category as the screens show it.</summary>
+    public static string CategoryText(DishCategory category) => category switch
+    {
+        DishCategory.LocalMeals => "Local Meals",
+        DishCategory.Snacks => "Snacks",
+        DishCategory.Drinks => "Drinks",
+        _ => category.ToString()
     };
 
-    /// <summary>New names sellers asked for, waiting for an admin (shown on the Admin dashboard).</summary>
-    public ObservableCollection<CatalogDish> Suggestions { get; } = new();
-
-    public void Suggest(string name, string category, string group, string suggestedBy)
+    /// <summary>A group as the screens show it.</summary>
+    public static string GroupText(CatalogGroup group) => group switch
     {
-        name = name.Trim();
-        if (string.IsNullOrWhiteSpace(name)) return;
-        if (Dishes.Any(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) return;
-        if (Suggestions.Any(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) return;
+        CatalogGroup.WestAfrican => "West African",
+        _ => group.ToString()
+    };
 
-        Suggestions.Add(new CatalogDish(name, category, group) { SuggestedBy = suggestedBy });
-    }
-
-    public void Approve(CatalogDish suggestion)
+    /// <summary>The group a seller's suggestion goes in: their own country's, else West African.</summary>
+    public static CatalogGroup GroupFor(Country country) => country switch
     {
-        Suggestions.Remove(suggestion);
-        Dishes.Add(suggestion with { SuggestedBy = null });
-    }
+        Country.Ghana => CatalogGroup.Ghana,
+        Country.Nigeria => CatalogGroup.Nigeria,
+        _ => CatalogGroup.WestAfrican
+    };
 
-    public void Reject(CatalogDish suggestion) => Suggestions.Remove(suggestion);
-
-    /// <summary>
-    /// Finds the list name a dish was built from, e.g. "Jollof Rice &amp; Chicken" → "Jollof Rice" + "&amp; Chicken".
-    /// </summary>
-    public (CatalogDish? Base, string Detail) Split(string fullName, string? country)
-    {
-        var match = Dishes
-            .Where(d => fullName.StartsWith(d.Name, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(d => d.Name.Length)
-            .ThenByDescending(d => d.Group == country)
-            .FirstOrDefault();
-
-        return match is null ? (null, string.Empty) : (match, fullName[match.Name.Length..].Trim());
-    }
+    private static CatalogDish ToCatalogDish(DishCatalogItemDto d) =>
+        new(d.Name, CategoryText(d.Category), GroupText(d.Group))
+        {
+            Id = d.Id,
+            ApiCategory = d.Category,
+            ApiGroup = d.Group,
+            HasPriceRange = d.HasPriceRange,
+            MinPrice = d.MinPrice,
+            MaxPrice = d.MaxPrice,
+            CurrencySymbol = d.Currency is { } c ? OrderService.SymbolOf(c) : string.Empty
+        };
 }

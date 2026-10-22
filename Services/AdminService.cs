@@ -68,6 +68,16 @@ public sealed class AdminService(ApiClient api)
     public Task<ApiResult<List<AdminDishSuggestionDto>>> GetDishSuggestionsAsync(CancellationToken ct = default) =>
         api.GetAsync<List<AdminDishSuggestionDto>>($"{DishNames}/suggestions", ct);
 
+    /// <summary>Every approved dish name with its price range in each country.</summary>
+    public Task<ApiResult<List<AdminDishCatalogDto>>> GetDishNamesAsync(CancellationToken ct = default) =>
+        api.GetAsync<List<AdminDishCatalogDto>>(DishNames, ct);
+
+    /// <summary>Sets a name's price range in one country; returns how many dishes now need a new price (their
+    /// sellers are emailed).</summary>
+    public Task<ApiResult<int>> SetPriceRangeAsync(Guid id, Country country, decimal min, decimal max,
+                                                  CancellationToken ct = default) =>
+        api.PutAsync<int>($"{DishNames}/{id}/price-ranges/{country}", new PriceRangeRequest(min, max), ct);
+
     public Task<ApiResult> ApproveDishNameAsync(Guid id, CancellationToken ct = default) =>
         api.PostAsync($"{DishNames}/{id}/approve", null, ct);
 
