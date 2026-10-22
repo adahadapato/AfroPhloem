@@ -1,40 +1,59 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Options;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Services.Api;
+using Phloem.Services.Api.Contracts.Dtos;
+using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
+/// <summary>
+/// Admin dashboard (route "admin"), from the API:
+/// <list type="bullet">
+///   <item><description><b>Sellers:</b> shops waiting for approval (Approve / Reject), dish name suggestions, and every
+///   shop with its logo (✓ badge, Block / Unblock, open its details and documents).</description></item>
+///   <item><description><b>Users:</b> everyone who has signed up; Suspend (reason + how long) and Lift suspension.
+///   A suspended person's shop is hidden with them.</description></item>
+///   <item><description><b>Shipments:</b> Shipping routes and All shipments (their own pages).</description></item>
+/// </list>
+/// </summary>
 public partial class AdminViewModel : ObservableObject
 {
-    private readonly MockDataService _data;
-    private readonly DishCatalogService _catalog;
+    private readonly AdminService _admin;
     private readonly ShipmentService _shipments;
+    private readonly ApiSettings _api;
 
-    /// <summary>NEW: dish names sellers have suggested, waiting for approval.</summary>
-    public System.Collections.ObjectModel.ObservableCollection<CatalogDish> DishSuggestions => _catalog.Suggestions;
-    public bool HasDishSuggestions => _catalog.Suggestions.Count > 0;
+    public AdminViewModel(AdminService admin, ShipmentService shipments, IOptions<ApiSettings> api)
+    {
+        _admin = admin;
+        _shipments = shipments;
+        _api = api.Value;
+    }
 
-    public ObservableCollection<Vendor> PendingVendors { get; } = new();
-    public ObservableCollection<Vendor> ActiveVendors { get; } = new();
+    // ---------- Lists ----------
 
-    /// <summary>NEW: everyone who has signed up (for the Users tab).</summary>
-    public ObservableCollection<User> Users { get; } = new();
+    public ObservableCollection<AdminShopCard> PendingShops { get; } = new();
+    public ObservableCollection<AdminShopCard> Shops { get; } = new();
+    public ObservableCollection<DishSuggestionCard> DishSuggestions { get; } = new();
+    public ObservableCollection<AdminUserCard> Users { get; } = new();
+
+    public bool HasPendingApprovals => PendingShops.Count > 0;
+    public bool HasDishSuggestions => DishSuggestions.Count > 0;
+
+    // ---------- Stat tiles ----------
 
     [ObservableProperty]
     public partial int TotalVendors { get; set; }
 
-    /// <summary>NEW: number of registered users (stat tile).</summary>
     [ObservableProperty]
     public partial int TotalUsers { get; set; }
 
     [ObservableProperty]
     public partial int PendingApprovalCount { get; set; }
-
-    public bool HasPendingApprovals => PendingApprovalCount > 0;
-
-    partial void OnPendingApprovalCountChanged(int value) => OnPropertyChanged(nameof(HasPendingApprovals));
 
     [ObservableProperty]
     public partial int BlockedCount { get; set; }
@@ -43,49 +62,262 @@ public partial class AdminViewModel : ObservableObject
     [ObservableProperty]
     public partial int TotalShipments { get; set; }
 
+    // ---------- Tabs, search, messages ----------
+
     [ObservableProperty]
     public partial string ActiveTab { get; set; } = "Sellers";
 
-    public AdminViewModel(MockDataService data, DishCatalogService catalog, ShipmentService shipments)
-    {
-        _data = data;
-        _catalog = catalog;
-        _shipments = shipments;
-        _catalog.Suggestions.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDishSuggestions));
-        Refresh();
-    }
+    [ObservableProperty]
+    public partial string ShopSearch { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string UserSearch { get; set; } = string.Empty;
+
+    /// <summary>Users tab: only people who are suspended.</summary>
+    [ObservableProperty]
+    public partial bool SuspendedOnly { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
+
+    [ObservableProperty]
+    public partial string StatusMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsError { get; set; }
 
     [RelayCommand]
     private void ShowSellers() => ActiveTab = "Sellers";
 
-    /// <summary>NEW: the Users pill.</summary>
     [RelayCommand]
     private void ShowUsers() => ActiveTab = "Users";
 
     [RelayCommand]
     private void ShowShipments() => ActiveTab = "Shipments";
 
-    /// <summary>Called by the page each time it appears, so new sign-ups and shops show up.</summary>
-    public void Reload()
+    // ═════════════════════════════ Loading ═════════════════════════════
+
+    /// <summary>Called by the page each time it appears (and by pull to refresh).</summary>
+    public async void Reload()
     {
-        Refresh();
-        OnPropertyChanged(nameof(HasDishSuggestions));
-        LoadShipmentCount();
+        try { await LoadAllAsync(); }
+        catch (Exception) { ShowError("Couldn't load the dashboard. Pull down to try again."); }
     }
 
-    /// <summary>The Shipments tile: how many parcels the server has.</summary>
-    private async void LoadShipmentCount()
+    [RelayCommand]
+    private async Task Refresh() => await LoadAllAsync();
+
+    private async Task LoadAllAsync()
     {
+        IsLoading = true;
         try
         {
-            var result = await _shipments.GetAllAsync(status: null);
-            if (result.IsSuccess) TotalShipments = result.Value!.TotalCount;
+            await LoadStatsAsync();
+            await LoadShopsAsync();
+            await LoadDishSuggestionsAsync();
+            await LoadUsersAsync();
+            await LoadShipmentCountAsync();
         }
-        catch (Exception)
+        finally
         {
-            // The tile keeps its last number
+            IsLoading = false;
         }
     }
+
+    private async Task LoadStatsAsync()
+    {
+        var stats = await _admin.GetShopStatsAsync();
+        if (stats.IsFailure)
+        {
+            ShowError(stats.Error!.DisplayMessage);
+            return;
+        }
+
+        TotalVendors = stats.Value!.Total;
+        PendingApprovalCount = stats.Value.PendingApproval;
+        BlockedCount = stats.Value.Blocked;
+    }
+
+    private async Task LoadShopsAsync()
+    {
+        var pending = await _admin.GetPendingShopsAsync();
+        PendingShops.Clear();
+        if (pending.IsSuccess)
+            foreach (var s in pending.Value!) PendingShops.Add(ToCard(s));
+        OnPropertyChanged(nameof(HasPendingApprovals));
+
+        var all = await _admin.GetShopsAsync(ShopSearch);
+        Shops.Clear();
+        if (all.IsSuccess)
+            foreach (var s in all.Value!.Items.Where(s => s.Status != VendorStatus.PendingApproval))
+                Shops.Add(ToCard(s));
+        else
+            ShowError(all.Error!.DisplayMessage);
+    }
+
+    private async Task LoadDishSuggestionsAsync()
+    {
+        var result = await _admin.GetDishSuggestionsAsync();
+        DishSuggestions.Clear();
+        if (result.IsSuccess)
+            foreach (var s in result.Value!) DishSuggestions.Add(new DishSuggestionCard { Suggestion = s });
+        OnPropertyChanged(nameof(HasDishSuggestions));
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        var result = await _admin.GetUsersAsync(UserSearch, SuspendedOnly);
+        if (result.IsFailure)
+        {
+            ShowError(result.Error!.DisplayMessage);
+            return;
+        }
+
+        Users.Clear();
+        foreach (var u in result.Value!.Items) Users.Add(new AdminUserCard { User = u });
+        if (!SuspendedOnly && string.IsNullOrWhiteSpace(UserSearch)) TotalUsers = result.Value.TotalCount;
+    }
+
+    private async Task LoadShipmentCountAsync()
+    {
+        var result = await _shipments.GetAllAsync(status: null);
+        if (result.IsSuccess) TotalShipments = result.Value!.TotalCount;
+    }
+
+    private AdminShopCard ToCard(AdminShopDto shop) => new()
+    {
+        Shop = shop,
+        LogoUrl = _api.ResolveFileUrl(shop.LogoUrl) ?? Vendor.DefaultLogo
+    };
+
+    // ═════════════════════════════ Sellers ═════════════════════════════
+
+    [RelayCommand]
+    private async Task SearchShops() => await RunAsync(LoadShopsAsync);
+
+    [RelayCommand]
+    private async Task ApproveShop(AdminShopCard card) =>
+        await DoAsync(() => _admin.ApproveShopAsync(card.Shop.Id), $"{card.Name} is live.");
+
+    [RelayCommand]
+    private async Task RejectShop(AdminShopCard card)
+    {
+        var reason = await Shell.Current.DisplayPromptAsync("Reject shop",
+            $"Why can't {card.Name} be approved? The seller sees this and can fix it.", "Reject", "Cancel",
+            placeholder: "e.g. The business email doesn't work");
+        if (string.IsNullOrWhiteSpace(reason)) return;
+
+        await DoAsync(() => _admin.RejectShopAsync(card.Shop.Id, reason.Trim()), $"{card.Name} was rejected.");
+    }
+
+    /// <summary>Block hides only the shop; its owner can still sign in and buy.</summary>
+    [RelayCommand]
+    private async Task ToggleBlock(AdminShopCard card)
+    {
+        var block = !card.IsBlocked;
+        if (block)
+        {
+            var ok = await Shell.Current.DisplayAlertAsync("Block this shop?",
+                $"{card.Name} will be hidden from buyers. Its owner can still use Phloem as a customer.",
+                "Block", "Cancel");
+            if (!ok) return;
+        }
+
+        await DoAsync(() => _admin.SetBlockedAsync(card.Shop.Id, block),
+                      block ? $"{card.Name} is blocked." : $"{card.Name} is unblocked.");
+    }
+
+    [RelayCommand]
+    private async Task ToggleVerified(AdminShopCard card) =>
+        await DoAsync(() => _admin.SetVerifiedAsync(card.Shop.Id, !card.IsVerified),
+                      card.IsVerified ? $"✓ removed from {card.Name}." : $"{card.Name} now has the ✓ badge.");
+
+    /// <summary>The shop's details, pictures and documents.</summary>
+    [RelayCommand]
+    private async Task OpenShop(AdminShopCard card) =>
+        await Shell.Current.GoToAsync($"adminshop?id={card.Shop.Id}");
+
+    // ═════════════════════════════ Dish names ═════════════════════════════
+
+    [RelayCommand]
+    private async Task ApproveDishName(DishSuggestionCard card) =>
+        await DoAsync(() => _admin.ApproveDishNameAsync(card.Suggestion.Id),
+                      $"\"{card.Name}\" approved. Set its price range so sellers can use it.");
+
+    [RelayCommand]
+    private async Task RejectDishName(DishSuggestionCard card)
+    {
+        var ok = await Shell.Current.DisplayAlertAsync("Reject dish name?",
+            $"\"{card.Name}\" won't be added to the dish list.", "Reject", "Cancel");
+        if (!ok) return;
+
+        await DoAsync(() => _admin.RejectDishNameAsync(card.Suggestion.Id), $"\"{card.Name}\" rejected.");
+    }
+
+    // ═════════════════════════════ Users ═════════════════════════════
+
+    [RelayCommand]
+    private async Task SearchUsers() => await RunAsync(LoadUsersAsync);
+
+    partial void OnSuspendedOnlyChanged(bool value) => _ = RunAsync(LoadUsersAsync);
+
+    /// <summary>Suspend: how long, then why (shown to them). Their shop is hidden with them.</summary>
+    [RelayCommand]
+    private async Task Suspend(AdminUserCard card)
+    {
+        const string week = "7 days", month = "30 days", open = "Until further notice";
+        var length = await Shell.Current.DisplayActionSheetAsync($"Suspend {card.FullName} for…", "Cancel", null,
+                                                                 week, month, open);
+        DateTime? until = length switch
+        {
+            week => DateTime.UtcNow.AddDays(7),
+            month => DateTime.UtcNow.AddDays(30),
+            open => null,
+            _ => DateTime.MinValue
+        };
+        if (until == DateTime.MinValue) return;   // cancelled
+
+        var shopNote = card.HasShop ? " Their shop will be hidden and its unfinished orders cancelled." : string.Empty;
+        var reason = await Shell.Current.DisplayPromptAsync("Why?",
+            $"{card.FullName} will see this reason.{shopNote}", "Suspend", "Cancel",
+            placeholder: "e.g. Repeated fake orders", maxLength: 500);
+        if (string.IsNullOrWhiteSpace(reason)) return;
+
+        IsLoading = true;
+        try
+        {
+            var result = await _admin.SuspendAsync(card.User.Id, reason.Trim(), until);
+            if (result.IsFailure)
+            {
+                ShowError(result.Error!.DisplayMessage);
+                return;
+            }
+
+            var done = result.Value!;
+            var extra = done.ShopSuspended
+                ? $" Their shop is hidden; {done.CancelledShopOrders} order(s) cancelled ({done.OrdersToRefund} to refund)."
+                : string.Empty;
+            await LoadAllAsync();
+            ShowInfo($"{card.FullName} is suspended.{extra}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task LiftSuspension(AdminUserCard card)
+    {
+        var ok = await Shell.Current.DisplayAlertAsync("Lift suspension?",
+            $"{card.FullName} will be able to sign in again" + (card.HasShop ? ", and their shop comes back." : "."),
+            "Lift", "Cancel");
+        if (!ok) return;
+
+        await DoAsync(() => _admin.ReinstateAsync(card.User.Id), $"{card.FullName} can sign in again.");
+    }
+
+    // ═════════════════════════════ Shipments tab ═════════════════════════════
 
     /// <summary>Shipments tab → Shipping routes (create Ghana → UK, rates, switch on).</summary>
     [RelayCommand]
@@ -95,64 +327,47 @@ public partial class AdminViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenAllShipments() => await Shell.Current.GoToAsync("adminshipments");
 
-    private void Refresh()
+    // ═════════════════════════════ Helpers ═════════════════════════════
+
+    /// <summary>Runs an action on the API; on success reloads everything and shows <paramref name="done"/>.</summary>
+    private async Task DoAsync(Func<Task<ApiResult>> action, string done)
     {
-        PendingVendors.Clear();
-        ActiveVendors.Clear();
-        Users.Clear();
+        IsLoading = true;
+        try
+        {
+            var result = await action();
+            if (result.IsFailure)
+            {
+                ShowError(result.Error!.DisplayMessage);
+                return;
+            }
 
-        foreach (var vendor in _data.Vendors.Where(v => !v.IsApproved).OrderByDescending(v => v.JoinedAt))
-            PendingVendors.Add(vendor);
-
-        foreach (var vendor in _data.Vendors.Where(v => v.IsApproved).OrderByDescending(v => v.Rating))
-            ActiveVendors.Add(vendor);
-
-        // Admin accounts are not listed as customers
-        foreach (var user in _data.Users.Where(u => !u.IsAdmin).OrderByDescending(u => u.JoinedAt))
-            Users.Add(user);
-
-        TotalVendors = _data.Vendors.Count;
-        TotalUsers = Users.Count;
-        PendingApprovalCount = PendingVendors.Count;
-        BlockedCount = _data.Vendors.Count(v => v.IsBlocked);
+            await LoadAllAsync();
+            ShowInfo(done);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
-    [RelayCommand]
-    private void ApproveVendor(Vendor vendor)
+    private async Task RunAsync(Func<Task> load)
     {
-        vendor.IsApproved = true;
-        Refresh();
+        IsLoading = true;
+        try { await load(); }
+        catch (Exception) { ShowError("Couldn't load. Please try again."); }
+        finally { IsLoading = false; }
     }
 
-    [RelayCommand]
-    private void RejectVendor(Vendor vendor)
+    private void ShowError(string message)
     {
-        _data.Vendors.Remove(vendor);
-        Refresh();
+        IsError = true;
+        StatusMessage = message;
     }
 
-    /// <summary>NEW: approve a suggested dish name → it joins the list sellers pick from.</summary>
-    [RelayCommand]
-    private void ApproveDishName(CatalogDish suggestion) => _catalog.Approve(suggestion);
-
-    /// <summary>NEW: reject a suggested dish name.</summary>
-    [RelayCommand]
-    private async Task RejectDishName(CatalogDish suggestion)
+    private void ShowInfo(string message)
     {
-        var ok = await Shell.Current.DisplayAlertAsync("Reject dish name?",
-            $"\"{suggestion.Name}\" won't be added to the dish list.", "Reject", "Cancel");
-        if (ok) _catalog.Reject(suggestion);
+        IsError = false;
+        StatusMessage = message;
     }
-
-    [RelayCommand]
-    private void ToggleBlock(Vendor vendor)
-    {
-        vendor.IsBlocked = !vendor.IsBlocked;
-        Refresh();
-    }
-
-    [RelayCommand]
-    private async Task ViewShop(Vendor vendor) =>
-        await Shell.Current.GoToAsync(
-            $"//listing?vendorId={Uri.EscapeDataString(vendor.Id)}&vendorName={Uri.EscapeDataString(vendor.Name)}");
 }

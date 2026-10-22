@@ -86,6 +86,14 @@ public partial class PlacedOrder : ObservableObject
     public string SubtotalText => $"{CurrencySymbol}{Subtotal:N2}";
     public string DeliveryFeeText => $"{CurrencySymbol}{DeliveryFee:N2}";
 
+    /// <summary>The shop's reason when IT declined the order (shown on Order details); null otherwise.</summary>
+    public string? DeclineReason { get; init; }
+
+    public bool WasDeclined => DeclineReason is not null;
+
+    /// <summary>"Mama Ama's Kitchen couldn't make this order: …"</summary>
+    public string DeclineText => $"{ShopName} couldn't make this order: \"{DeclineReason}\"";
+
     /// <summary>When the order was cancelled (shown on Order details).</summary>
     [ObservableProperty]
     public partial DateTime? CancelledAt { get; set; }
@@ -307,7 +315,8 @@ public class OrderHistoryService
             Status = o.Status,
             AllowsCancel = o.CanCancel,
             CancelDeadline = o.CancelSecondsLeft is { } seconds ? DateTime.Now.AddSeconds(seconds) : null,
-            CancelledAt = o.CancelledAt?.ToLocalTime()
+            CancelledAt = o.CancelledAt?.ToLocalTime(),
+            DeclineReason = o.DeclinedByShop ? o.DeclineReason ?? string.Empty : null
         };
     }
 

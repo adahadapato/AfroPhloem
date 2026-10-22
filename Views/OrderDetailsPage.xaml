@@ -104,6 +104,9 @@
                     <VerticalStackLayout Spacing="2">
                         <Label Text="This order was cancelled" FontSize="15" FontAttributes="Bold"
                                TextColor="{StaticResource BrandDanger}" />
+                        <!-- The shop declined it: their reason -->
+                        <Label Text="{Binding Order.DeclineText}" FontSize="13" Margin="0,2,0,2"
+                               TextColor="{StaticResource BrandTextDark}" IsVisible="{Binding Order.WasDeclined}" />
                         <Label FontSize="12" TextColor="{StaticResource BrandTextMuted}">
                             <Label.FormattedText>
                                 <FormattedString>

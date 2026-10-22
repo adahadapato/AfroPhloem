@@ -23,4 +23,6 @@ public sealed record OrderDetailsDto(
     bool CanCancel,
     int? CancelSecondsLeft,
     bool NeedsRefund,
-    bool ViewedBySeller);
+    bool ViewedBySeller,
+    bool DeclinedByShop,
+    string? DeclineReason);

@@ -51,6 +51,22 @@ public partial class CheckoutViewModel : ObservableObject
     public partial PaymentMethodOption SelectedPaymentMethod { get; set; }
 
     /// <summary>
+    /// "Delivery time": As soon as possible, This evening, Tomorrow. Times a shop in the basket doesn't take right now
+    /// are greyed out (after a shop's cut-off, e.g. 7pm, only Tomorrow).
+    /// </summary>
+    public IReadOnlyList<DeliveryTimeOption> DeliveryTimes { get; } = DeliveryTimeOption.All();
+
+    /// <summary>The delivery time the buyer picked (sent when checking the basket and placing the order).</summary>
+    public DeliveryWindow SelectedDeliveryWindow { get; private set; } = DeliveryWindow.Asap;
+
+    /// <summary>e.g. "Orders for today closed at 7pm at Mama Ama's Kitchen. Choose Tomorrow." (empty when none).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDeliveryTimeNote))]
+    public partial string DeliveryTimeNote { get; set; } = string.Empty;
+
+    public bool HasDeliveryTimeNote => DeliveryTimeNote.Length > 0;
+
+    /// <summary>
     /// property indicating whether the order has been placed,
     /// </summary>
     [ObservableProperty]
@@ -126,6 +142,7 @@ public partial class CheckoutViewModel : ObservableObject
         _delivery = delivery;
         _orders = orders;
         SelectedPaymentMethod = PaymentMethods[0];
+        ShowSelectedDeliveryTime();
         _cart.Items.CollectionChanged += (_, _) => CheckBasket();
     }
 
@@ -162,11 +179,18 @@ public partial class CheckoutViewModel : ObservableObject
                 return;
             }
 
-            var result = await _orders.CheckBasketAsync(items, DeliveryWindow.Asap, load.Token);
+            var result = await _orders.CheckBasketAsync(items, SelectedDeliveryWindow, load.Token);
             if (load.IsCancellationRequested) return;
 
             _check = result.IsSuccess ? result.Value : null;
             RefreshTotals();
+
+            // The picked time closed meanwhile (shop's cut-off)? Move to the first open one and check again
+            if (UpdateDeliveryTimes() is { } moveTo)
+            {
+                SelectDeliveryWindow(moveTo);
+                CheckBasket();
+            }
         }
         catch (Exception)
         {
@@ -210,6 +234,65 @@ public partial class CheckoutViewModel : ObservableObject
 
         CheckBasket();
     }
+
+    // ───────────────────────────── Delivery time ─────────────────────────────
+
+    /// <summary>Tap a delivery time: re-prices the basket for it (some times cost extra).</summary>
+    [RelayCommand]
+    private async Task SelectDeliveryTime(DeliveryTimeOption option)
+    {
+        if (!option.IsOpen)
+        {
+            await Shell.Current.DisplayAlertAsync(option.Title,
+                DeliveryTimeNote.Length > 0 ? DeliveryTimeNote : $"{option.Title} isn't available for this basket.", "OK");
+            return;
+        }
+
+        if (option.Window == SelectedDeliveryWindow) return;
+        SelectDeliveryWindow(option.Window);
+        CheckBasket();
+    }
+
+    private void SelectDeliveryWindow(DeliveryWindow window)
+    {
+        SelectedDeliveryWindow = window;
+        ShowSelectedDeliveryTime();
+    }
+
+    private void ShowSelectedDeliveryTime()
+    {
+        foreach (var option in DeliveryTimes)
+            option.IsSelected = option.Window == SelectedDeliveryWindow;
+    }
+
+    /// <summary>
+    /// Greys out the times a shop in the basket doesn't take right now, and explains why.
+    /// </summary>
+    /// <returns>The first open time when the picked one has closed; otherwise null.</returns>
+    private DeliveryWindow? UpdateDeliveryTimes()
+    {
+        var shops = ServerShops ?? Array.Empty<BasketShopDto>();
+        foreach (var option in DeliveryTimes)
+            option.IsOpen = shops.All(s => s.OpenWindows.Contains(option.Window));
+
+        // Shops past their cut-off: they only take Tomorrow
+        var closed = shops.Where(s => !s.OpenWindows.Contains(DeliveryWindow.Asap)
+                                      && s.OpenWindows.Contains(DeliveryWindow.Tomorrow)).ToList();
+        DeliveryTimeNote = closed.Count switch
+        {
+            0 => string.Join("\n", shops.Select(s => s.DeliveryProblem).OfType<string>().Distinct()),
+            1 => $"Orders for today closed at {CutoffText(closed[0].OrderCutoffTime)} at {closed[0].ShopName}. " +
+                 "Choose Tomorrow.",
+            _ => "Some shops in your basket have closed for today's orders. Choose Tomorrow."
+        };
+
+        var picked = DeliveryTimes.First(o => o.Window == SelectedDeliveryWindow);
+        return !picked.IsOpen && DeliveryTimes.FirstOrDefault(o => o.IsOpen) is { } open ? open.Window : null;
+    }
+
+    /// <summary>19:00 → "7pm", 18:30 → "6:30pm".</summary>
+    private static string CutoffText(TimeOnly time) =>
+        time.ToString(time.Minute == 0 ? "%h" : "h:mm") + (time.Hour < 12 ? "am" : "pm");
 
     /// <summary>
     /// "Change delivery details →": the Delivery address page (pick a saved address or add one).
@@ -277,7 +360,7 @@ public partial class CheckoutViewModel : ObservableObject
         }
 
         // 3. Place: one order per shop
-        var placed = await _orders.PlaceAsync(items, addressId, DeliveryWindow.Asap);
+        var placed = await _orders.PlaceAsync(items, addressId, SelectedDeliveryWindow);
         if (placed.IsFailure)
         {
             await Shell.Current.DisplayAlertAsync("Couldn't place order", placed.Error!.DisplayMessage, "OK");

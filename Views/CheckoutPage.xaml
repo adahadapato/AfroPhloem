@@ -179,6 +179,50 @@
                         </Grid>
                     </Border>
 
+                    <!-- ============ DELIVERY TIME ============ -->
+                    <!-- Greyed-out times aren't taken right now (e.g. after a shop's 7pm cut-off only Tomorrow) -->
+                    <Label Text="Delivery time" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,10,0,0" />
+
+                    <FlexLayout BindableLayout.ItemsSource="{Binding DeliveryTimes}" Wrap="Wrap"
+                                JustifyContent="Start" AlignItems="Center">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:DeliveryTimeOption">
+                                <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1.5"
+                                        StrokeShape="RoundRectangle 18" Padding="14,8" Margin="0,0,8,8">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+                                            <Setter Property="Stroke" Value="{StaticResource BrandDark}" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsOpen}" Value="False">
+                                            <Setter Property="Opacity" Value="0.45" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding SelectDeliveryTimeCommand, Source={RelativeSource AncestorType={x:Type vm:CheckoutViewModel}}}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextDark}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="TextColor" Value="White" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+
+                    <!-- e.g. "Orders for today closed at 7pm at Mama Ama's Kitchen. Choose Tomorrow." -->
+                    <Border BackgroundColor="{StaticResource BrandPeach}" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 12" Padding="12,8" Margin="0,-4,0,0"
+                            IsVisible="{Binding HasDeliveryTimeNote}">
+                        <Label Text="{Binding DeliveryTimeNote}" FontSize="12" TextColor="{StaticResource BrandTextDark}" />
+                    </Border>
+
                     <!-- ============ CHOOSE PAYMENT ============ -->
                     <Label Text="Choose payment" Style="{StaticResource SectionTitle}" FontSize="17" Margin="2,10,0,0" />
 

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    ShopOrderDetailsPage: the seller's view of one order (route "shoporder", from the Seller dashboard).
+    What the customer ordered first, then Accept / Decline (waiting), Send out (being prepared) or
+    Mark delivered (out for delivery).
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:phloem="clr-namespace:Phloem"
+             xmlns:vm="clr-namespace:Phloem.ViewModels"
+             x:DataType="vm:ShopOrderDetailsViewModel"
+             x:Class="Phloem.Views.ShopOrderDetailsPage"
+             Shell.NavBarIsVisible="False"
+             Title="Order">
+
+    <ContentPage.Resources>
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <Shadow Brush="Black" Opacity="0.06" Radius="10" Offset="0,3" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SmallMuted" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
+        </Style>
+        <Style x:Key="StepButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HeightRequest" Value="52" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ============ GREEN HEADER (back arrow) ============ -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource BrandDark}" HeightRequest="72">
+            <Ellipse Stroke="#1AFFFFFF" StrokeThickness="10"
+                     WidthRequest="320" HeightRequest="320"
+                     HorizontalOptions="Start" VerticalOptions="Start"
+                     Margin="-60,-30,0,0" InputTransparent="True" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14" Padding="14,0,16,0">
+                <Grid WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Path Data="M15,5 L8,12 L15,19" Stroke="White" StrokeThickness="2.6"
+                          StrokeLineCap="Round" StrokeLineJoin="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="34" HeightRequest="34" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsLoading}" Command="{Binding RefreshCommand}"
+                     RefreshColor="{StaticResource BrandDark}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16,18,16,28" Spacing="12"
+                                 MaximumWidthRequest="560" HorizontalOptions="Fill">
+
+                <!-- ============ TITLE ============ -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Margin="2,0,0,4">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Order" FontSize="26" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandTextDark}" />
+                        <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandDark}" />
+                    </VerticalStackLayout>
+                    <Border Grid.Column="1" BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 10" Padding="10,4" VerticalOptions="Center"
+                            IsVisible="{Binding HasOrder}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsCancelled}" Value="True">
+                                <Setter Property="BackgroundColor" Value="#FDECEA" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsWaiting}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{StaticResource BrandPeach}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Label Text="{Binding StatusText}" FontSize="12" FontAttributes="Bold"
+                               TextColor="{StaticResource BrandDark}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                    <Setter Property="TextColor" Value="{StaticResource BrandDanger}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </Border>
+                </Grid>
+
+                <!-- Done / why it didn't work -->
+                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="14,10" IsVisible="{Binding HasMessage}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding IsError}" Value="True">
+                            <Setter Property="BackgroundColor" Value="#FDECEA" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <Label Text="{Binding Message}" FontSize="13" TextColor="{StaticResource BrandTextDark}" />
+                </Border>
+
+                <!-- ============ CANCELLED / DECLINED ============ -->
+                <Border BackgroundColor="#FDECEA" Stroke="#F5C6C0" StrokeThickness="1"
+                        StrokeShape="RoundRectangle 14" Padding="14,12" IsVisible="{Binding IsCancelled}">
+                    <Label Text="{Binding CancelledText}" FontSize="13" TextColor="{StaticResource BrandTextDark}" />
+                </Border>
+
+                <!-- ============ WHEN + WHERE ============ -->
+                <Border Style="{StaticResource WhiteCard}" IsVisible="{Binding HasOrder}">
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Path Data="M12,2 A10,10 0 1 0 12.01,2 M12,6 L12,12 L16,14"
+                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8" StrokeLineCap="Round"
+                                  WidthRequest="22" HeightRequest="22" VerticalOptions="Start" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="When" Style="{StaticResource SmallMuted}" />
+                                <Label Text="{Binding WhenText}" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BrandBorder}" />
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Path Data="M12,22 C12,22 4,14.5 4,9 A8,8 0 0 1 20,9 C20,14.5 12,22 12,22 Z M9,9 A3,3 0 1 0 15,9 A3,3 0 1 0 9,9"
+                                  Stroke="{StaticResource BrandDark}" StrokeThickness="1.8"
+                                  WidthRequest="22" HeightRequest="22" VerticalOptions="Start" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Deliver to" Style="{StaticResource SmallMuted}" />
+                                <Label Text="{Binding AddressText}" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{StaticResource BrandTextDark}" LineBreakMode="WordWrap" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ WHAT THEY ORDERED ============ -->
+                <Grid ColumnDefinitions="*,Auto" Margin="2,8,0,0" IsVisible="{Binding HasOrder}">
+                    <Label Text="What they ordered" Style="{StaticResource SectionTitle}" FontSize="17" />
+                    <Label Grid.Column="1" Text="{Binding ItemCountText}" FontSize="12" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandDark}" VerticalOptions="Center" />
+                </Grid>
+
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Lines}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ShopOrderLine">
+                            <Border Style="{StaticResource WhiteCard}" Padding="10">
+                                <Grid ColumnDefinitions="60,*,Auto" ColumnSpacing="12">
+                                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 10"
+                                            WidthRequest="60" HeightRequest="46"
+                                            BackgroundColor="{StaticResource BrandMintPale}">
+                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
+                                    </Border>
+                                    <Label Grid.Column="1" Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
+                                           TextColor="{StaticResource BrandTextDark}" VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation" />
+                                    <VerticalStackLayout Grid.Column="2" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding QuantityText}" FontSize="16" FontAttributes="Bold"
+                                               TextColor="{StaticResource BrandDark}" HorizontalOptions="End" />
+                                        <Label Text="{Binding LineTotalText}" Style="{StaticResource SmallMuted}"
+                                               HorizontalOptions="End" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- ============ TOTALS ============ -->
+                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14" Padding="14,12" IsVisible="{Binding HasOrder}">
+                    <VerticalStackLayout Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Dishes" FontSize="13" TextColor="{StaticResource BrandTextMuted}" />
+                            <Label Grid.Column="1" Text="{Binding SubtotalText}" FontSize="13"
+                                   TextColor="{StaticResource BrandTextMuted}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Delivery fee" FontSize="13" TextColor="{StaticResource BrandTextMuted}" />
+                            <Label Grid.Column="1" Text="{Binding DeliveryFeeText}" FontSize="13"
+                                   TextColor="{StaticResource BrandTextMuted}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BrandMint}" Margin="0,4" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Total paid" FontSize="17" FontAttributes="Bold"
+                                   TextColor="{StaticResource BrandDark}" />
+                            <Label Grid.Column="1" Text="{Binding TotalText}" FontSize="17"
+                                   FontAttributes="Bold" TextColor="{StaticResource BrandDark}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- ============ NEXT STEP ============ -->
+                <!-- Waiting: accept or decline -->
+                <Button Text="✓  Accept order" Command="{Binding AcceptCommand}" Style="{StaticResource StepButton}"
+                        Margin="0,6,0,0" IsVisible="{Binding IsWaiting}" />
+                <Button Text="Decline" Command="{Binding DeclineCommand}" IsVisible="{Binding IsWaiting}"
+                        BackgroundColor="White" TextColor="{StaticResource BrandDanger}"
+                        BorderColor="{StaticResource BrandDanger}" BorderWidth="1.5"
+                        FontAttributes="Bold" FontSize="15" CornerRadius="12" HeightRequest="50" />
+                <Label Text="If you decline, the customer gets a full refund and your reason by email."
+                       Style="{StaticResource SmallMuted}" HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center" IsVisible="{Binding IsWaiting}" />
+
+                <!-- Being prepared → out for delivery -->
+                <Button Text="🛵  Send out for delivery" Command="{Binding SendOutCommand}"
+                        Style="{StaticResource StepButton}" Margin="0,6,0,0" IsVisible="{Binding IsPreparing}" />
+
+                <!-- Out for delivery → delivered -->
+                <Button Text="✓  Mark delivered" Command="{Binding MarkDeliveredCommand}"
+                        Style="{StaticResource StepButton}" Margin="0,6,0,0" IsVisible="{Binding IsOutForDelivery}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

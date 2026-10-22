@@ -2,7 +2,8 @@
 <!--
     SellerDashboardPage: redesigned to match "SellerDashboardPage.xaml / dashboard / Proposed redesign".
     No AppHeaderBar: the green header is built into the page.
-    Uses SellerDashboardViewModel (existing commands + Greeting, WeeklySales, ViewAllDishes).
+    Uses SellerDashboardViewModel: tiles, orders waiting / being prepared / out for delivery and the sales chart
+    come from the API; tapping an order opens it (route "shoporder") to accept or decline.
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -37,6 +38,29 @@
             <Setter Property="FontSize" Value="13" />
             <Setter Property="TextColor" Value="{StaticResource BrandTextMuted}" />
         </Style>
+        <!-- One order card (waiting / being prepared / out for delivery): tap → the order's page -->
+        <DataTemplate x:Key="ShopOrderTemplate" x:DataType="models:ShopOrderCard">
+            <Border BackgroundColor="White" Stroke="{StaticResource BrandBorder}" StrokeThickness="1"
+                    StrokeShape="RoundRectangle 14" Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer
+                        Command="{Binding OpenOrderCommand, Source={RelativeSource AncestorType={x:Type vm:SellerDashboardViewModel}}}"
+                        CommandParameter="{Binding .}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                    <Label Text="{Binding CustomerName}" FontSize="15" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" />
+                    <Label Grid.Column="1" Text="{Binding TotalText}" Style="{StaticResource PriceLabel}" />
+                    <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ItemsSummary}" FontSize="13"
+                           TextColor="{StaticResource BrandTextDark}" LineBreakMode="TailTruncation" MaxLines="2" />
+                    <Label Grid.Row="2" Text="{Binding WhenText}" FontSize="12"
+                           TextColor="{StaticResource BrandTextMuted}" LineBreakMode="TailTruncation" />
+                    <Label Grid.Row="2" Grid.Column="1" Text="Open  ›" FontSize="12" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandGreen}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
         <!-- Small − / + price buttons -->
         <Style x:Key="TinyStepButton" TargetType="Button">
             <Setter Property="BackgroundColor" Value="Transparent" />
@@ -92,7 +116,9 @@
             </Grid>
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsLoading}" Command="{Binding RefreshCommand}"
+                     RefreshColor="{StaticResource BrandDark}">
+        <ScrollView>
             <VerticalStackLayout Padding="16,18,16,28" Spacing="14"
                                  MaximumWidthRequest="700" HorizontalOptions="Fill">
 
@@ -127,7 +153,7 @@
                     <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource StatCard}"
                             BackgroundColor="{StaticResource BrandMintPale}">
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="{Binding CurrentVendor.Balance, StringFormat='£{0:#,0}'}"
+                            <Label Text="{Binding BalanceText}"
                                    Style="{StaticResource StatNumberLabel}" TextColor="{StaticResource BrandGreen}" />
                             <Label Text="Available balance" Style="{StaticResource StatCaptionLabel}" />
                         </VerticalStackLayout>
@@ -136,17 +162,16 @@
                     <!-- Total orders -->
                     <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource StatCard}">
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="{Binding CurrentVendor.TotalOrders}" Style="{StaticResource StatNumberLabel}" />
+                            <Label Text="{Binding TotalOrdersText}" Style="{StaticResource StatNumberLabel}" />
                             <Label Text="Total orders" Style="{StaticResource StatCaptionLabel}" />
                         </VerticalStackLayout>
                     </Border>
 
-                    <!-- Pending orders -->
+                    <!-- Orders waiting to be accepted -->
                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource StatCard}">
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="{Binding CurrentVendor.PendingOrders, StringFormat='{0:00}'}"
-                                   Style="{StaticResource StatNumberLabel}" />
-                            <Label Text="Pending orders" Style="{StaticResource StatCaptionLabel}" />
+                            <Label Text="{Binding WaitingCountText}" Style="{StaticResource StatNumberLabel}" />
+                            <Label Text="Orders waiting" Style="{StaticResource StatCaptionLabel}" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -156,7 +181,7 @@
                             <Label Style="{StaticResource StatNumberLabel}">
                                 <Label.FormattedText>
                                     <FormattedString>
-                                        <Span Text="{Binding CurrentVendor.Rating, StringFormat='{0:0.0}'}" />
+                                        <Span Text="{Binding RatingText}" />
                                         <Span Text="  ★" TextColor="{StaticResource BrandStar}" FontSize="20" />
                                     </FormattedString>
                                 </Label.FormattedText>
@@ -166,9 +191,40 @@
                     </Border>
                 </Grid>
 
-                <!-- ============ ACCEPT ORDER ============ -->
-                <Button Text="Accept next pending order  →" Command="{Binding AcceptNextOrderCommand}"
-                        Style="{StaticResource CtaButton}" HeightRequest="52" Margin="0,4,0,0" />
+                <!-- Why the dashboard couldn't load (no shop, no internet…) -->
+                <Border BackgroundColor="{StaticResource BrandPeach}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="14,10" IsVisible="{Binding HasMessage}">
+                    <Label Text="{Binding Message}" FontSize="13" TextColor="{StaticResource BrandTextDark}" />
+                </Border>
+
+                <!-- ============ ORDERS WAITING ============ -->
+                <Label Text="{Binding WaitingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />
+                <Label Text="Open an order to see what the customer ordered, then accept or decline it."
+                       Style="{StaticResource SubtleLabel}" FontSize="12" Margin="2,-8,0,0"
+                       IsVisible="{Binding HasNoWaitingOrders, Converter={StaticResource InvertedBoolConverter}}" />
+
+                <Border BackgroundColor="{StaticResource BrandMintPale}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14" Padding="16,18" IsVisible="{Binding HasNoWaitingOrders}">
+                    <Label Text="No orders waiting right now." FontSize="14" FontAttributes="Bold"
+                           TextColor="{StaticResource BrandDark}" HorizontalOptions="Center" />
+                </Border>
+
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding WaitingOrders}"
+                                     BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}" />
+
+                <!-- ============ BEING PREPARED ============ -->
+                <Label Text="{Binding PreparingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
+                       IsVisible="{Binding HasPreparingOrders}" />
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding PreparingOrders}"
+                                     BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}"
+                                     IsVisible="{Binding HasPreparingOrders}" />
+
+                <!-- ============ OUT FOR DELIVERY ============ -->
+                <Label Text="{Binding OutForDeliveryTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
+                       IsVisible="{Binding HasOutForDeliveryOrders}" />
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding OutForDeliveryOrders}"
+                                     BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}"
+                                     IsVisible="{Binding HasOutForDeliveryOrders}" />
 
                 <!-- ============ SALES OVERVIEW ============ -->
                 <Label Text="Sales overview" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />
@@ -278,5 +334,6 @@
 
             </VerticalStackLayout>
         </ScrollView>
+        </RefreshView>
     </Grid>
 </ContentPage>

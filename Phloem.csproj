@@ -69,8 +69,9 @@
   <ItemGroup>
     <!-- App settings (API address), read at start-up by MauiProgram. NO secrets: they ship inside the app. -->
     <EmbeddedResource Include="Settings\appsettings.json" LogicalName="appsettings.json" />
-    <!-- Debug builds only: your local API -->
-    <EmbeddedResource Include="Settings\appsettings.Development.json" LogicalName="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug'" />
+    <!-- Debug builds only: your local API. The file is git-ignored (it's only on your PC), so it's embedded only when
+         it exists: GitHub's build machines don't have it, and the app treats it as optional (MauiProgram). -->
+    <EmbeddedResource Include="Settings\appsettings.Development.json" LogicalName="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug' And Exists('Settings\appsettings.Development.json')" />
   </ItemGroup>
 
   <ItemGroup>
@@ -88,6 +89,9 @@
     </MauiXaml>
     <MauiXaml Update="Views\AdminShipmentsPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\AdminShopDetailsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
     <MauiXaml Update="Views\ChangePasswordPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>

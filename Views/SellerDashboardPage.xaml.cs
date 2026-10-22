@@ -12,13 +12,14 @@ public partial class SellerDashboardPage : ContentPage
         BindingContext = _vm = vm;
     }
 
-    // Flag of the country picked on Home
-    protected override void OnAppearing()
+    // Flag of the country picked on Home; the shop and its orders as they are now
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _vm.Reload();   // shows dishes just added, edited or deleted
         var cart = IPlatformApplication.Current?.Services.GetService<Phloem.Services.CartService>();
         FlagLabel.Text = cart?.SelectedCountry?.FlagEmoji ?? "🌍";
+        try { await _vm.ReloadAsync(); }
+        catch (Exception) { /* the page says it couldn't load; pull down to try again */ }
     }
 
     // ☰ opens the side menu

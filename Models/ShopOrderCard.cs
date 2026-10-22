@@ -1,0 +1,25 @@
+using Phloem.Services;
+using Phloem.Services.Api.Contracts.Dtos;
+
+namespace Phloem.Models;
+
+/// <summary>One order card in the Seller dashboard lists (waiting, being prepared, out for delivery).</summary>
+public sealed class ShopOrderCard
+{
+    public required ShopOrderSummaryDto Order { get; init; }
+
+    public string OrderNumber => Order.OrderNumber;
+    public string CustomerName => Order.CustomerName;
+    public string ItemsSummary => Order.ItemsSummary;
+    public string TotalText => $"{OrderService.SymbolOf(Order.Currency)}{Order.Total:N2}";
+
+    /// <summary>"Paid 14:05 · As soon as possible".</summary>
+    public string WhenText => Order.PaidAt is { } paid
+        ? $"Paid {paid.ToLocalTime():HH:mm} · {DeliveryTimeOption.TextOf(Order.DeliveryWindow)}"
+        : DeliveryTimeOption.TextOf(Order.DeliveryWindow);
+
+    /// <summary>"Home · 31 Camden High St, London".</summary>
+    public string AddressText => string.IsNullOrWhiteSpace(Order.DeliveryLabel)
+        ? Order.DeliveryAddress
+        : $"{Order.DeliveryLabel} · {Order.DeliveryAddress}";
+}
