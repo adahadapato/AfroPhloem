@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
@@ -15,13 +16,17 @@ public partial class MyShipmentsViewModel : ObservableObject
     private readonly ShipmentService _shipments;
     private readonly SessionService _session;
 
-    public MyShipmentsViewModel(ShipmentService shipments, SessionService session)
+    public MyShipmentsViewModel(ShipmentService shipments, SessionService session, PagingFactory paging)
     {
         _shipments = shipments;
         _session = session;
+        Pager = paging.Create(PagedLists.MyShipments, LoadAsync);
     }
 
     public ObservableCollection<ShipmentCard> Shipments { get; } = new();
+
+    /// <summary>◀ Page x of y ▶ and "Show n" under the parcels.</summary>
+    public Paging Pager { get; }
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -36,6 +41,7 @@ public partial class MyShipmentsViewModel : ObservableObject
         if (!_session.IsLoggedIn)
         {
             Shipments.Clear();
+            Pager.Update(0);
             Message = "Log in to see your parcels.";
             return;
         }
@@ -43,13 +49,14 @@ public partial class MyShipmentsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var result = await _shipments.GetMineAsync();
+            var result = await _shipments.GetMineAsync(Pager.Page, Pager.PageSize);
             if (result.IsFailure)
             {
                 Message = result.Error!.DisplayMessage;
                 return;
             }
 
+            Pager.Update(result.Value!.TotalCount);
             Shipments.Clear();
             foreach (var s in result.Value!.Items) Shipments.Add(ShipmentCard.From(s));
             Message = Shipments.Count == 0 ? "You haven't sent a parcel yet." : string.Empty;

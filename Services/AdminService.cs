@@ -16,9 +16,6 @@ public sealed class AdminService(ApiClient api)
     private const string Users = "api/admin/users";
     private const string DishNames = "api/admin/dish-catalog";
 
-    /// <summary>How many people or shops a list shows.</summary>
-    private const int PageSize = 100;
-
     // ───────────────────────────── 1. Shops ─────────────────────────────
 
     /// <summary>How many shops are in each status (the stat tiles).</summary>
@@ -29,10 +26,11 @@ public sealed class AdminService(ApiClient api)
     public Task<ApiResult<List<AdminShopDto>>> GetPendingShopsAsync(CancellationToken ct = default) =>
         api.GetAsync<List<AdminShopDto>>($"{Shops}/pending", ct);
 
-    /// <summary>All shops (any status), verified then best rated.</summary>
-    public Task<ApiResult<PagedResult<AdminShopDto>>> GetShopsAsync(string? search, CancellationToken ct = default)
+    /// <summary>All shops (any status), verified then best rated; one page.</summary>
+    public Task<ApiResult<PagedResult<AdminShopDto>>> GetShopsAsync(string? search, int page, int pageSize,
+                                                                   CancellationToken ct = default)
     {
-        var path = $"{Shops}?page=1&pageSize={PageSize}";
+        var path = $"{Shops}?page={page}&pageSize={pageSize}";
         if (!string.IsNullOrWhiteSpace(search)) path += $"&search={Uri.EscapeDataString(search.Trim())}";
         return api.GetAsync<PagedResult<AdminShopDto>>(path, ct);
     }
@@ -78,11 +76,11 @@ public sealed class AdminService(ApiClient api)
 
     // ───────────────────────────── 3. Users ─────────────────────────────
 
-    /// <summary>Everyone who has signed up, newest first; optionally a name search, or only suspended people.</summary>
-    public Task<ApiResult<PagedResult<AdminUserDto>>> GetUsersAsync(string? search, bool suspendedOnly,
-                                                                   CancellationToken ct = default)
+    /// <summary>Everyone who has signed up, newest first; optionally a name search, or only suspended people; one page.</summary>
+    public Task<ApiResult<PagedResult<AdminUserDto>>> GetUsersAsync(string? search, bool suspendedOnly, int page,
+                                                                   int pageSize, CancellationToken ct = default)
     {
-        var path = $"{Users}?page=1&pageSize={PageSize}&suspendedOnly={suspendedOnly.ToString().ToLowerInvariant()}";
+        var path = $"{Users}?page={page}&pageSize={pageSize}&suspendedOnly={suspendedOnly.ToString().ToLowerInvariant()}";
         if (!string.IsNullOrWhiteSpace(search)) path += $"&search={Uri.EscapeDataString(search.Trim())}";
         return api.GetAsync<PagedResult<AdminUserDto>>(path, ct);
     }

@@ -5,6 +5,7 @@ using Phloem.Models;
 using Phloem.Services;
 using Phloem.Services.Api;
 using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 using Phloem.Views;
 
 namespace Phloem.ViewModels;
@@ -41,6 +42,9 @@ public partial class VendorsListViewModel : ObservableObject
     /// <summary>The cards shown on the page.</summary>
     public ObservableCollection<VendorListItem> Vendors { get; } = new();
 
+    /// <summary>◀ Page x of y ▶ and "Show n" under the shops.</summary>
+    public Paging Pager { get; }
+
     /// <summary>Country used across the app (header flag, currency). Unchanged behaviour.</summary>
     [ObservableProperty]
     public partial CountryOption SelectedCountry { get; set; }
@@ -61,10 +65,11 @@ public partial class VendorsListViewModel : ObservableObject
 
     partial void OnEmptyMessageChanged(string value) => OnPropertyChanged(nameof(IsEmpty));
 
-    public VendorsListViewModel(ShopService shops, CartService cart)
+    public VendorsListViewModel(ShopService shops, CartService cart, PagingFactory paging)
     {
         _shops = shops;
         _cart = cart;
+        Pager = paging.Create(PagedLists.Shops, () => LoadVendorsAsync(debounce: false));
         SelectedCountry = _cart.SelectedCountry;
         RefreshVendors();
     }
@@ -86,24 +91,33 @@ public partial class VendorsListViewModel : ObservableObject
     public void Reload()
     {
         SelectedCountry = _cart.SelectedCountry;
-        RefreshVendors();
+        _ = LoadVendorsAsync(debounce: false);   // same page, fresh from the server
     }
 
-    /// <summary>Reloads the shops from the API; a newer request (another letter typed) cancels the older one.</summary>
-    private async void RefreshVendors()
+    /// <summary>New search or country chip: back to page 1 and reload.</summary>
+    private void RefreshVendors()
     {
+        Pager?.Reset();
+        _ = LoadVendorsAsync(debounce: true);
+    }
+
+    /// <summary>Loads the current page from the API; a newer request (another letter typed) cancels the older one.</summary>
+    /// <param name="debounce">Wait a moment first (the user may still be typing).</param>
+    private async Task LoadVendorsAsync(bool debounce)
+    {
+        if (Pager is null) return;   // still being created
         _load?.Cancel();
         var load = _load = new CancellationTokenSource();
         try
         {
-            await Task.Delay(250, load.Token);   // wait while the user is still typing
+            if (debounce) await Task.Delay(250, load.Token);   // wait while the user is still typing
 
             // The chips use the names people read ("United Kingdom"); the API wants its own name
             var country = CountryFilter == "All"
                 ? (Country?)null
                 : CountryOption.All.FirstOrDefault(c => c.Name == CountryFilter)?.ApiCountry;
 
-            var result = await _shops.GetShopsAsync(country, SearchText, load.Token);
+            var result = await _shops.GetShopsAsync(country, SearchText, Pager.Page, Pager.PageSize, load.Token);
             if (load.IsCancellationRequested) return;
 
             Vendors.Clear();
@@ -114,7 +128,8 @@ public partial class VendorsListViewModel : ObservableObject
             }
 
             // The API lists verified shops first, then the best rated
-            foreach (var vendor in result.Value!)
+            Pager.Update(result.Value!.TotalCount);
+            foreach (var vendor in result.Value.Items)
             {
                 Vendors.Add(new VendorListItem
                 {

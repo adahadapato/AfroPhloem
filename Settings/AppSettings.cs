@@ -54,4 +54,22 @@ public static class AppSettings
         /// </summary>
         public const string TrustDevelopmentCertificate = "Api:TrustDevelopmentCertificate";
     }
+
+    // ==================== Paging ====================
+
+    /// <summary>Long lists shown a page at a time. Bound to <see cref="PagingSettings"/>.</summary>
+    public static class Paging
+    {
+        /// <summary>The whole section.</summary>
+        public const string Section = "Paging";
+
+        /// <summary>The "Show" choices people can pick from, e.g. [10, 15, 20, 30, 50] (the API allows up to 100).</summary>
+        public const string SizeOptions = "Paging:SizeOptions";
+
+        /// <summary>
+        /// Items per page until the person picks their own, per list (keys are <see cref="PagedLists"/>),
+        /// e.g. "Paging:Defaults:Dishes" = 20.
+        /// </summary>
+        public const string Defaults = "Paging:Defaults";
+    }
 }

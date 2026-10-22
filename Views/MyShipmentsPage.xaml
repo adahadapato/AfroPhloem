@@ -7,6 +7,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
              xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:MyShipmentsViewModel"
              x:Class="Phloem.Views.MyShipmentsPage"
@@ -131,6 +132,9 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
+
+                    <!-- ◀ Page x of y ▶ · Show n -->
+                    <controls:PagerView Paging="{Binding Pager}" />
 
                 </VerticalStackLayout>
             </ScrollView>

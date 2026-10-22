@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
@@ -19,6 +20,9 @@ public partial class OrdersViewModel : ObservableObject
     public ObservableCollection<CartItem> Items => _cart.Items;
     public ObservableCollection<PlacedOrder> PastOrders => _history.Orders;
 
+    /// <summary>◀ Page x of y ▶ and "Show n" under "Recent orders".</summary>
+    public Paging Pager { get; }
+
     public int ItemCount => _cart.Items.Sum(i => i.Quantity);
     public decimal Subtotal => _cart.Subtotal;
     public decimal DeliveryFee => _cart.DeliveryFee;
@@ -33,12 +37,13 @@ public partial class OrdersViewModel : ObservableObject
     public string DeliveryAddressText => _delivery.Describe(_session.IsLoggedIn ? _session.CurrentUser : null);
 
     public OrdersViewModel(CartService cart, OrderHistoryService history,
-                           SessionService session, DeliveryAddressService delivery)
+                           SessionService session, DeliveryAddressService delivery, PagingFactory paging)
     {
         _cart = cart;
         _history = history;
         _session = session;
         _delivery = delivery;
+        Pager = paging.Create(PagedLists.MyOrders, LoadOrdersPageAsync);
         _cart.Items.CollectionChanged += (_, _) => Refresh();
         _history.Orders.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasPastOrders));
     }
@@ -64,9 +69,16 @@ public partial class OrdersViewModel : ObservableObject
     public async void RefreshWithOrders()
     {
         Refresh();
+        await LoadOrdersPageAsync();
+    }
+
+    /// <summary>The pager's page of "Recent orders", fresh from the server.</summary>
+    private async Task LoadOrdersPageAsync()
+    {
         try
         {
-            await _history.LoadAsync();
+            await _history.LoadAsync(Pager.Page, Pager.PageSize);
+            Pager.Update(_history.TotalCount);
         }
         catch (Exception)
         {

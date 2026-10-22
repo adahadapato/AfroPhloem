@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Phloem.Services;
 using Phloem.Services.Api;
+using Phloem.Settings;
 using Phloem.ViewModels;
 using Phloem.Views;
 
@@ -22,6 +23,10 @@ public static class DependencyInjection
     {
         // ---- API: settings, tokens, HttpClients, ApiClient ----
         services.AddPhloemApi(configuration);
+
+        // ---- Long lists a page at a time: sizes from appsettings "Paging" ----
+        services.Configure<PagingSettings>(configuration.GetSection(PagingSettings.SectionName));
+        services.AddSingleton<PagingFactory>();
 
         // ---- API feature services (one per API area) ----
         services.AddSingleton<AuthService>();       // /api/auth

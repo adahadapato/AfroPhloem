@@ -13,9 +13,6 @@ namespace Phloem.Services;
 /// </summary>
 public sealed class OrderService(ApiClient api)
 {
-    /// <summary>How many orders "My orders" shows (newest first).</summary>
-    private const int MyOrdersPageSize = 50;
-
     // ───────────────────────────── 1. Basket ─────────────────────────────
 
     /// <summary>The basket's dishes as the API wants them (Id + quantity). Dishes without an API Id are skipped.</summary>
@@ -47,9 +44,10 @@ public sealed class OrderService(ApiClient api)
 
     // ───────────────────────────── 3. My orders ─────────────────────────────
 
-    /// <summary>My orders, newest first.</summary>
-    public Task<ApiResult<PagedResult<OrderSummaryDto>>> GetMyOrdersAsync(CancellationToken ct = default) =>
-        api.GetAsync<PagedResult<OrderSummaryDto>>($"api/orders?page=1&pageSize={MyOrdersPageSize}", ct);
+    /// <summary>My orders, newest first; one page.</summary>
+    public Task<ApiResult<PagedResult<OrderSummaryDto>>> GetMyOrdersAsync(int page, int pageSize,
+                                                                         CancellationToken ct = default) =>
+        api.GetAsync<PagedResult<OrderSummaryDto>>($"api/orders?page={page}&pageSize={pageSize}", ct);
 
     /// <summary>One of my orders, with its dishes.</summary>
     public Task<ApiResult<OrderDetailsDto>> GetAsync(string orderNumber, CancellationToken ct = default) =>

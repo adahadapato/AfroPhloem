@@ -14,27 +14,29 @@ namespace Phloem.Services;
 /// </summary>
 public sealed class ShopService(ApiClient api, IOptions<ApiSettings> settings)
 {
-    /// <summary>Most shops one list returns.</summary>
-    public const int PageSize = 50;
-
-    /// <summary>"Meet local shops": approved shops, optionally in one country and/or matching a name.</summary>
+    /// <summary>"Meet local shops": approved shops, optionally in one country and/or matching a name; one page.</summary>
     /// <param name="country">Only this country; null = every country.</param>
     /// <param name="search">Part of a shop's name; empty = no filter.</param>
+    /// <param name="page">1-based page.</param>
+    /// <param name="pageSize">Shops per page.</param>
     /// <param name="ct">Cancels the request.</param>
-    public async Task<ApiResult<IReadOnlyList<Vendor>>> GetShopsAsync(Country? country, string? search,
-                                                                     CancellationToken ct = default)
+    public async Task<ApiResult<PagedResult<Vendor>>> GetShopsAsync(Country? country, string? search, int page,
+                                                                   int pageSize, CancellationToken ct = default)
     {
         var path = ApiQuery.Build("api/shops", new Dictionary<string, string?>
         {
             ["country"] = country?.ToString(),
             ["search"] = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
-            ["pageSize"] = PageSize.ToString()
+            ["page"] = page.ToString(),
+            ["pageSize"] = pageSize.ToString()
         });
 
         var result = await api.GetAsync<PagedResult<ShopListItemDto>>(path, ct);
-        return result.IsFailure
-            ? result.Error!
-            : ApiResult<IReadOnlyList<Vendor>>.Success(result.Value!.Items.Select(ToVendor).ToList());
+        if (result.IsFailure) return result.Error!;
+
+        var paged = result.Value!;
+        return ApiResult<PagedResult<Vendor>>.Success(
+            new PagedResult<Vendor>(paged.Items.Select(ToVendor).ToList(), paged.TotalCount, paged.Page, paged.PageSize));
     }
 
     /// <summary>Home → "Top sellers": the best-rated shops.</summary>

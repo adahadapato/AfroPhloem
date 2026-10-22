@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Phloem.Models;
 using Phloem.Services;
 using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
@@ -27,11 +28,15 @@ public partial class AdminShipmentsViewModel : ObservableObject
 {
     private readonly ShipmentService _shipments;
 
-    public AdminShipmentsViewModel(ShipmentService shipments)
+    public AdminShipmentsViewModel(ShipmentService shipments, PagingFactory paging)
     {
         _shipments = shipments;
         Filters[0].IsSelected = true;
+        Pager = paging.Create(PagedLists.AdminShipments, LoadAsync);
     }
+
+    /// <summary>◀ Page x of y ▶ and "Show n" under the parcels.</summary>
+    public Paging Pager { get; }
 
     public ObservableCollection<StatusFilter> Filters { get; } = new(
         new StatusFilter[] { new() { Name = "All" } }
@@ -53,13 +58,14 @@ public partial class AdminShipmentsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var result = await _shipments.GetAllAsync(SelectedStatus);
+            var result = await _shipments.GetAllAsync(SelectedStatus, Pager.Page, Pager.PageSize);
             if (result.IsFailure)
             {
                 Message = result.Error!.DisplayMessage;
                 return;
             }
 
+            Pager.Update(result.Value!.TotalCount);
             Shipments.Clear();
             foreach (var s in result.Value!.Items) Shipments.Add(ShipmentCard.From(s));
             Message = Shipments.Count == 0 ? "No parcels here." : string.Empty;
@@ -77,6 +83,7 @@ public partial class AdminShipmentsViewModel : ObservableObject
     private async Task SelectFilter(StatusFilter filter)
     {
         foreach (var f in Filters) f.IsSelected = ReferenceEquals(f, filter);
+        Pager.Reset();
         await LoadAsync();
     }
 

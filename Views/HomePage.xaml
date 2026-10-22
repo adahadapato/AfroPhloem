@@ -18,21 +18,25 @@
 
     <Grid RowDefinitions="*,Auto">
 
+        <!--
+            The page scrolls UNDER a pinned header (menu, logo, basket, country, search), like the other pages.
+            The header shows the top of the same wallpaper at the same size, so at rest the page looks unchanged.
+        -->
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="0">
 
-                <!-- ============ HERO: header, search and greeting on one wallpaper ============ -->
+                <!-- ============ HERO: greeting on the wallpaper (the pinned header covers its top) ============ -->
                 <Border HeightRequest="330"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 0,0,25,25"
                         BackgroundColor="{StaticResource BrandDark}">
-                    <Grid RowDefinitions="Auto,Auto,*">
+                    <Grid RowDefinitions="120,*">   <!-- 120 = the pinned header's height (keep the two the same) -->
 
                         <!-- Wallpaper behind everything -->
-                        <Image Grid.RowSpan="3" Source="home_page_wallpaper.png" Aspect="AspectFill" />
+                        <Image Grid.RowSpan="2" Source="home_page_wallpaper.png" Aspect="AspectFill" />
 
                         <!-- Darkens the left side so the white text stays readable -->
-                        <BoxView Grid.RowSpan="3">
+                        <BoxView Grid.RowSpan="2">
                             <BoxView.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                     <GradientStop Color="#80012411" Offset="0.0" />
@@ -41,97 +45,10 @@
                             </BoxView.Background>
                         </BoxView>
 
-                        <!-- Row 0: menu, logo + name, country flag pill -->
-                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14"
-                              Padding="18,14,16,10">
-                            <!-- Menu icon (opens the side menu) -->
-                            <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
-                                <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
-                                      Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
-                                      WidthRequest="24" HeightRequest="24"
-                                      HorizontalOptions="Center" VerticalOptions="Center" />
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnMenuTapped" />
-                                </Grid.GestureRecognizers>
-                            </Grid>
+                        <!-- Row 0: room for the pinned header -->
 
-                            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                                <HorizontalStackLayout.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
-                                </HorizontalStackLayout.GestureRecognizers>
-                                <Image Source="header_logo.png" WidthRequest="36" HeightRequest="36" />
-                                <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
-                                       VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-
-                            <!-- Cart icon + count (shows once something is in the basket) -->
-                            <Grid Grid.Column="2" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
-                                  IsVisible="{Binding CartCount, Converter={StaticResource IntToBoolConverter}}">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnCartTapped" />
-                                </Grid.GestureRecognizers>
-                                <Path Data="M2.5,4 L5.5,4 L7.9,14.5 L18.1,14.5 L20.5,7 L7,7 M9.5,19 A1.6,1.6 0 1 0 9.51,19 M16.5,19 A1.6,1.6 0 1 0 16.51,19"
-                                      Stroke="White" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
-                                      WidthRequest="26" HeightRequest="26"
-                                      HorizontalOptions="Center" VerticalOptions="Center" />
-                                <Border BackgroundColor="{StaticResource BrandOrangeLight}" Stroke="{StaticResource BrandDark}"
-                                        StrokeThickness="2" StrokeShape="RoundRectangle 10"
-                                        MinimumWidthRequest="20" HeightRequest="20" Padding="5,0"
-                                        HorizontalOptions="End" VerticalOptions="Start" Margin="0,-2,-4,0">
-                                    <Label Text="{Binding CartCount}" TextColor="White" FontSize="11" FontAttributes="Bold"
-                                           HorizontalOptions="Center" VerticalOptions="Center" />
-                                </Border>
-                            </Grid>
-
-                            <!-- Country pill -->
-                            <Border Grid.Column="3" BackgroundColor="White" StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 18" Padding="12,4" HeightRequest="36"
-                                    VerticalOptions="Center">
-                                <HorizontalStackLayout Spacing="6">
-                                    <Label Text="{Binding SelectedCountry.FlagEmoji}" FontSize="20" VerticalOptions="Center" />
-                                    <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
-                                          StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
-                                          WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
-                                </HorizontalStackLayout>
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnCountryTapped" />
-                                </Border.GestureRecognizers>
-                            </Border>
-                        </Grid>
-
-                        <!-- Row 1: white rounded search bar -->
-                        <Border Grid.Row="1" Margin="16,0,16,0" HeightRequest="46"
-                                BackgroundColor="{StaticResource BrandCard}"
-                                StrokeThickness="0" StrokeShape="RoundRectangle 12"
-                                Padding="14,0">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Opacity="0.15" Radius="10" Offset="0,3" />
-                            </Border.Shadow>
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
-                                <Path Data="M3,10 A7,7 0 1 0 17,10 A7,7 0 1 0 3,10 M15.5,15.5 L21,21"
-                                      Stroke="{StaticResource BrandTextDark}" StrokeThickness="2"
-                                      StrokeLineCap="Round"
-                                      WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
-                                <Entry Grid.Column="1"
-                                       Text="{Binding SearchText}"
-                                       Placeholder="Search meals, ingredients, or vendors..."
-                                       PlaceholderColor="{StaticResource BrandTextMuted}"
-                                       TextColor="{StaticResource BrandTextDark}"
-                                       BackgroundColor="Transparent"
-                                       FontSize="14" ReturnType="Search"
-                                       VerticalOptions="Center" />
-                                <BoxView Grid.Column="2" WidthRequest="1" HeightRequest="24"
-                                         Color="{StaticResource BrandBorder}" VerticalOptions="Center" />
-                                <Path Grid.Column="3"
-                                      Data="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18 M7,4 L7,8 M16,10 L16,14 M10,16 L10,20"
-                                      Stroke="{StaticResource BrandTextDark}" StrokeThickness="2"
-                                      StrokeLineCap="Round"
-                                      WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
-                            </Grid>
-                        </Border>
-
-                        <!-- Row 2: greeting left, round dish photo right (runs off the edge) -->
-                        <Grid Grid.Row="2" ColumnDefinitions="1.2*,*" Padding="20,10,0,44">
+                        <!-- Row 1: greeting left, round dish photo right (runs off the edge) -->
+                        <Grid Grid.Row="1" ColumnDefinitions="1.2*,*" Padding="20,0,0,44">
                             <VerticalStackLayout Spacing="4" VerticalOptions="Center">
                                 <Label Text="Good to see you 👋" TextColor="White" FontSize="15" />
                                 <Label Text="What are you craving today?" TextColor="White"
@@ -400,6 +317,115 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- ============ PINNED HEADER: menu, logo, basket, country + search (never scrolls) ============ -->
+        <!-- 120 high: the same as the hero's first row (keep the two the same) -->
+        <Grid Grid.Row="0" VerticalOptions="Start" HeightRequest="120" RowDefinitions="Auto,Auto,*"
+              BackgroundColor="{StaticResource BrandDark}">
+
+            <!-- Same wallpaper at the hero's size (full width × 330), cut to the header, so the two line up exactly -->
+            <AbsoluteLayout Grid.RowSpan="3" HeightRequest="120" IsClippedToBounds="True" InputTransparent="True">
+                <Image Source="home_page_wallpaper.png" Aspect="AspectFill"
+                       AbsoluteLayout.LayoutBounds="0,0,1,330" AbsoluteLayout.LayoutFlags="WidthProportional" />
+                <BoxView AbsoluteLayout.LayoutBounds="0,0,1,330" AbsoluteLayout.LayoutFlags="WidthProportional">
+                    <BoxView.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#80012411" Offset="0.0" />
+                            <GradientStop Color="#00012411" Offset="0.75" />
+                        </LinearGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+            </AbsoluteLayout>
+
+            <!-- Row 0: menu, logo + name, country flag pill -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14"
+                  Padding="18,14,16,10">
+                <!-- Menu icon (opens the side menu) -->
+                <Grid WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
+                    <Path Data="M2,5 L22,5 M2,12 L22,12 M2,19 L22,19"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round"
+                          WidthRequest="24" HeightRequest="24"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                    </Grid.GestureRecognizers>
+            </Grid>
+
+                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Static phloem:AppNav.GoHomeCommand}" />
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <Image Source="header_logo.png" WidthRequest="36" HeightRequest="36" />
+                    <Label Text="Phloem" TextColor="White" FontSize="22" FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <!-- Cart icon + count (shows once something is in the basket) -->
+                <Grid Grid.Column="2" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                      IsVisible="{Binding CartCount, Converter={StaticResource IntToBoolConverter}}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCartTapped" />
+                    </Grid.GestureRecognizers>
+                    <Path Data="M2.5,4 L5.5,4 L7.9,14.5 L18.1,14.5 L20.5,7 L7,7 M9.5,19 A1.6,1.6 0 1 0 9.51,19 M16.5,19 A1.6,1.6 0 1 0 16.51,19"
+                          Stroke="White" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                          WidthRequest="26" HeightRequest="26"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border BackgroundColor="{StaticResource BrandOrangeLight}" Stroke="{StaticResource BrandDark}"
+                            StrokeThickness="2" StrokeShape="RoundRectangle 10"
+                            MinimumWidthRequest="20" HeightRequest="20" Padding="5,0"
+                            HorizontalOptions="End" VerticalOptions="Start" Margin="0,-2,-4,0">
+                        <Label Text="{Binding CartCount}" TextColor="White" FontSize="11" FontAttributes="Bold"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
+                <!-- Country pill -->
+                <Border Grid.Column="3" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18" Padding="12,4" HeightRequest="36"
+                        VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="6">
+                        <Label Text="{Binding SelectedCountry.FlagEmoji}" FontSize="20" VerticalOptions="Center" />
+                        <Path Data="M2,4 L6,8 L10,4" Stroke="{StaticResource BrandTextDark}"
+                              StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round"
+                              WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCountryTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+
+            <!-- Row 1: white rounded search bar -->
+            <Border Grid.Row="1" Margin="16,0,16,0" HeightRequest="46"
+                    BackgroundColor="{StaticResource BrandCard}"
+                    StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                    Padding="14,0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.15" Radius="10" Offset="0,3" />
+                </Border.Shadow>
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                    <Path Data="M3,10 A7,7 0 1 0 17,10 A7,7 0 1 0 3,10 M15.5,15.5 L21,21"
+                          Stroke="{StaticResource BrandTextDark}" StrokeThickness="2"
+                          StrokeLineCap="Round"
+                          WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+                    <Entry Grid.Column="1"
+                           Text="{Binding SearchText}"
+                           Placeholder="Search meals, ingredients, or vendors..."
+                           PlaceholderColor="{StaticResource BrandTextMuted}"
+                           TextColor="{StaticResource BrandTextDark}"
+                           BackgroundColor="Transparent"
+                           FontSize="14" ReturnType="Search"
+                           VerticalOptions="Center" />
+                    <BoxView Grid.Column="2" WidthRequest="1" HeightRequest="24"
+                             Color="{StaticResource BrandBorder}" VerticalOptions="Center" />
+                    <Path Grid.Column="3"
+                          Data="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18 M7,4 L7,8 M16,10 L16,14 M10,16 L10,20"
+                          Stroke="{StaticResource BrandTextDark}" StrokeThickness="2"
+                          StrokeLineCap="Round"
+                          WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- ============ CHECKOUT BAR ============ -->
         <Border Grid.Row="1"

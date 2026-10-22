@@ -110,7 +110,8 @@ public partial class HomeViewModel : ObservableObject
             await Task.Delay(250, load.Token);
 
             var result = await _dishes.SearchAsync(SelectedCountry?.ApiCountry, SelectedCategory, SearchText,
-                                                   shopId: null, DishSort.Rating, page: 1, load.Token);
+                                                   shopId: null, DishSort.Rating, page: 1,
+                                                   pageSize: DishService.PageSize, ct: load.Token);
             if (load.IsCancellationRequested) return;
 
             FeaturedDishes.Clear();

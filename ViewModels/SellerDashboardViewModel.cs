@@ -7,6 +7,7 @@ using Phloem.Services.Api;
 using Phloem.Services.Api.Contracts;
 using Phloem.Services.Api.Contracts.Dtos;
 using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
@@ -44,6 +45,11 @@ public partial class SellerDashboardViewModel : ObservableObject
 
     /// <summary>Orders on their way to the customer.</summary>
     public ObservableCollection<ShopOrderCard> OutForDeliveryOrders { get; } = new();
+
+    /// <summary>Pages of each order list.</summary>
+    public Paging WaitingPager { get; }
+    public Paging PreparingPager { get; }
+    public Paging OutForDeliveryPager { get; }
 
     /// <summary>The demo shop behind "My dishes" (until Part B).</summary>
     [ObservableProperty]
@@ -85,18 +91,25 @@ public partial class SellerDashboardViewModel : ObservableObject
     public string TotalOrdersText => Stats?.TotalOrders.ToString() ?? "–";
     public string WaitingCountText => Stats is null ? "–" : $"{Stats.NewOrders:00}";
 
-    public string WaitingTitle => $"Orders waiting ({WaitingOrders.Count})";
+    public string WaitingTitle => $"Orders waiting ({WaitingPager.TotalCount})";
     public bool HasNoWaitingOrders => WaitingOrders.Count == 0;
-    public string PreparingTitle => $"Being prepared ({PreparingOrders.Count})";
+    public string PreparingTitle => $"Being prepared ({PreparingPager.TotalCount})";
     public bool HasPreparingOrders => PreparingOrders.Count > 0;
-    public string OutForDeliveryTitle => $"Out for delivery ({OutForDeliveryOrders.Count})";
+    public string OutForDeliveryTitle => $"Out for delivery ({OutForDeliveryPager.TotalCount})";
     public bool HasOutForDeliveryOrders => OutForDeliveryOrders.Count > 0;
 
-    public SellerDashboardViewModel(MockDataService data, SessionService session, SellerService seller)
+    public SellerDashboardViewModel(MockDataService data, SessionService session, SellerService seller,
+                                    PagingFactory paging)
     {
         _data = data;
         _session = session;
         _seller = seller;
+        WaitingPager = paging.Create(PagedLists.SellerOrders,
+            () => LoadOrderPageAsync(OrderStatus.Paid, WaitingOrders, WaitingPager));
+        PreparingPager = paging.Create(PagedLists.SellerOrders,
+            () => LoadOrderPageAsync(OrderStatus.Preparing, PreparingOrders, PreparingPager));
+        OutForDeliveryPager = paging.Create(PagedLists.SellerOrders,
+            () => LoadOrderPageAsync(OrderStatus.OutForDelivery, OutForDeliveryOrders, OutForDeliveryPager));
         // Demo shop for "My dishes" (until Part B): the user's own, else the first one
         var userId = _session.CurrentUser?.Id;
         CurrentVendor = _data.Vendors.FirstOrDefault(v => userId != null && v.UserId == userId)
@@ -148,9 +161,11 @@ public partial class SellerDashboardViewModel : ObservableObject
             Shop = shop.Value;
 
             var stats = _seller.GetStatsAsync(load.Token);
-            var waiting = _seller.GetOrdersAsync(OrderStatus.Paid, load.Token);
-            var preparing = _seller.GetOrdersAsync(OrderStatus.Preparing, load.Token);
-            var onTheWay = _seller.GetOrdersAsync(OrderStatus.OutForDelivery, load.Token);
+            var waiting = _seller.GetOrdersAsync(OrderStatus.Paid, WaitingPager.Page, WaitingPager.PageSize, load.Token);
+            var preparing = _seller.GetOrdersAsync(OrderStatus.Preparing, PreparingPager.Page, PreparingPager.PageSize,
+                                                   load.Token);
+            var onTheWay = _seller.GetOrdersAsync(OrderStatus.OutForDelivery, OutForDeliveryPager.Page,
+                                                  OutForDeliveryPager.PageSize, load.Token);
             await Task.WhenAll(stats, waiting, preparing, onTheWay);
             if (load.IsCancellationRequested) return;
 
@@ -163,15 +178,10 @@ public partial class SellerDashboardViewModel : ObservableObject
                 Stats = stats.Result.Value;
                 ShowSales(Stats!.WeeklySales);
             }
-            Fill(WaitingOrders, waiting.Result);
-            Fill(PreparingOrders, preparing.Result);
-            Fill(OutForDeliveryOrders, onTheWay.Result);
-            OnPropertyChanged(nameof(WaitingTitle));
-            OnPropertyChanged(nameof(HasNoWaitingOrders));
-            OnPropertyChanged(nameof(PreparingTitle));
-            OnPropertyChanged(nameof(HasPreparingOrders));
-            OnPropertyChanged(nameof(OutForDeliveryTitle));
-            OnPropertyChanged(nameof(HasOutForDeliveryOrders));
+            Fill(WaitingOrders, WaitingPager, waiting.Result);
+            Fill(PreparingOrders, PreparingPager, preparing.Result);
+            Fill(OutForDeliveryOrders, OutForDeliveryPager, onTheWay.Result);
+            NotifyListsChanged();
         }
         catch (OperationCanceledException)
         {
@@ -187,13 +197,38 @@ public partial class SellerDashboardViewModel : ObservableObject
         }
     }
 
-    private static void Fill(ObservableCollection<ShopOrderCard> list,
+    /// <summary>One list's new page (its pager's ◀ ▶ or "Show").</summary>
+    private async Task LoadOrderPageAsync(OrderStatus status, ObservableCollection<ShopOrderCard> list, Paging pager)
+    {
+        var result = await _seller.GetOrdersAsync(status, pager.Page, pager.PageSize);
+        if (result.IsFailure)
+        {
+            Message = result.Error!.DisplayMessage;
+            return;
+        }
+
+        Fill(list, pager, result);
+        NotifyListsChanged();
+    }
+
+    private static void Fill(ObservableCollection<ShopOrderCard> list, Paging pager,
                              ApiResult<PagedResult<ShopOrderSummaryDto>> result)
     {
         if (result.IsFailure) return;
+        pager.Update(result.Value!.TotalCount);
         list.Clear();
-        foreach (var order in result.Value!.Items)
+        foreach (var order in result.Value.Items)
             list.Add(new ShopOrderCard { Order = order });
+    }
+
+    private void NotifyListsChanged()
+    {
+        OnPropertyChanged(nameof(WaitingTitle));
+        OnPropertyChanged(nameof(HasNoWaitingOrders));
+        OnPropertyChanged(nameof(PreparingTitle));
+        OnPropertyChanged(nameof(HasPreparingOrders));
+        OnPropertyChanged(nameof(OutForDeliveryTitle));
+        OnPropertyChanged(nameof(HasOutForDeliveryOrders));
     }
 
     /// <summary>Mon–Sun bars from the server's daily order counts (the tallest day fills the chart).</summary>

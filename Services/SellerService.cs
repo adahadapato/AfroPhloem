@@ -12,9 +12,6 @@ namespace Phloem.Services;
 /// </summary>
 public sealed class SellerService(ApiClient api)
 {
-    /// <summary>How many orders each dashboard list shows.</summary>
-    public const int ListSize = 50;
-
     // ───────────────────────────── 1. My shop ─────────────────────────────
 
     /// <summary>My shop (404 when the user hasn't opened one).</summary>
@@ -27,11 +24,11 @@ public sealed class SellerService(ApiClient api)
 
     // ───────────────────────────── 2. Orders ─────────────────────────────
 
-    /// <summary>My shop's orders with one status, newest first (Paid = waiting to be accepted).</summary>
-    public Task<ApiResult<PagedResult<ShopOrderSummaryDto>>> GetOrdersAsync(OrderStatus status,
+    /// <summary>My shop's orders with one status, newest first (Paid = waiting to be accepted); one page.</summary>
+    public Task<ApiResult<PagedResult<ShopOrderSummaryDto>>> GetOrdersAsync(OrderStatus status, int page, int pageSize,
                                                                             CancellationToken ct = default) =>
         api.GetAsync<PagedResult<ShopOrderSummaryDto>>(
-            $"api/shops/mine/orders?status={status}&page=1&pageSize={ListSize}", ct);
+            $"api/shops/mine/orders?status={status}&page={page}&pageSize={pageSize}", ct);
 
     /// <summary>One order with its dishes: what the customer ordered, before accepting it.</summary>
     public Task<ApiResult<OrderDetailsDto>> GetOrderAsync(string orderNumber, CancellationToken ct = default) =>

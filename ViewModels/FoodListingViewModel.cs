@@ -5,12 +5,14 @@ using Phloem.Models;
 using Phloem.Services;
 using Phloem.Services.Api;
 using Phloem.Services.Api.Contracts.Enums;
+using Phloem.Settings;
 
 namespace Phloem.ViewModels;
 
 /// <summary>
 /// Browse &amp; Order (Explore tab): dishes from the Phloem API (<see cref="DishService"/>) by country, category,
-/// search text and sort order, or one shop's menu when opened from "View Shop".
+/// search text and sort order, or one shop's menu when opened from "View Shop". Shown a page at a time
+/// (<see cref="Pager"/>); a new search or filter goes back to page 1.
 /// </summary>
 public partial class FoodListingViewModel : ObservableObject
 {
@@ -21,6 +23,9 @@ public partial class FoodListingViewModel : ObservableObject
     public ObservableCollection<CountryOption> Countries { get; } = new(CountryOption.All);
     public ObservableCollection<string> DeliveryTimes { get; } = new() { "ASAP (30-45 min)", "Today, Evening", "Tomorrow" };
     public ObservableCollection<Dish> Dishes { get; } = new();
+
+    /// <summary>◀ Page x of y ▶ and "Show n" under the dishes.</summary>
+    public Paging Pager { get; }
 
     [ObservableProperty]
     public partial CountryOption SelectedCountry { get; set; }
@@ -71,10 +76,11 @@ public partial class FoodListingViewModel : ObservableObject
     partial void OnEmptyMessageChanged(string value) => OnPropertyChanged(nameof(IsEmpty));
     partial void OnCartTotalChanged(decimal value) => OnPropertyChanged(nameof(CartTotalText));
 
-    public FoodListingViewModel(DishService dishes, CartService cart)
+    public FoodListingViewModel(DishService dishes, CartService cart, PagingFactory paging)
     {
         _dishes = dishes;
         _cart = cart;
+        Pager = paging.Create(PagedLists.Dishes, () => LoadDishesAsync(debounce: false));
         SelectedCountry = _cart.SelectedCountry;
         SelectedDeliveryTime = DeliveryTimes[0];
         _cart.Items.CollectionChanged += (_, _) => RefreshCartSummary();
@@ -112,15 +118,24 @@ public partial class FoodListingViewModel : ObservableObject
     public void Reload()
     {
         if (SelectedCountry != _cart.SelectedCountry)
-            SelectedCountry = _cart.SelectedCountry;   // triggers RefreshDishes
+            SelectedCountry = _cart.SelectedCountry;   // triggers RefreshDishes (page 1)
         else
-            RefreshDishes();
+            _ = LoadDishesAsync(debounce: false);       // same page, fresh from the server
         RefreshCartSummary();
     }
 
-    /// <summary>Reloads the dishes from the API; a newer request (another letter typed) cancels the older one.</summary>
-    private async void RefreshDishes()
+    /// <summary>New search, filter, sort or country: back to page 1 and reload.</summary>
+    private void RefreshDishes()
     {
+        Pager?.Reset();
+        _ = LoadDishesAsync(debounce: true);
+    }
+
+    /// <summary>Loads the current page from the API; a newer request (another letter typed) cancels the older one.</summary>
+    /// <param name="debounce">Wait a moment first (the user may still be typing).</param>
+    private async Task LoadDishesAsync(bool debounce)
+    {
+        if (Pager is null) return;   // still being created
         _load?.Cancel();
         var load = _load = new CancellationTokenSource();
 
@@ -128,7 +143,7 @@ public partial class FoodListingViewModel : ObservableObject
         try
         {
             // Wait a moment while the user is still typing
-            await Task.Delay(250, load.Token);
+            if (debounce) await Task.Delay(250, load.Token);
 
             var sort = SortBy switch
             {
@@ -140,7 +155,7 @@ public partial class FoodListingViewModel : ObservableObject
             // A shop's menu shows all its dishes, whatever country is picked in the header
             var country = IsFilteredByVendor ? null : SelectedCountry?.ApiCountry;
             var result = await _dishes.SearchAsync(country, SelectedCategory, SearchText, FilterVendorId, sort,
-                                                   page: 1, load.Token);
+                                                   Pager.Page, Pager.PageSize, load.Token);
             if (load.IsCancellationRequested) return;
 
             Dishes.Clear();
@@ -151,6 +166,7 @@ public partial class FoodListingViewModel : ObservableObject
             }
 
             foreach (var dish in result.Value!.Items) Dishes.Add(dish);
+            Pager.Update(result.Value.TotalCount);
             EmptyMessage = Dishes.Count == 0 ? "No dishes match your search yet." : string.Empty;
         }
         catch (OperationCanceledException)

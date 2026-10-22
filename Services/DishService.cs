@@ -22,7 +22,7 @@ public sealed class DishService(ApiClient api, IOptions<ApiSettings> settings)
         [DishCategory.Drinks] = "Drinks"
     };
 
-    /// <summary>Most dishes one search returns.</summary>
+    /// <summary>Most dishes one search returns when no page size is given (e.g. Home's popular dishes).</summary>
     public const int PageSize = 50;
 
     /// <summary>Searches dishes that can be ordered now (approved shops, available, priced).</summary>
@@ -32,11 +32,13 @@ public sealed class DishService(ApiClient api, IOptions<ApiSettings> settings)
     /// <param name="shopId">Only this shop's menu; null = every shop.</param>
     /// <param name="sort">Best rated first, or by price.</param>
     /// <param name="page">1-based page.</param>
+    /// <param name="pageSize">Dishes per page.</param>
     /// <param name="ct">Cancels the search (e.g. the user typed another letter).</param>
     /// <returns>The dishes, or why they couldn't be loaded.</returns>
     public async Task<ApiResult<PagedResult<Dish>>> SearchAsync(Country? country, string? category, string? search,
                                                                string? shopId, DishSort sort = DishSort.Rating,
-                                                               int page = 1, CancellationToken ct = default)
+                                                               int page = 1, int pageSize = PageSize,
+                                                               CancellationToken ct = default)
     {
         var query = new Dictionary<string, string?>
         {
@@ -46,7 +48,7 @@ public sealed class DishService(ApiClient api, IOptions<ApiSettings> settings)
             ["shopId"] = Guid.TryParse(shopId, out var id) ? id.ToString() : null,
             ["sort"] = sort.ToString(),
             ["page"] = page.ToString(),
-            ["pageSize"] = PageSize.ToString()
+            ["pageSize"] = pageSize.ToString()
         };
 
         var result = await api.GetAsync<PagedResult<DishCardDto>>(ApiQuery.Build("api/dishes", query), ct);

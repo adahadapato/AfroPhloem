@@ -13,9 +13,6 @@ namespace Phloem.Services;
 /// </summary>
 public sealed class ShipmentService(ApiClient api)
 {
-    /// <summary>How many parcels a list shows.</summary>
-    private const int PageSize = 50;
-
     // ───────────────────────────── 1. Anyone ─────────────────────────────
 
     /// <summary>Where parcels can be sent (routes an admin has switched on).</summary>
@@ -32,9 +29,10 @@ public sealed class ShipmentService(ApiClient api)
     public Task<ApiResult<BookedShipmentDto>> BookAsync(BookShipmentCommand command, CancellationToken ct = default) =>
         api.PostAsync<BookedShipmentDto>("api/shipments", command, ct);
 
-    /// <summary>My parcels, newest first.</summary>
-    public Task<ApiResult<PagedResult<ShipmentSummaryDto>>> GetMineAsync(CancellationToken ct = default) =>
-        api.GetAsync<PagedResult<ShipmentSummaryDto>>($"api/shipments?page=1&pageSize={PageSize}", ct);
+    /// <summary>My parcels, newest first; one page.</summary>
+    public Task<ApiResult<PagedResult<ShipmentSummaryDto>>> GetMineAsync(int page, int pageSize,
+                                                                         CancellationToken ct = default) =>
+        api.GetAsync<PagedResult<ShipmentSummaryDto>>($"api/shipments?page={page}&pageSize={pageSize}", ct);
 
     /// <summary>One of my parcels with its timeline.</summary>
     public Task<ApiResult<ShipmentDetailsDto>> GetMineAsync(string trackingNumber, CancellationToken ct = default) =>
@@ -55,11 +53,12 @@ public sealed class ShipmentService(ApiClient api)
 
     // ───────────────────────────── 3. Staff (ShipmentManager or Admin) ─────────────────────────────
 
-    /// <summary>Every parcel, newest first; optionally one status.</summary>
-    public Task<ApiResult<PagedResult<StaffShipmentSummaryDto>>> GetAllAsync(ShipmentStatus? status,
+    /// <summary>Every parcel, newest first; optionally one status; one page.</summary>
+    public Task<ApiResult<PagedResult<StaffShipmentSummaryDto>>> GetAllAsync(ShipmentStatus? status, int page,
+                                                                            int pageSize,
                                                                             CancellationToken ct = default)
     {
-        var path = $"api/staff/shipments?page=1&pageSize={PageSize}";
+        var path = $"api/staff/shipments?page={page}&pageSize={pageSize}";
         if (status is { } s) path += $"&status={s}";
         return api.GetAsync<PagedResult<StaffShipmentSummaryDto>>(path, ct);
     }

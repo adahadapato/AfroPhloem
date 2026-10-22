@@ -9,6 +9,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:phloem="clr-namespace:Phloem"
              xmlns:vm="clr-namespace:Phloem.ViewModels"
+             xmlns:controls="clr-namespace:Phloem.Views.Controls"
              xmlns:models="clr-namespace:Phloem.Models"
              x:DataType="vm:SellerDashboardViewModel"
              x:Class="Phloem.Views.SellerDashboardPage"
@@ -198,7 +199,7 @@
                 </Border>
 
                 <!-- ============ ORDERS WAITING ============ -->
-                <Label Text="{Binding WaitingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />
+                <Label x:Name="WaitingTitleLabel" Text="{Binding WaitingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />
                 <Label Text="Open an order to see what the customer ordered, then accept or decline it."
                        Style="{StaticResource SubtleLabel}" FontSize="12" Margin="2,-8,0,0"
                        IsVisible="{Binding HasNoWaitingOrders, Converter={StaticResource InvertedBoolConverter}}" />
@@ -212,19 +213,28 @@
                 <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding WaitingOrders}"
                                      BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}" />
 
+                <!-- ◀ Page x of y ▶ · Show n -->
+                <controls:PagerView Paging="{Binding WaitingPager}" ScrollTarget="{x:Reference WaitingTitleLabel}" />
+
                 <!-- ============ BEING PREPARED ============ -->
-                <Label Text="{Binding PreparingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
+                <Label x:Name="PreparingTitleLabel" Text="{Binding PreparingTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
                        IsVisible="{Binding HasPreparingOrders}" />
                 <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding PreparingOrders}"
                                      BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}"
                                      IsVisible="{Binding HasPreparingOrders}" />
 
+                <!-- ◀ Page x of y ▶ · Show n -->
+                <controls:PagerView Paging="{Binding PreparingPager}" ScrollTarget="{x:Reference PreparingTitleLabel}" />
+
                 <!-- ============ OUT FOR DELIVERY ============ -->
-                <Label Text="{Binding OutForDeliveryTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
+                <Label x:Name="OutForDeliveryTitleLabel" Text="{Binding OutForDeliveryTitle}" Style="{StaticResource SectionTitle}" Margin="2,10,0,0"
                        IsVisible="{Binding HasOutForDeliveryOrders}" />
                 <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding OutForDeliveryOrders}"
                                      BindableLayout.ItemTemplate="{StaticResource ShopOrderTemplate}"
                                      IsVisible="{Binding HasOutForDeliveryOrders}" />
+
+                <!-- ◀ Page x of y ▶ · Show n -->
+                <controls:PagerView Paging="{Binding OutForDeliveryPager}" ScrollTarget="{x:Reference OutForDeliveryTitleLabel}" />
 
                 <!-- ============ SALES OVERVIEW ============ -->
                 <Label Text="Sales overview" Style="{StaticResource SectionTitle}" Margin="2,10,0,0" />

@@ -290,7 +290,7 @@
 
                     <!-- ============ ALL SHOPS ============ -->
                     <Grid ColumnDefinitions="*,Auto" Margin="2,14,0,0">
-                        <Label Text="All shops" Style="{StaticResource SectionTitle}" />
+                        <Label x:Name="AllShopsTitle" Text="All shops" Style="{StaticResource SectionTitle}" />
                         <Label Grid.Column="1" Text="{Binding BlockedCount, StringFormat='{0} blocked'}"
                                FontSize="12" FontAttributes="Bold" TextColor="{StaticResource BrandDanger}"
                                VerticalOptions="Center" />
@@ -374,6 +374,9 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
+
+                    <!-- ◀ Page x of y ▶ · Show n -->
+                    <controls:PagerView Paging="{Binding ShopsPager}" ScrollTarget="{x:Reference AllShopsTitle}" />
                 </VerticalStackLayout>
 
                 <!-- =================================================== -->
@@ -387,7 +390,7 @@
                     </VerticalStackLayout.Triggers>
 
                     <VerticalStackLayout Spacing="2" Margin="2,4,0,0">
-                        <Label Text="Registered users" Style="{StaticResource SectionTitle}" />
+                        <Label x:Name="UsersTitle" Text="Registered users" Style="{StaticResource SectionTitle}" />
                         <Label Text="Suspend people who abuse Phloem: their shop is hidden with them."
                                Style="{StaticResource SmallSubtle}" />
                     </VerticalStackLayout>
@@ -465,6 +468,9 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
+
+                    <!-- ◀ Page x of y ▶ · Show n -->
+                    <controls:PagerView Paging="{Binding UsersPager}" ScrollTarget="{x:Reference UsersTitle}" />
                 </VerticalStackLayout>
 
                 <!-- =================================================== -->

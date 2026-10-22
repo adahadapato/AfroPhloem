@@ -99,6 +99,9 @@
     <MauiXaml Update="Views\Controls\AppHeaderBar.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </MauiXaml>
+    <MauiXaml Update="Views\Controls\PagerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
     <MauiXaml Update="Views\Controls\StatusBanner.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </MauiXaml>
@@ -128,6 +131,9 @@
     </MauiXaml>
     <MauiXaml Update="Views\ShipmentDetailsPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </MauiXaml>
+    <MauiXaml Update="Views\ShopOrderDetailsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
     <MauiXaml Update="Views\ShopSettingsPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>

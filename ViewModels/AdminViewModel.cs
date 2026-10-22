@@ -27,12 +27,21 @@ public partial class AdminViewModel : ObservableObject
     private readonly ShipmentService _shipments;
     private readonly ApiSettings _api;
 
-    public AdminViewModel(AdminService admin, ShipmentService shipments, IOptions<ApiSettings> api)
+    public AdminViewModel(AdminService admin, ShipmentService shipments, IOptions<ApiSettings> api,
+                          PagingFactory paging)
     {
         _admin = admin;
         _shipments = shipments;
         _api = api.Value;
+        ShopsPager = paging.Create(PagedLists.AdminShops, () => RunAsync(LoadAllShopsAsync));
+        UsersPager = paging.Create(PagedLists.AdminUsers, () => RunAsync(LoadUsersAsync));
     }
+
+    /// <summary>Sellers tab → "All shops" pages.</summary>
+    public Paging ShopsPager { get; }
+
+    /// <summary>Users tab pages.</summary>
+    public Paging UsersPager { get; }
 
     // ---------- Lists ----------
 
@@ -146,13 +155,23 @@ public partial class AdminViewModel : ObservableObject
             foreach (var s in pending.Value!) PendingShops.Add(ToCard(s));
         OnPropertyChanged(nameof(HasPendingApprovals));
 
-        var all = await _admin.GetShopsAsync(ShopSearch);
+        await LoadAllShopsAsync();
+    }
+
+    /// <summary>"All shops": the pager's page (shops waiting for approval are listed above it instead).</summary>
+    private async Task LoadAllShopsAsync()
+    {
+        var all = await _admin.GetShopsAsync(ShopSearch, ShopsPager.Page, ShopsPager.PageSize);
         Shops.Clear();
-        if (all.IsSuccess)
-            foreach (var s in all.Value!.Items.Where(s => s.Status != VendorStatus.PendingApproval))
-                Shops.Add(ToCard(s));
-        else
+        if (all.IsFailure)
+        {
             ShowError(all.Error!.DisplayMessage);
+            return;
+        }
+
+        ShopsPager.Update(all.Value!.TotalCount);
+        foreach (var s in all.Value.Items.Where(s => s.Status != VendorStatus.PendingApproval))
+            Shops.Add(ToCard(s));
     }
 
     private async Task LoadDishSuggestionsAsync()
@@ -166,13 +185,14 @@ public partial class AdminViewModel : ObservableObject
 
     private async Task LoadUsersAsync()
     {
-        var result = await _admin.GetUsersAsync(UserSearch, SuspendedOnly);
+        var result = await _admin.GetUsersAsync(UserSearch, SuspendedOnly, UsersPager.Page, UsersPager.PageSize);
         if (result.IsFailure)
         {
             ShowError(result.Error!.DisplayMessage);
             return;
         }
 
+        UsersPager.Update(result.Value!.TotalCount);
         Users.Clear();
         foreach (var u in result.Value!.Items) Users.Add(new AdminUserCard { User = u });
         if (!SuspendedOnly && string.IsNullOrWhiteSpace(UserSearch)) TotalUsers = result.Value.TotalCount;
@@ -180,7 +200,7 @@ public partial class AdminViewModel : ObservableObject
 
     private async Task LoadShipmentCountAsync()
     {
-        var result = await _shipments.GetAllAsync(status: null);
+        var result = await _shipments.GetAllAsync(status: null, page: 1, pageSize: 1);   // only the total
         if (result.IsSuccess) TotalShipments = result.Value!.TotalCount;
     }
 
@@ -193,7 +213,11 @@ public partial class AdminViewModel : ObservableObject
     // ═════════════════════════════ Sellers ═════════════════════════════
 
     [RelayCommand]
-    private async Task SearchShops() => await RunAsync(LoadShopsAsync);
+    private async Task SearchShops()
+    {
+        ShopsPager.Reset();
+        await RunAsync(LoadShopsAsync);
+    }
 
     [RelayCommand]
     private async Task ApproveShop(AdminShopCard card) =>
@@ -257,9 +281,17 @@ public partial class AdminViewModel : ObservableObject
     // ═════════════════════════════ Users ═════════════════════════════
 
     [RelayCommand]
-    private async Task SearchUsers() => await RunAsync(LoadUsersAsync);
+    private async Task SearchUsers()
+    {
+        UsersPager.Reset();
+        await RunAsync(LoadUsersAsync);
+    }
 
-    partial void OnSuspendedOnlyChanged(bool value) => _ = RunAsync(LoadUsersAsync);
+    partial void OnSuspendedOnlyChanged(bool value)
+    {
+        UsersPager.Reset();
+        _ = RunAsync(LoadUsersAsync);
+    }
 
     /// <summary>Suspend: how long, then why (shown to them). Their shop is hidden with them.</summary>
     [RelayCommand]

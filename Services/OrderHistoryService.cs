@@ -126,6 +126,15 @@ public class OrderHistoryService
 
     public ObservableCollection<PlacedOrder> Orders { get; } = new();
 
+    /// <summary>The page of "My orders" being shown (the Orders page's pager sets it).</summary>
+    public int Page { get; private set; } = 1;
+
+    /// <summary>Orders per page (the Orders page's pager sets it).</summary>
+    public int PageSize { get; private set; } = 10;
+
+    /// <summary>All my orders on the server (for the pager).</summary>
+    public int TotalCount { get; private set; }
+
     public OrderHistoryService(OrderService orders, SessionService session, IOptions<ApiSettings> api)
     {
         _orders = orders;
@@ -148,15 +157,24 @@ public class OrderHistoryService
 
     // ───────────────────────────── 1. Loading ─────────────────────────────
 
-    /// <summary>Reloads "My orders" from the API (several calls at once share one load).</summary>
+    /// <summary>
+    /// Reloads "My orders" from the API (several calls at once share one load). Without a page: page 1 (newest
+    /// first, e.g. after placing an order).
+    /// </summary>
+    /// <param name="page">1-based page; null = page 1.</param>
+    /// <param name="pageSize">Orders per page; null = as before.</param>
     /// <returns>Null when loaded (or signed out); otherwise why it failed.</returns>
-    public async Task<string?> LoadAsync()
+    public async Task<string?> LoadAsync(int? page = null, int? pageSize = null)
     {
         if (!_session.IsLoggedIn)
         {
             Orders.Clear();
+            TotalCount = 0;
             return null;
         }
+
+        Page = Math.Max(1, page ?? 1);
+        if (pageSize is > 0) PageSize = pageSize.Value;
 
         string? error = null;
         _loading ??= LoadCoreAsync(e => error = e);
@@ -167,13 +185,14 @@ public class OrderHistoryService
 
     private async Task LoadCoreAsync(Action<string> fail)
     {
-        var result = await _orders.GetMyOrdersAsync();
+        var result = await _orders.GetMyOrdersAsync(Page, PageSize);
         if (result.IsFailure)
         {
             fail(result.Error!.DisplayMessage);
             return;
         }
 
+        TotalCount = result.Value!.TotalCount;
         Orders.Clear();
         foreach (var order in result.Value!.Items.Select(ToPlacedOrder))
             Orders.Add(order);
